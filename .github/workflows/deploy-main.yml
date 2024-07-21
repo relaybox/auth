@@ -1,0 +1,59 @@
+name: Deploy development
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: deploy-dev
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - name: Dump context
+        id: github_context_dump
+        run: echo '${{ toJSON(github) }}'
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Create .env
+        run: |
+          touch .env
+          echo AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} >> .env
+          echo DB_HOST=${{ vars.DB_HOST }} >> .env
+          echo DB_NAME=${{ vars.DB_NAME }} >> .env
+          echo DB_PORT=${{ vars.DB_PORT }} >> .env
+          echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> .env
+          echo DB_MAX_CONNECTIONS="${{ vars.DB_MAX_CONNECTIONS }}" >> .env
+          echo DB_USERNAME=${{ vars.DB_USERNAME }} >> .env
+          echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
+          echo TLS_DISABLED=${{ vars.TLS_DISABLED }} >> .env
+          echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
+          echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
+          cat .env
+
+      - name: npm ci
+        run: npm ci
+
+      - name: deploy main
+        uses: ./.github/actions/sls-deploy
+        with:
+          app-namespace: relaybox
+          stage: ${{ vars.STAGE }}
+          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
+          node-env: ${{ vars.NODE_ENV }}

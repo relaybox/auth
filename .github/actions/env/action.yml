@@ -1,0 +1,27 @@
+name: generate-env
+
+description: build .env
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
+      shell: bash
+      run: |
+        touch .env
+        echo AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} >> .env
+        echo COGNITO_CLIENT_ID=${{ vars.COGNITO_CLIENT_ID }} >> .env
+        echo COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} >> .env
+        echo COGNITO_USER_POOL_ID=${{ vars.COGNITO_USER_POOL_ID }} >> .env
+        echo DB_HOST=${{ vars.DB_HOST }} >> .env
+        echo DB_NAME=${{ vars.DB_NAME }} >> .env
+        echo DB_PORT=${{ vars.DB_PORT }} >> .env
+        echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> .env
+        echo DB_MAX_CONNECTIONS="${{ vars.DB_MAX_CONNECTIONS }}" >> .env
+        echo DB_USERNAME=${{ vars.DB_USERNAME }} >> .env
+        echo JWT_ANONYMOUS_GRANT=${{ vars.JWT_ANONYMOUS_GRANT }} >> .env
+        echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
+        echo JWT_SIGNATURE=${{ secrets.JWT_SIGNATURE }} >> .env
+        echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
+        echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
+        cat .env

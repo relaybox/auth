@@ -1,4 +1,4 @@
-service: ds-prototype-events
+service: relaybox-auth
 
 plugins:
   - serverless-dotenv-plugin
@@ -13,6 +13,17 @@ custom:
   esbuild:
     bundle: true
     minify: true
+
+  customDomain:
+    domainName: auth.${self:provider.stage}.relaybox-services.net
+    stage: ${self:provider.stage}
+    certificateName: '*.${self:provider.stage}.relaybox-services.net'
+    createRoute53Record: true
+    createRoute53IPv6Record: true
+    endpointType: edge
+    securityPolicy: tls_1_2
+    apiType: rest
+    autoDomain: true
 
   serverless-offline:
     httpPort: 4005
@@ -37,8 +48,8 @@ custom:
       - Content-Type
       - X-Amz-Date
       - Authorization
-      - X-Ds-App-Key
-      - X-Ds-Req-Signature
+      - X-Ds-Client-Id
+      - X-Ds-Connection-Id
     allowCredentials: true
 
   vars:

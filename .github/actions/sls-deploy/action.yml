@@ -1,0 +1,35 @@
+name: sls-deploy
+
+description: deploy sls application
+
+inputs:
+  aws-account-id:
+    required: true
+
+  app-namespace:
+    required: true
+
+  stage:
+    required: true
+
+  node-env:
+    required: true
+
+# User from tools account (based on access key and secret in environment settings) then assumes deployer role
+# from stage account (dev or prod...) which has the necessary permissions to deploy the project
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
+      shell: bash
+      run: |
+        CREDS=`aws sts assume-role \
+          --role-arn arn:aws:iam::${{ inputs.aws-account-id }}:role/${{ inputs.app-namespace }}-${{ inputs.stage }}-DeployerRole \
+          --role-session-name=gha_deployer`
+        export NODE_ENV=${{ inputs.node-env }}
+        export AWS_ACCESS_KEY_ID=`echo $CREDS | jq -r '.Credentials.AccessKeyId'`
+        export AWS_SECRET_ACCESS_KEY=`echo $CREDS | jq -r '.Credentials.SecretAccessKey'`
+        export AWS_SESSION_TOKEN=`echo $CREDS | jq -r '.Credentials.SessionToken'`
+        export STAGE=${{ inputs.stage }}
+        export SLS_DEBUG="*"
+        npm run deploy -- --stage ${{ inputs.stage}}
