@@ -6,6 +6,7 @@ plugins:
   - serverless-plugin-canary-deployments
   - serverless-plugin-utils
   - serverless-offline
+  - serverless-domain-manager
 
 useDotenv: true
 
@@ -99,7 +100,6 @@ functions:
   get-validate-token:
     handler: src/handlers/get-validate-token.handler
     timeout: 30
-    deploymentSettings: ${self:custom.deploymentSettings}
     events:
       - ${self:custom.keepAlive}
       - http:
@@ -110,7 +110,6 @@ functions:
   get-validate-api-key:
     handler: src/handlers/get-validate-api-key.handler
     timeout: 30
-    deploymentSettings: ${self:custom.deploymentSettings}
     events:
       - ${self:custom.keepAlive}
       - http:
@@ -121,7 +120,6 @@ functions:
   get-credentials:
     handler: src/handlers/get-credentials.handler
     timeout: 30
-    deploymentSettings: ${self:custom.deploymentSettings}
     events:
       - ${self:custom.keepAlive}
       - http:
