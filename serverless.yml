@@ -1,0 +1,119 @@
+service: ds-prototype-events
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-esbuild
+  - serverless-plugin-canary-deployments
+  - serverless-plugin-utils
+  - serverless-offline
+
+useDotenv: true
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+
+  serverless-offline:
+    httpPort: 4005
+    lambdaPort: 3005
+    reloadHandler: true
+
+  deploymentSettings:
+    type: AllAtOnce
+    alias: live
+    preTrafficHook: pre-traffic
+
+  keepAlive:
+    eventBridge:
+      schedule: rate(5 minutes)
+      enabled: true
+      input:
+        keepAlive: true
+
+  cors:
+    origin: '*'
+    headers:
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Ds-App-Key
+      - X-Ds-Req-Signature
+    allowCredentials: true
+
+  vars:
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, ''}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID, ''}
+    VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
+    VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  memorySize: 3008
+  environment: ${self:custom.vars}
+  stage: ${opt:stage, env:STAGE, 'dev'}
+  timeout: 300
+  apiGateway:
+    binaryMediaTypes:
+      - multipart/form-data
+  deploymentBucket:
+    name: ${self:service}.${self:provider.stage}.sls-deploys
+    maxPreviousDeploymentArtifacts: 10
+    blockPublicAccess: true
+    serverSideEncryption: AES256
+    tags:
+      Env: ${self:provider.stage}
+  region: ${opt:region, 'eu-west-2'}
+  logRetentionInDays: 30
+  iam:
+    deploymentRole: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${self:service}-${self:provider.stage}-CloudFormationExecutionRole
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - codedeploy:*
+          Resource:
+            - '*'
+  vpc:
+    securityGroupIds: ${split(${self:custom.vars.VPC_SECURITY_GROUP_IDS}, ',')}
+    subnetIds: ${split(${self:custom.vars.VPC_SUBNET_IDS}, ',')}
+
+package:
+  individually: true
+
+variablesResolutionMode: 20210326
+
+functions:
+  get-validate-token:
+    handler: src/handlers/get-validate-token.handler
+    timeout: 30
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - ${self:custom.keepAlive}
+      - http:
+          path: /validate-token
+          method: get
+          cors: ${self:custom.cors}
+
+  get-validate-api-key:
+    handler: src/handlers/get-validate-api-key.handler
+    timeout: 30
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - ${self:custom.keepAlive}
+      - http:
+          path: /validate-api-key
+          method: get
+          cors: ${self:custom.cors}
+
+  get-credentials:
+    handler: src/handlers/get-credentials.handler
+    timeout: 30
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - ${self:custom.keepAlive}
+      - http:
+          path: /credentials
+          method: get
+          cors: ${self:custom.cors}
