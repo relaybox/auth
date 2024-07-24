@@ -7,7 +7,7 @@ plugins:
   - serverless-plugin-utils
   - serverless-offline
   - serverless-domain-manager
-  - serverless-secrets-plugin
+  # - serverless-secrets-plugin
 
 useDotenv: true
 
@@ -16,9 +16,9 @@ custom:
     bundle: true
     minify: true
 
-  secrets:
-    RDS_ROOT_CERTIFICATE:
-      arn: ${env.RDS_ROOT_CERTIFICATE_ARN, ''}
+  # secrets:
+  #   RDS_ROOT_CERTIFICATE:
+  #     arn: ${ssm:rds/relaybox_core_dev/certificate-bundle-eu-west-2}
 
   customDomain:
     domainName: auth.${self:provider.stage}.relaybox-services.net
@@ -68,8 +68,8 @@ custom:
     DB_PASSWORD: ${env:DB_PASSWORD, ''}
     DB_PROXY_ENABLED: ${env:DB_PROXY_ENABLED, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
-    RDS_ROOT_CERTIFICATE: ${self:custom.secrets.RDS_ROOT_CERTIFICATE}
-    TLS_DISABLED: ${env:TLS_DISABLED, ''}
+    RDS_ROOT_CERTIFICATE: ${ssm:rds/${env.DB_NAME}/certificate-bundle-eu-west-2}
+    DB_TLS_DISABLED: ${env:DB_TLS_DISABLED, ''}
     VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
     VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
 
