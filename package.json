@@ -37,6 +37,7 @@
     "serverless-plugin-aws-alerts": "^1.7.5",
     "serverless-plugin-canary-deployments": "0.8.0",
     "serverless-plugin-utils": "0.2.0",
+    "serverless-secrets-plugin": "^0.1.0",
     "typescript": "^5.3.3",
     "vitest": "^1.4.0"
   },
