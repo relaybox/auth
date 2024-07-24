@@ -20,7 +20,7 @@ export const client = new PgClient({
   debug: LOG_LEVEL === LogLevel.DEBUG,
   maxConnections: Number(process.env.DB_MAX_CONNECTIONS),
   delayMs: 3000,
-  ...(!DB_TLS_DISABLED && ssl)
+  ...(!DB_TLS_DISABLED && { ssl })
 });
 
 export async function getConnection(): Promise<PgClient> {
