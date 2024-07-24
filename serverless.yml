@@ -63,7 +63,7 @@ custom:
     DB_PASSWORD: ${env:DB_PASSWORD, ''}
     DB_PROXY_ENABLED: ${env:DB_PROXY_ENABLED, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
-    RDS_ROOT_CERTIFICATE: ${ssm:/rds/${env.DB_NAME}/certificate-bundle-eu-west-2}
+    RDS_ROOT_CERTIFICATE: ${ssm:rds/${env:DB_NAME}/certificate-bundle-${self:provider.region}}
     DB_TLS_DISABLED: ${env:DB_TLS_DISABLED, ''}
     VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
     VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
