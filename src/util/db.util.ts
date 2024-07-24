@@ -18,7 +18,7 @@ export const client = new PgClient({
   delayMs: 3000,
   ...(!TLS_DISABLED && {
     ssl: {
-      rejectUnauthorized: true
+      rejectUnauthorized: false
     }
   })
 });
