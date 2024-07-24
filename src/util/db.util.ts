@@ -23,18 +23,6 @@ export const client = new PgClient({
   ...(!DB_TLS_DISABLED && ssl)
 });
 
-console.log({
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  debug: LOG_LEVEL === LogLevel.DEBUG,
-  maxConnections: Number(process.env.DB_MAX_CONNECTIONS),
-  delayMs: 3000,
-  ...(!DB_TLS_DISABLED && { ssl })
-});
-
 export async function getConnection(): Promise<PgClient> {
   await client.connect();
   return client;
