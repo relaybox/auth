@@ -1,7 +1,6 @@
 import PgClient from 'serverless-postgres';
 import { LogLevel } from 'src/types/system.types';
 
-const RDS_ROOT_CERTIFICATE = process.env.RDS_ROOT_CERTIFICATE || '';
 const DB_PROXY_ENABLED = process.env.DB_PROXY_ENABLED === 'true';
 const DB_TLS_DISABLED = process.env.DB_TLS_DISABLED === 'true';
 const LOG_LEVEL = process.env.LOG_LEVEL;
@@ -9,8 +8,7 @@ const LOG_LEVEL = process.env.LOG_LEVEL;
 /*********************** SERVERLESS PG *************************/
 
 const ssl = {
-  rejectUnauthorized: true,
-  ...(!DB_PROXY_ENABLED && { ca: RDS_ROOT_CERTIFICATE })
+  rejectUnauthorized: DB_PROXY_ENABLED
 };
 
 export const client = new PgClient({

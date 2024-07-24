@@ -44,7 +44,6 @@ jobs:
           echo DB_PROXY_ENABLED=${{ vars.DB_PROXY_ENABLED }} >> .env
           echo DB_TLS_DISABLED=${{ vars.DB_TLS_DISABLED }} >> .env
           echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
-          echo RDS_ROOT_CERTIFICATE_ARN=${{ vars.RDS_ROOT_CERTIFICATE_ARN }} >> .env
           echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
           echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
           cat .env
