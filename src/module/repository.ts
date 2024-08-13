@@ -7,9 +7,9 @@ export async function getSecretKeybyKeyId(
   keyId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT "secretKey" 
-    FROM credentials 
-    WHERE "appPid" = $1 AND "keyId" = $2;
+    SELECT "secretKey", "deletedAt"
+    FROM credentials
+    WHERE "appPid" = $1 AND "keyId" = $2 AND "deletedAt" IS NULL;
   `;
 
   return pgClient.query(query, [appPid, keyId]);
