@@ -1,3 +1,4 @@
+import PgClient from 'serverless-postgres';
 import {
   AuthFlowType,
   CognitoIdentityProviderClient,
@@ -23,7 +24,6 @@ import { Moment } from 'moment-timezone';
 import { PolicyEffect } from 'src/types/aws.types';
 import { ExtendedJwtPayload } from 'src/types/jwt.types';
 import * as repository from './auth.repository';
-import PgClient from 'serverless-postgres';
 import { User } from './auth.types';
 import { GuardOptions } from 'src/types/system.types';
 import { Logger } from 'winston';
@@ -35,11 +35,7 @@ const COGNITO_VERIFIER_TOKEN = 'id';
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
 const COGNITO_CLIENT_SECRET = process.env.COGNITO_CLIENT_SECRET || '';
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || '';
-const COGNITO_USER_POOL_DOMAIN = process.env.COGNITO_USER_POOL_DOMAIN || '';
-const COGNITO_OAUTH_CALLBACK_URL = process.env.COGNITO_OAUTH_CALLBACK_URL || '';
 const COGNITO_SIGNUP_USER_ATTRIBUTE_NAME = 'email';
-const AUTH_HASH_ID_SECRET = process.env.AUTH_HASH_ID_SECRET || '';
-const OAUTH_GRANT_TYPE_AUTH_CODE = 'authorization_code';
 
 export function processAuthentication(
   cognitoClient: CognitoIdentityProviderClient,
@@ -327,67 +323,67 @@ export async function getUserById(logger: Logger, pgClient: PgClient, uid: strin
   return rows[0];
 }
 
-export function processUpdateUserAttributes(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  userAttributes: { Name: string; Value: string }[]
-): Promise<UpdateUserAttributesCommandOutput> {
-  logger.debug(`Updating user auth attributes`, { userAttributes });
+// export function processUpdateUserAttributes(
+//   logger: Logger,
+//   cognitoClient: CognitoIdentityProviderClient,
+//   accessToken: string,
+//   userAttributes: { Name: string; Value: string }[]
+// ): Promise<UpdateUserAttributesCommandOutput> {
+//   logger.debug(`Updating user auth attributes`, { userAttributes });
 
-  const updateUserAttributesCommandInput = {
-    AccessToken: accessToken,
-    UserAttributes: userAttributes
-  };
+//   const updateUserAttributesCommandInput = {
+//     AccessToken: accessToken,
+//     UserAttributes: userAttributes
+//   };
 
-  const updateUserAttributesCommand = new UpdateUserAttributesCommand(
-    updateUserAttributesCommandInput
-  );
+//   const updateUserAttributesCommand = new UpdateUserAttributesCommand(
+//     updateUserAttributesCommandInput
+//   );
 
-  return cognitoClient.send(updateUserAttributesCommand);
-}
+//   return cognitoClient.send(updateUserAttributesCommand);
+// }
 
-export function processSendUserAttributesVerificationCode(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  attributeName: string
-): Promise<GetUserAttributeVerificationCodeCommandOutput> {
-  logger.debug(`Sending user auth attribute update verification code`, { attributeName });
+// export function processSendUserAttributesVerificationCode(
+//   logger: Logger,
+//   cognitoClient: CognitoIdentityProviderClient,
+//   accessToken: string,
+//   attributeName: string
+// ): Promise<GetUserAttributeVerificationCodeCommandOutput> {
+//   logger.debug(`Sending user auth attribute update verification code`, { attributeName });
 
-  const getUserAttributeVerificationCodeCommandInput = {
-    AccessToken: accessToken,
-    AttributeName: attributeName
-  };
+//   const getUserAttributeVerificationCodeCommandInput = {
+//     AccessToken: accessToken,
+//     AttributeName: attributeName
+//   };
 
-  const getUserAttributeVerificationCodeCommand = new GetUserAttributeVerificationCodeCommand(
-    getUserAttributeVerificationCodeCommandInput
-  );
+//   const getUserAttributeVerificationCodeCommand = new GetUserAttributeVerificationCodeCommand(
+//     getUserAttributeVerificationCodeCommandInput
+//   );
 
-  return cognitoClient.send(getUserAttributeVerificationCodeCommand);
-}
+//   return cognitoClient.send(getUserAttributeVerificationCodeCommand);
+// }
 
-export function processConfirmUserAttributesVerificationCode(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  attributeName: string,
-  verificationCode: string
-): Promise<VerifyUserAttributeCommandOutput> {
-  logger.debug(`Confirming user auth attribute update verification code`, { attributeName });
+// export function processConfirmUserAttributesVerificationCode(
+//   logger: Logger,
+//   cognitoClient: CognitoIdentityProviderClient,
+//   accessToken: string,
+//   attributeName: string,
+//   verificationCode: string
+// ): Promise<VerifyUserAttributeCommandOutput> {
+//   logger.debug(`Confirming user auth attribute update verification code`, { attributeName });
 
-  const verifyUserAttributeCommandInput = {
-    AccessToken: accessToken,
-    AttributeName: attributeName,
-    Code: verificationCode
-  };
+//   const verifyUserAttributeCommandInput = {
+//     AccessToken: accessToken,
+//     AttributeName: attributeName,
+//     Code: verificationCode
+//   };
 
-  const verifyUserAttributeCommand = new VerifyUserAttributeCommand(
-    verifyUserAttributeCommandInput
-  );
+//   const verifyUserAttributeCommand = new VerifyUserAttributeCommand(
+//     verifyUserAttributeCommandInput
+//   );
 
-  return cognitoClient.send(verifyUserAttributeCommand);
-}
+//   return cognitoClient.send(verifyUserAttributeCommand);
+// }
 
 export function formatAuthTokenResponse(
   response: InitiateAuthCommandOutput

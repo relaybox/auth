@@ -2,7 +2,6 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import * as httpResponse from 'src/util/http.util';
 import { getAuthenticatedUserData, processAuthentication } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
-import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { processSetUserMfaTotpPreference } from 'src/modules/mfa/mfa.service';
 
@@ -15,8 +14,6 @@ export const handler: APIGatewayProxyHandler = async (
   context: any
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
-
-  const pgClient = await getPgClient();
 
   try {
     const { password } = JSON.parse(event.body!);
@@ -41,7 +38,5 @@ export const handler: APIGatewayProxyHandler = async (
     return httpResponse._200(result);
   } catch (err: any) {
     return httpResponse._422({ message: err.message });
-  } finally {
-    pgClient.clean();
   }
 };

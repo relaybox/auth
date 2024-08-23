@@ -53,36 +53,6 @@ post-auth-confirm-password:
         cors: ${self:custom.cors}
         authorizer: authenticated-authorizer
 
-post-auth-attributes:
-  handler: src/handlers/auth/post-auth-attributes.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/attributes
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
-
-post-auth-attributes-verify:
-  handler: src/handlers/auth/post-auth-attributes-verify.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/attributes/verify
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
-
-post-auth-attributes-confirm:
-  handler: src/handlers/auth/post-auth-attributes-confirm.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/attributes/confirm
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
-
 get-auth-refresh:
   handler: src/handlers/auth/get-auth-refresh.handler
   timeout: 30
@@ -102,3 +72,32 @@ get-auth-session:
         method: get
         cors: ${self:custom.cors}
         authorizer: authenticated-authorizer
+# post-auth-attributes:
+#   handler: src/handlers/auth/post-auth-attributes.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/attributes
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
+
+# post-auth-attributes-verify:
+#   handler: src/handlers/auth/post-auth-attributes-verify.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/attributes/verify
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
+
+# post-auth-attributes-confirm:
+#   handler: src/handlers/auth/post-auth-attributes-confirm.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/attributes/confirm
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
