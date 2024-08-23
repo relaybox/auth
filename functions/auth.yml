@@ -1,7 +1,3 @@
-authenticated-authorizer:
-  handler: src/handlers/auth/authorizers/authenticated-authorizer.handler
-  type: TOKEN
-
 post-auth-login:
   handler: src/handlers/auth/post-auth-login.handler
   timeout: 30

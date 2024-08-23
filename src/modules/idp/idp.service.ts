@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { AuthUserData, OAuthTokenCredentials } from 'src/types/auth.types';
+import { OAuthTokenCredentials } from 'src/types/auth.types';
 import { ExtendedJwtPayload } from 'src/types/jwt.types';
 import { Logger } from 'winston';
 import PgClient from 'serverless-postgres';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { getUserById, getUserNameFromEmail } from '../auth/auth.service';
 import * as repository from './idp.repository';
 import { AuthConflictError } from 'src/lib/errors';
