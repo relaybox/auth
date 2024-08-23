@@ -31,7 +31,13 @@ export const handler: APIGatewayProxyHandler = async (
       return httpResponse._400({ message: 'Missing email or code' });
     }
 
-    const codeConfirmation = await processCodeConfirmation(cognitoClient, email, confirmationCode);
+    const codeConfirmation = await processCodeConfirmation(
+      logger,
+      cognitoClient,
+      email,
+      confirmationCode
+    );
+
     const hashId = generateAuthHashId(email, AUTH_HASH_ID_SECRET);
 
     const { id } = await getUserByHashId(logger, pgClient, hashId);

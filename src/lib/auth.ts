@@ -83,8 +83,6 @@ export function refreshToken(
   clientId: string,
   clientSecret: string
 ): Promise<InitiateAuthCommandOutput> {
-  console.info(`Refreshing token...`);
-
   const initiateAuthParams = {
     AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
     ClientId: clientId,

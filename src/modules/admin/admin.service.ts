@@ -11,7 +11,6 @@ import {
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { Moment } from 'moment-timezone';
 import { ExtendedJwtPayload } from 'src/types/jwt.types';
 import * as repository from './admin.repository';
 import { GuardOptions } from 'src/types/system.types';
@@ -148,25 +147,6 @@ export function refreshAuthenticatedJwt(
   return refreshToken(cognitoClient, REFRESH_TOKEN, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 }
 
-export function generateAnonymousJwt(id: string, sub: string, exp: Moment): string {
-  const payload = <ExtendedJwtPayload>{
-    id,
-    sub,
-    exp: exp.unix(),
-    grant: process.env.JWT_ANONYMOUS_GRANT
-  };
-
-  return jwt.sign(payload, process.env.JWT_SIGNATURE!);
-}
-
-export async function completeAuthentication(logger: Logger, pgClient: PgClient, idToken: string) {
-  const { email_verified, sub: id } = <ExtendedJwtPayload>jwt.decode(idToken);
-
-  if (email_verified && id) {
-    return repository.setAuthenticationComplete(pgClient, id);
-  }
-}
-
 export async function getAuthenticatedUser(
   logger: Logger,
   pgClient: PgClient,
@@ -200,43 +180,6 @@ export async function getAuthenticatedUser(
   }
 
   return <User>(<unknown>user);
-}
-
-// export async function processDeleteAuthenticatedUser(
-//   logger: Logger,
-//   cognitoClient: CognitoIdentityProviderClient,
-//   accessToken: string
-// ): Promise<any> {
-//   logger.debug(`Deleting user...`);
-
-//   const deletUserParams = {
-//     AccessToken: accessToken
-//   };
-
-//   const deleteUserCommand = new DeleteUserCommand(deletUserParams);
-
-//   return cognitoClient.send(deleteUserCommand);
-// }
-
-export async function processValidateUsername(
-  logger: Logger,
-  pgClient: PgClient,
-  username: string,
-  existingUid?: string
-): Promise<boolean> {
-  const usernameRegex = new RegExp(/^[a-zA-Z0-9]{5,20}$/);
-
-  if (!username.match(usernameRegex)?.length) {
-    throw new Error('Username must be between 5 and 20 characters with no special characters');
-  }
-
-  const { rows } = await repository.validateUsername(pgClient, username, existingUid);
-
-  if (rows.length) {
-    throw new Error('Username unavailable');
-  }
-
-  return true;
 }
 
 export async function getUserByHashId(
