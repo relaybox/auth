@@ -4,7 +4,6 @@ import {
   verifyAuthenticatedJwt
 } from 'src/modules/auth/auth.service';
 import { PolicyEffect } from 'src/types/aws.types';
-import jwt from 'jsonwebtoken';
 
 export const handler = async (
   event: APIGatewayTokenAuthorizerEvent,
