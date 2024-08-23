@@ -252,7 +252,7 @@ export async function getAuthenticatedUser(
   event: APIGatewayProxyEvent,
   guardOptions?: GuardOptions
 ): Promise<User> {
-  logger.info(`Getting authenticated user data`, {
+  logger.debug(`Getting authenticated user data`, {
     id: event.requestContext.authorizer!.principalId
   });
 
@@ -286,7 +286,7 @@ export async function processDeleteAuthenticatedUser(
   cognitoClient: CognitoIdentityProviderClient,
   accessToken: string
 ): Promise<any> {
-  logger.info(`Deleting user...`);
+  logger.debug(`Deleting user...`);
 
   const deletUserParams = {
     AccessToken: accessToken
@@ -323,7 +323,7 @@ export async function getUserByHashId(
   pgClient: PgClient,
   hashId: string
 ): Promise<any> {
-  logger.info(`Getting user data by hash id`);
+  logger.debug(`Getting user data by hash id`);
 
   const { rows } = await repository.getUserByHashId(pgClient, hashId);
 
@@ -335,7 +335,7 @@ export async function saveUserVerification(
   pgClient: PgClient,
   id: string
 ): Promise<any> {
-  logger.info(`Getting user data by hash id`);
+  logger.debug(`Getting user data by hash id`);
 
   const { rows } = await repository.saveUserVerification(pgClient, id);
 
@@ -347,7 +347,7 @@ export function getUserNameFromEmail(email: string): string {
 }
 
 export async function getUserById(logger: Logger, pgClient: PgClient, uid: string): Promise<any> {
-  logger.info(`Getting user data by id`);
+  logger.debug(`Getting user data by id`);
 
   const { rows } = await repository.getUserById(pgClient, uid);
 
@@ -360,7 +360,7 @@ export function processUpdateUserAttributes(
   accessToken: string,
   userAttributes: { Name: string; Value: string }[]
 ): Promise<UpdateUserAttributesCommandOutput> {
-  logger.info(`Updating user auth attributes`, { userAttributes });
+  logger.debug(`Updating user auth attributes`, { userAttributes });
 
   const updateUserAttributesCommandInput = {
     AccessToken: accessToken,
@@ -380,7 +380,7 @@ export function processSendUserAttributesVerificationCode(
   accessToken: string,
   attributeName: string
 ): Promise<GetUserAttributeVerificationCodeCommandOutput> {
-  logger.info(`Sending user auth attribute update verification code`, { attributeName });
+  logger.debug(`Sending user auth attribute update verification code`, { attributeName });
 
   const getUserAttributeVerificationCodeCommandInput = {
     AccessToken: accessToken,
@@ -401,7 +401,7 @@ export function processConfirmUserAttributesVerificationCode(
   attributeName: string,
   verificationCode: string
 ): Promise<VerifyUserAttributeCommandOutput> {
-  logger.info(`Confirming user auth attribute update verification code`, { attributeName });
+  logger.debug(`Confirming user auth attribute update verification code`, { attributeName });
 
   const verifyUserAttributeCommandInput = {
     AccessToken: accessToken,
@@ -422,7 +422,7 @@ export function processSetUserMfaSmsPreference(
   accessToken: string,
   email: string
 ): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.info(`Setting mfa sms preferences`);
+  logger.debug(`Setting mfa sms preferences`);
 
   const adminSetUserMFAPreferenceCommandInput = {
     SMSMfaSettings: {
@@ -446,7 +446,7 @@ export function processAssociateSoftwareToken(
   cognitoClient: CognitoIdentityProviderClient,
   accessToken: string
 ): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.info(`Associating software token to user`);
+  logger.debug(`Associating software token to user`);
 
   const associateSoftwareTokenCommandInput = {
     AccessToken: accessToken
@@ -466,7 +466,7 @@ export function processVerifySoftwareToken(
   userCode: string,
   friendlyDeviceName?: string
 ): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.info(`Verifying software token`);
+  logger.debug(`Verifying software token`);
 
   const verifySoftwareTokenCommandInput = {
     AccessToken: accessToken,
@@ -488,7 +488,7 @@ export function processChallengeSoftwareToken(
   email: string,
   session: string
 ): Promise<any> {
-  logger.info(`Challenging mfa software token`);
+  logger.debug(`Challenging mfa software token`);
 
   const secretHash = generateAuthSecretHash(email);
 
@@ -517,7 +517,7 @@ export function processSetUserMfaTotpPreference(
   email: string,
   enabled: boolean
 ): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.info(`Setting mfa totp preferences`);
+  logger.debug(`Setting mfa totp preferences`);
 
   const adminSetUserMFAPreferenceCommandInput = {
     Username: email,
@@ -546,7 +546,7 @@ export async function setMfaEnabled(
   pgClient: PgClient,
   uid: string
 ): Promise<void> {
-  logger.info(`Saving mfa enabled`, { uid });
+  logger.debug(`Saving mfa enabled`, { uid });
 
   const result = await repository.setMfaEnabled(pgClient, uid);
 }
@@ -556,7 +556,7 @@ export async function setMfaDisabled(
   pgClient: PgClient,
   uid: string
 ): Promise<void> {
-  logger.info(`Saving mfa disabled`, { uid });
+  logger.debug(`Saving mfa disabled`, { uid });
 
   const result = await repository.setMfaDisabled(pgClient, uid);
 }
@@ -597,7 +597,7 @@ export function getAuthenticatedUserData(
   logger: Logger,
   event: APIGatewayProxyEvent
 ): AuthUserData {
-  logger.info(`Getting authenticated user data from token`);
+  logger.debug(`Getting authenticated user data from token`);
 
   try {
     const token = event.headers['Authorization']?.substring(7);
@@ -626,7 +626,7 @@ export async function getIdpAuthCredentials(
   logger: Logger,
   code: string
 ): Promise<OAuthTokenCredentials> {
-  logger.info(`Fetching auth credentials from cognito oauth token endpoint`);
+  logger.debug(`Fetching auth credentials from cognito oauth token endpoint`);
 
   const basicAuth = `Basic ${Buffer.from(`${COGNITO_CLIENT_ID}:${COGNITO_CLIENT_SECRET}`).toString(
     'base64'
@@ -658,7 +658,7 @@ export async function syncIdpUser(
   pgClient: PgClient,
   idToken: string
 ): Promise<void> {
-  logger.info(`Syncing idp user to local database`);
+  logger.debug(`Syncing idp user to local database`);
 
   const {
     email,
@@ -696,7 +696,7 @@ export async function getIdpUser(
   pgClient: PgClient,
   idToken: string
 ): Promise<User> {
-  logger.info(`Getting idp user from local database`);
+  logger.debug(`Getting idp user from local database`);
 
   const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
 
@@ -707,7 +707,7 @@ export async function getGitHubAuthToken(
   logger: Logger,
   event: APIGatewayProxyEvent
 ): Promise<any> {
-  logger.info(`Exchanging auth code for GitHub access tokens`);
+  logger.debug(`Exchanging auth code for GitHub access tokens`);
 
   try {
     const { client_id, client_secret, code } = await parser.parse(event);
@@ -737,7 +737,7 @@ export async function getGitHubAuthToken(
 }
 
 export async function getGitHubUserData(logger: Logger, authorization: string): Promise<any> {
-  logger.info(`Fetching GitHub user data`);
+  logger.debug(`Fetching GitHub user data`);
 
   try {
     const response = await fetch(`https://api.github.com/user`, {
@@ -761,7 +761,7 @@ export async function getGitHubUserPrimaryEmail(
   logger: Logger,
   authorization: string
 ): Promise<any> {
-  logger.info(`Fetching GitHub user email`);
+  logger.debug(`Fetching GitHub user email`);
 
   try {
     const response = await fetch(`https://api.github.com/user/emails`, {

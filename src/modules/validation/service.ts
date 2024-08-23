@@ -46,6 +46,8 @@ export async function getPermissions(
   keyId: string,
   inlinePermissions: any = {}
 ): Promise<Record<string, string[]> | string[]> {
+  logger.info(`Getting permissions for key`, { keyId });
+
   const { rows } = await getPermissionsByKeyId(pgClient, keyId);
 
   if (!rows.length) {

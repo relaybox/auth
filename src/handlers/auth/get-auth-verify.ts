@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import { getConnection } from 'src/util/db.util';
+import { getConnection } from 'src/lib/postgres';
 import { getSessionData } from 'src/modules/auth/auth.repository';
 import { getLogger } from 'src/util/logger.util';
 
