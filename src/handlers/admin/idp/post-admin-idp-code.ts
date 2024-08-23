@@ -5,7 +5,7 @@ import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { getPgClient } from 'src/lib/postgres';
 import { getIdpAuthCredentials, getIdpUser, syncIdpUser } from 'src/modules/idp/idp.service';
 
-const logger = getLogger('post-auth-idp-code');
+const logger = getLogger('post-admin-idp-code');
 
 async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,

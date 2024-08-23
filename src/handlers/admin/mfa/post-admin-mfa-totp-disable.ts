@@ -10,7 +10,7 @@ import {
   setMfaDisabled
 } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-totp-disable');
+const logger = getLogger('post-admin-mfa-totp-disable');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 

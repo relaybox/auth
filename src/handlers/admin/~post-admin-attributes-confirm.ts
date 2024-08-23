@@ -1,11 +1,15 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import { getAuthenticatedUserData, processAuthentication } from 'src/modules/auth/auth.service';
+import {
+  getAuthenticatedUserData,
+  processAuthentication,
+  processConfirmUserAttributesVerificationCode
+} from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { processSetUserMfaTotpPreference } from 'src/modules/mfa/mfa.service';
+import { processSetUserMfaSmsPreference } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-totp-enable');
+const logger = getLogger('post-admin-attributes-confirm');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 
@@ -16,23 +20,29 @@ export const handler: APIGatewayProxyHandler = async (
   context.callbackWaitsForEmptyEventLoop = false;
 
   try {
-    const { password } = JSON.parse(event.body!);
+    const { password, attributeName, verificationCode } = JSON.parse(event.body!);
     const { email } = getAuthenticatedUserData(logger, event);
 
     if (!password) {
-      return httpResponse._400({ message: 'Password required' });
+      return httpResponse._400({
+        message: 'password, attributeName name and verificationCode required'
+      });
     }
 
     const response = await processAuthentication(cognitoClient, email, password);
 
     const { AccessToken: accessToken } = response.AuthenticationResult!;
 
-    const result = await processSetUserMfaTotpPreference(
+    await processSetUserMfaSmsPreference(logger, cognitoClient, accessToken!, email);
+
+    return httpResponse._200({ message: 'placeholder' });
+
+    const result = await processConfirmUserAttributesVerificationCode(
       logger,
       cognitoClient,
       accessToken!,
-      email,
-      true
+      attributeName,
+      verificationCode
     );
 
     return httpResponse._200(result);

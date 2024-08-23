@@ -10,7 +10,7 @@ import {
   setMfaEnabled
 } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-totp-verify');
+const logger = getLogger('post-admin-mfa-totp-verify');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 

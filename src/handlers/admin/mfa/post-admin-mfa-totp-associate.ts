@@ -5,7 +5,7 @@ import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { generateTotpQrCodeUrl, processAssociateSoftwareToken } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-totp-associate');
+const logger = getLogger('post-admin-mfa-totp-associate');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 

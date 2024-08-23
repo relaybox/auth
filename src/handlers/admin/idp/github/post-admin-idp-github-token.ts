@@ -3,7 +3,7 @@ import { getLogger } from 'src/util/logger.util';
 import * as httpResponse from 'src/util/http.util';
 import { getGitHubAuthToken } from 'src/modules/idp/idp.service';
 
-const logger = getLogger('github-post-auth-token');
+const logger = getLogger('poat-admin-idp-github-token');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,

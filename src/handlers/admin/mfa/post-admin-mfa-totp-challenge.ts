@@ -4,7 +4,7 @@ import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { processChallengeSoftwareToken } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-totp-challenge');
+const logger = getLogger('post-admin-mfa-totp-challenge');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 
