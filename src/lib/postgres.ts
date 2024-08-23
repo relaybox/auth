@@ -23,7 +23,7 @@ export const client = new PgClient({
   ...(!DB_TLS_DISABLED && { ssl })
 });
 
-export async function getConnection(): Promise<PgClient> {
+export async function getPgClient(): Promise<PgClient> {
   await client.connect();
   return client;
 }

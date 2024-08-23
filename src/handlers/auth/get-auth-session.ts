@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 import { getSessionData } from 'src/modules/auth/auth.repository';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { getLogger } from 'src/util/logger.util';
@@ -13,7 +13,7 @@ async function lambdaProxyEventHandler(
 ): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const id = event.requestContext.authorizer!.principalId;

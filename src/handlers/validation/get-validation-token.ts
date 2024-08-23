@@ -6,7 +6,7 @@ import {
   getSecretKey,
   verifyAuthToken
 } from 'src/modules/validation/service';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
@@ -19,7 +19,7 @@ async function lambdaProxyEventHandler(
 ): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const token = event.headers.Authorization!.substring(7);

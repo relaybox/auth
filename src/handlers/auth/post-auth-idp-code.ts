@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 import { getIdpAuthCredentials, getIdpUser, syncIdpUser } from 'src/modules/auth/auth.service';
 
 const logger = getLogger('post-auth-idp-code');
@@ -15,7 +15,7 @@ async function lambdaProxyEventHandler(
 
   logger.info(`Retrieving idp credentials and syncing user`);
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const { code } = JSON.parse(event.body!);

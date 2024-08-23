@@ -8,7 +8,7 @@ import {
   setMfaEnabled
 } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 
 const logger = getLogger('post-auth-mfa-totp-verify');
@@ -21,7 +21,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const { password, userCode, friendlyDeviceName } = JSON.parse(event.body!);

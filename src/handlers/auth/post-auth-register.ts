@@ -6,7 +6,7 @@ import {
   processRegistration
 } from 'src/modules/auth/auth.service';
 import { syncUser } from 'src/modules/auth/auth.repository';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const body = JSON.parse(event.body!);

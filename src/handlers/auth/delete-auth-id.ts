@@ -8,7 +8,7 @@ import {
 } from 'src/modules/auth/auth.service';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { processPurgeUserData } from 'src/modules/users/users.service';
-import { getConnection } from 'src/lib/postgres';
+import { getPgClient } from 'src/lib/postgres';
 
 const logger = getLogger('delete-auth-id');
 
@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const pgClient = await getConnection();
+  const pgClient = await getPgClient();
 
   try {
     const { email, password } = JSON.parse(event.body!);
