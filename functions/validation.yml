@@ -1,0 +1,44 @@
+get-validation-token:
+  handler: src/handlers/validation/get-validation-token.handler
+  timeout: 30
+  events:
+    - ${self:custom.keepAlive}
+    - http:
+        path: /validation/token
+        method: get
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /validate-token
+        method: get
+        cors: ${self:custom.cors}
+
+get-validation-api-key:
+  handler: src/handlers/validation/get-validation-api-key.handler
+  timeout: 30
+  events:
+    - ${self:custom.keepAlive}
+    - http:
+        path: /validation/api-key
+        method: get
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /validate-api-key
+        method: get
+        cors: ${self:custom.cors}
+
+get-validationcredentials:
+  handler: src/handlers/validation/get-validation-credentials.handler
+  timeout: 30
+  events:
+    - ${self:custom.keepAlive}
+    - http:
+        path: /validation/credentials
+        method: get
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /credentials
+        method: get
+        cors: ${self:custom.cors}

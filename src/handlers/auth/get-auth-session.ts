@@ -1,12 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getConnection } from 'src/util/db.util';
 import * as httpResponse from 'src/util/http.util';
-import { getLogger } from 'src/util/logger.util';
+import { getConnection } from 'src/lib/postgres';
+import { getSessionData } from 'src/modules/auth/auth.repository';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { nanoid } from 'nanoid';
-import crypto from 'crypto';
+import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('get-credentials');
+const logger = getLogger('get-auth-session');
 
 async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
@@ -17,18 +16,17 @@ async function lambdaProxyEventHandler(
   const pgClient = await getConnection();
 
   try {
-    const appKeyId = nanoid(12);
-    const keyId = nanoid(12);
-    const secretKey = crypto.randomBytes(32).toString('hex');
+    const id = event.requestContext.authorizer!.principalId;
 
-    return httpResponse._200({
-      appKeyId,
-      keyId,
-      secretKey
-    });
+    const { rows } = await getSessionData(pgClient, id);
+
+    if (!rows.length) {
+      throw new Error('Invalid token');
+    }
+
+    return httpResponse._200(rows[0]);
   } catch (err: any) {
-    logger.error(err);
-    return httpResponse._500({ message: err.message });
+    return httpResponse._403({ message: err.message });
   } finally {
     pgClient.clean();
   }

@@ -1,11 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getClientCredentials, getPermissions, getSecretKey } from 'src/module/service';
-import { getConnection } from 'src/util/db.util';
+import {
+  decodeAuthToken,
+  getClientCredentials,
+  getPermissions,
+  getSecretKey,
+  verifyAuthToken
+} from 'src/modules/validation/service';
+import { getConnection } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 
-const logger = getLogger('get-validate-api-key');
+const logger = getLogger('get-validate-token');
 
 async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
@@ -16,27 +22,32 @@ async function lambdaProxyEventHandler(
   const pgClient = await getConnection();
 
   try {
-    const apiKey = event.headers.Authorization!.substring(7);
-    const clientId = event.headers['X-Ds-Client-Id'];
+    const token = event.headers.Authorization!.substring(7);
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
-    const [keyName, providedSecret] = apiKey.split(':');
-    const [appPid, keyId] = keyName.split('.');
+    const {
+      keyName,
+      clientId,
+      timestamp,
+      exp,
+      permissions: inlinePermissions
+    } = decodeAuthToken(token);
 
+    const [appPid, keyId] = keyName.split('.');
     const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 
-    if (providedSecret !== secretKey) {
-      throw new Error(`Invalid api key`);
-    }
+    verifyAuthToken(token, secretKey);
 
-    const clientCredentials = getClientCredentials(logger, appPid, clientId, connectionId);
-    const keyPermissions = await getPermissions(logger, pgClient, keyId);
+    const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
+    const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
 
     const sessionData = {
       appPid,
       keyId,
-      permissions: keyPermissions,
-      ...clientCredentials
+      exp,
+      timestamp,
+      permissions: sessionPermissions,
+      ...credentials
     };
 
     return httpResponse._200(sessionData);

@@ -55,7 +55,13 @@ custom:
 
   vars:
     ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, ''}
+    AUTH_HASH_ID_SECRET: ${env:AUTH_HASH_ID_SECRET, ''}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID, ''}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, ''}
+    COGNITO_CLIENT_SECRET: ${env:COGNITO_CLIENT_SECRET, ''}
+    COGNITO_OAUTH_CALLBACK_URL: ${env:COGNITO_OAUTH_CALLBACK_URL, ''}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, ''}
+    COGNITO_USER_POOL_DOMAIN: ${env:COGNITO_USER_POOL_DOMAIN, ''}
     DB_HOST: ${env:DB_HOST, ''}
     DB_NAME: ${env:DB_NAME, ''}
     DB_PORT: ${env:DB_PORT, ''}
@@ -105,32 +111,5 @@ package:
 variablesResolutionMode: 20210326
 
 functions:
-  get-validate-token:
-    handler: src/handlers/get-validate-token.handler
-    timeout: 30
-    events:
-      - ${self:custom.keepAlive}
-      - http:
-          path: /validate-token
-          method: get
-          cors: ${self:custom.cors}
-
-  get-validate-api-key:
-    handler: src/handlers/get-validate-api-key.handler
-    timeout: 30
-    events:
-      - ${self:custom.keepAlive}
-      - http:
-          path: /validate-api-key
-          method: get
-          cors: ${self:custom.cors}
-
-  get-credentials:
-    handler: src/handlers/get-credentials.handler
-    timeout: 30
-    events:
-      - ${self:custom.keepAlive}
-      - http:
-          path: /credentials
-          method: get
-          cors: ${self:custom.cors}
+  - ${file(./functions/auth.yml)}
+  - ${file(./functions/validation.yml)}
