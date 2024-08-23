@@ -87,65 +87,6 @@ post-auth-attributes-confirm:
         cors: ${self:custom.cors}
         authorizer: authenticated-authorizer
 
-# post-auth-mfa-sms-enable:
-#   handler: src/handlers/auth/post-auth-mfa-sms-enable.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/sms-enable
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: authenticated-authorizer
-
-# post-auth-mfa-totp-enable:
-#   handler: src/handlers/auth/post-auth-mfa-totp-enable.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/totp-enable
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: authenticated-authorizer
-
-# post-auth-mfa-totp-associate:
-#   handler: src/handlers/auth/post-auth-mfa-totp-associate.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/totp-associate
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: authenticated-authorizer
-
-# post-auth-mfa-totp-verify:
-#   handler: src/handlers/auth/post-auth-mfa-totp-verify.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/totp-verify
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: authenticated-authorizer
-
-# post-auth-mfa-totp-challenge:
-#   handler: src/handlers/auth/post-auth-mfa-totp-challenge.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/totp-challenge
-#         method: post
-#         cors: ${self:custom.cors}
-
-# post-auth-mfa-totp-disable:
-#   handler: src/handlers/auth/post-auth-mfa-totp-disable.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /auth/mfa/totp-disable
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: authenticated-authorizer
-
 get-auth-refresh:
   handler: src/handlers/auth/get-auth-refresh.handler
   timeout: 30
@@ -165,30 +106,3 @@ get-auth-session:
         method: get
         cors: ${self:custom.cors}
         authorizer: authenticated-authorizer
-
-post-auth-idp-code:
-  handler: src/handlers/auth/post-auth-idp-code.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/idp/code
-        method: post
-        cors: ${self:custom.cors}
-
-github-post-auth-token:
-  handler: src/handlers/auth/github/post-auth-token.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/github/token
-        method: post
-        cors: ${self:custom.cors}
-
-github-get-auth-user:
-  handler: src/handlers/auth/github/get-auth-user.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/github/user
-        method: get
-        cors: ${self:custom.cors}
