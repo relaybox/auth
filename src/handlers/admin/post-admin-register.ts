@@ -1,11 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { getUserNameFromEmail, processRegistration } from 'src/modules/auth/auth.service';
-import { syncUser } from 'src/modules/auth/auth.repository';
+import { syncUser } from 'src/modules/~auth/auth.repository';
 import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { generateAuthHashId } from 'src/util/hash.util';
+import { getUserNameFromEmail, processRegistration } from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-register');
 
@@ -24,7 +24,12 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const body = JSON.parse(event.body!);
     const { email, password } = body;
-    const { UserSub: cognitoSub } = await processRegistration(cognitoClient, email, password);
+    const { UserSub: cognitoSub } = await processRegistration(
+      logger,
+      cognitoClient,
+      email,
+      password
+    );
 
     const hashId = generateAuthHashId(email, AUTH_HASH_ID_SECRET);
     const username = getUserNameFromEmail(email);

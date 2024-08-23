@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { processForgotPassword } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
+import { processForgotPassword } from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-forgot-password');
 
@@ -21,7 +21,7 @@ export const handler: APIGatewayProxyHandler = async (
       return httpResponse._400({ message: 'Email address is required' });
     }
 
-    const forgotPasswordResponse = await processForgotPassword(cognitoClient, email);
+    const forgotPasswordResponse = await processForgotPassword(logger, cognitoClient, email);
 
     return httpResponse._200({ requestId: forgotPasswordResponse.$metadata.requestId });
   } catch (err: any) {

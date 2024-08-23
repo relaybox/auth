@@ -3,9 +3,10 @@ import {
   CognitoIdentityProviderClient,
   UserNotConfirmedException
 } from '@aws-sdk/client-cognito-identity-provider';
-import { formatAuthTokenResponse, processAuthentication } from 'src/modules/auth/auth.service';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
+import { processAuthentication } from 'src/modules/admin/admin.service';
+import { formatAuthTokenResponse } from 'src/lib/auth';
 
 const logger = getLogger('post-admin-login');
 
@@ -20,7 +21,7 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, password } = JSON.parse(event.body!);
 
-    const response = await processAuthentication(cognitoClient, email, password);
+    const response = await processAuthentication(logger, cognitoClient, email, password);
     const authTokenResponse = formatAuthTokenResponse(response);
 
     return httpResponse._200(authTokenResponse);

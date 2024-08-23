@@ -5,7 +5,7 @@ import {
   formatAuthTokenResponse,
   getAuthenticatedUserData,
   processAuthentication
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-auth-confirm-password');

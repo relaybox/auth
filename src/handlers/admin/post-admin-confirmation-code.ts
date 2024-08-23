@@ -2,13 +2,13 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import * as httpResponse from 'src/util/http.util';
 import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { getLogger } from 'src/util/logger.util';
+import { generateAuthHashId } from 'src/util/hash.util';
 import {
   getUserByHashId,
   processCodeConfirmation,
   saveUserVerification
-} from 'src/modules/auth/auth.service';
-import { getLogger } from 'src/util/logger.util';
-import { generateAuthHashId } from 'src/util/hash.util';
+} from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-confirmation-code');
 

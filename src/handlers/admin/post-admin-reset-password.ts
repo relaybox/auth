@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { processConfirmForgotPassword } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
+import { processConfirmForgotPassword } from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-reset-password');
 
@@ -22,6 +22,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const confirmPasswordResponse = await processConfirmForgotPassword(
+      logger,
       cognitoClient,
       email,
       password,

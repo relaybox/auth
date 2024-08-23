@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { getUserNameFromEmail, processRegistration } from 'src/modules/auth/auth.service';
-import { syncUser } from 'src/modules/auth/auth.repository';
+import { getUserNameFromEmail, processRegistration } from 'src/modules/~auth/auth.service';
+import { syncUser } from 'src/modules/~auth/auth.repository';
 import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';

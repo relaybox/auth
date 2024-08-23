@@ -3,7 +3,7 @@ import {
   CognitoIdentityProviderClient,
   UserNotConfirmedException
 } from '@aws-sdk/client-cognito-identity-provider';
-import { formatAuthTokenResponse, processAuthentication } from 'src/modules/auth/auth.service';
+import { formatAuthTokenResponse, processAuthentication } from 'src/modules/~auth/auth.service';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 

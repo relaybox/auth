@@ -4,10 +4,10 @@ import {
   getAuthenticatedUserData,
   processAuthentication,
   processConfirmUserAttributesVerificationCode
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { processSetUserMfaSmsPreference } from 'src/modules/mfa/mfa.service';
+import { processSetUserMfaSmsPreference } from 'src/modules/~mfa/mfa.service';
 
 const logger = getLogger('post-auth-attributes-confirm');
 

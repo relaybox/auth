@@ -3,7 +3,11 @@ import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { getPgClient } from 'src/lib/postgres';
-import { getIdpAuthCredentials, getIdpUser, syncIdpUser } from 'src/modules/idp/idp.service';
+import {
+  getIdpUser,
+  processGetIdpAuthCredentials,
+  syncIdpUser
+} from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-idp-code');
 
@@ -20,7 +24,7 @@ async function lambdaProxyEventHandler(
   try {
     const { code } = JSON.parse(event.body!);
 
-    const authCredentials = await getIdpAuthCredentials(logger, code);
+    const authCredentials = await processGetIdpAuthCredentials(logger, code);
 
     const {
       id_token: idToken,

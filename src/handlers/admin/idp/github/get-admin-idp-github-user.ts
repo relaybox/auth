@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getLogger } from 'src/util/logger.util';
 import * as httpResponse from 'src/util/http.util';
-import { getGitHubUserData, getGitHubUserPrimaryEmail } from 'src/modules/idp/idp.service';
+import { getGitHubUserData, getGitHubUserPrimaryEmail } from 'src/lib/auth';
 
 const logger = getLogger('get-admin-idp-github-user');
 
@@ -20,8 +20,8 @@ export const handler: APIGatewayProxyHandler = async (
       throw new Error(`Authorization header not found`);
     }
 
-    const userData = await getGitHubUserData(logger, authorization);
-    const userPrimaryEmail = await getGitHubUserPrimaryEmail(logger, authorization);
+    const userData = await getGitHubUserData(authorization);
+    const userPrimaryEmail = await getGitHubUserPrimaryEmail(authorization);
 
     return httpResponse._200({
       sub: userData.id,

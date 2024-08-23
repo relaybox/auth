@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { refreshAuthenticatedJwt } from 'src/modules/auth/auth.service';
+import { refreshAuthenticatedJwt } from 'src/modules/~auth/auth.service';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 

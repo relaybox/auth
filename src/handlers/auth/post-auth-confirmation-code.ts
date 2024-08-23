@@ -6,7 +6,7 @@ import {
   getUserByHashId,
   processCodeConfirmation,
   saveUserVerification
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { generateAuthHashId } from 'src/util/hash.util';
 

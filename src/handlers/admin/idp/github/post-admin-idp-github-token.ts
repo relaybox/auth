@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getLogger } from 'src/util/logger.util';
 import * as httpResponse from 'src/util/http.util';
-import { getGitHubAuthToken } from 'src/modules/idp/idp.service';
+import { getGitHubAuthToken } from 'src/lib/auth';
 
 const logger = getLogger('poat-admin-idp-github-token');
 
@@ -14,7 +14,7 @@ export const handler: APIGatewayProxyHandler = async (
   logger.info(`Fetching GitHub id token from authorization code flow`);
 
   try {
-    const token = await getGitHubAuthToken(logger, event);
+    const token = await getGitHubAuthToken(event);
 
     return httpResponse._200(token);
   } catch (err: any) {

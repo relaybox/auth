@@ -73,36 +73,6 @@ get-admin-session:
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
 
-# post-admin-attributes:
-#   handler: src/handlers/admin/post-admin-attributes.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /admin/attributes
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: admin-authorizer
-
-# post-admin-attributes-verify:
-#   handler: src/handlers/admin/post-admin-attributes-verify.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /admin/attributes/verify
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: admin-authorizer
-
-# post-admin-attributes-confirm:
-#   handler: src/handlers/admin/post-admin-attributes-confirm.handler
-#   timeout: 30
-#   events:
-#     - http:
-#         path: /admin/attributes/confirm
-#         method: post
-#         cors: ${self:custom.cors}
-#         authorizer: admin-authorizer
-
 post-admin-mfa-sms-enable:
   handler: src/handlers/admin/mfa/post-admin-mfa-sms-enable.handler
   timeout: 30

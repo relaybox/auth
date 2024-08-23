@@ -4,10 +4,10 @@ import { ExtendedJwtPayload } from 'src/types/jwt.types';
 import { Logger } from 'winston';
 import PgClient from 'serverless-postgres';
 import jwt from 'jsonwebtoken';
-import { getUserById, getUserNameFromEmail } from '../auth/auth.service';
+import { getUserById, getUserNameFromEmail } from '../~auth/auth.service';
 import * as repository from './idp.repository';
 import { AuthConflictError } from 'src/lib/errors';
-import { User } from '../auth/auth.types';
+import { User } from '../~auth/auth.types';
 import parser from 'lambda-multipart-parser';
 import { generateAuthHashId } from 'src/util/hash.util';
 
@@ -49,55 +49,55 @@ export async function getIdpAuthCredentials(
   return <OAuthTokenCredentials>data;
 }
 
-export async function syncIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<void> {
-  logger.debug(`Syncing idp user to local database`);
+// export async function syncIdpUser(
+//   logger: Logger,
+//   pgClient: PgClient,
+//   idToken: string
+// ): Promise<void> {
+//   logger.debug(`Syncing idp user to local database`);
 
-  const {
-    email,
-    sub: id,
-    identities,
-    preferred_username: preferredUsername
-  } = <ExtendedJwtPayload>jwt.decode(idToken);
+//   const {
+//     email,
+//     sub: id,
+//     identities,
+//     preferred_username: preferredUsername
+//   } = <ExtendedJwtPayload>jwt.decode(idToken);
 
-  const hashId = generateAuthHashId(email!, AUTH_HASH_ID_SECRET);
-  const username = preferredUsername || getUserNameFromEmail(email!);
+//   const hashId = generateAuthHashId(email!, AUTH_HASH_ID_SECRET);
+//   const username = preferredUsername || getUserNameFromEmail(email!);
 
-  if (!id || !username || !hashId) {
-    throw new Error(`Failed to parse user data from token`);
-  }
+//   if (!id || !username || !hashId) {
+//     throw new Error(`Failed to parse user data from token`);
+//   }
 
-  try {
-    await repository.syncIdpUser(
-      pgClient,
-      id,
-      username,
-      hashId,
-      <string>identities?.[0]?.providerName
-    );
-  } catch (err: any) {
-    if (err.message.includes(`duplicate key`)) {
-      throw new AuthConflictError(`Existing user found`);
-    } else {
-      throw err;
-    }
-  }
-}
+//   try {
+//     await repository.syncIdpUser(
+//       pgClient,
+//       id,
+//       username,
+//       hashId,
+//       <string>identities?.[0]?.providerName
+//     );
+//   } catch (err: any) {
+//     if (err.message.includes(`duplicate key`)) {
+//       throw new AuthConflictError(`Existing user found`);
+//     } else {
+//       throw err;
+//     }
+//   }
+// }
 
-export async function getIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<User> {
-  logger.debug(`Getting idp user from local database`);
+// export async function getIdpUser(
+//   logger: Logger,
+//   pgClient: PgClient,
+//   idToken: string
+// ): Promise<User> {
+//   logger.debug(`Getting idp user from local database`);
 
-  const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
+//   const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
 
-  return getUserById(logger, pgClient, uid!);
-}
+//   return getUserById(logger, pgClient, uid!);
+// }
 
 export async function getGitHubAuthToken(
   logger: Logger,

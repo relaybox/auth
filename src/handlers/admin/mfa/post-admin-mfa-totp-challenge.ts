@@ -2,7 +2,7 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { processChallengeSoftwareToken } from 'src/modules/mfa/mfa.service';
+import { processChallengeSoftwareToken } from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-mfa-totp-challenge');
 

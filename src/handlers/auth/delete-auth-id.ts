@@ -5,7 +5,7 @@ import {
   getAuthenticatedUser,
   processAuthentication,
   processDeleteAuthenticatedUser
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { processPurgeUserData } from 'src/modules/users/users.service';
 import { getPgClient } from 'src/lib/postgres';

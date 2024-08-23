@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
 import { getPgClient } from 'src/lib/postgres';
-import { setAuthenticationComplete } from 'src/modules/auth/auth.repository';
+import { setAuthenticationComplete } from 'src/modules/~auth/auth.repository';
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,

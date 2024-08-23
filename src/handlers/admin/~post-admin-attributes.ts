@@ -4,7 +4,7 @@ import {
   getAuthenticatedUserData,
   processAuthentication,
   processUpdateUserAttributes
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 

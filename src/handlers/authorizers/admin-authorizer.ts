@@ -2,7 +2,7 @@ import { AuthResponse, APIGatewayTokenAuthorizerEvent } from 'aws-lambda';
 import {
   generateAuthResponsePolicyDocument,
   verifyAuthenticatedJwt
-} from 'src/modules/auth/auth.service';
+} from 'src/modules/~auth/auth.service';
 import { PolicyEffect } from 'src/types/aws.types';
 
 export const handler = async (

@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { confirmSession } from 'src/modules/auth/auth.repository';
+import { confirmSession } from 'src/modules/~auth/auth.repository';
 import * as httpResponse from 'src/util/http.util';
-import { processValidateUsername } from 'src/modules/auth/auth.service';
+import { processValidateUsername } from 'src/modules/~auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { getPgClient } from 'src/lib/postgres';
 
