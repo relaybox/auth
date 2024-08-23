@@ -1,0 +1,41 @@
+post-idp-code:
+  handler: src/handlers/idp/post-idp-code.handler
+  timeout: 30
+  events:
+    - http:
+        path: /idp/code
+        method: post
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /auth/idp/code
+        method: post
+        cors: ${self:custom.cors}
+
+github-post-token:
+  handler: src/handlers/idp/github/post-token.handler
+  timeout: 30
+  events:
+    - http:
+        path: /idp/github/token
+        method: post
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /auth/github/token
+        method: post
+        cors: ${self:custom.cors}
+
+github-get-user:
+  handler: src/handlers/idp/github/get-user.handler
+  timeout: 30
+  events:
+    - http:
+        path: /idp/github/user
+        method: get
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /auth/github/user
+        method: get
+        cors: ${self:custom.cors}

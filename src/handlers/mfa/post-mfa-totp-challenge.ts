@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import { processChallengeSoftwareToken } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { processChallengeSoftwareToken } from 'src/modules/mfa/mfa.service';
 
 const logger = getLogger('post-auth-mfa-totp-challenge');
 

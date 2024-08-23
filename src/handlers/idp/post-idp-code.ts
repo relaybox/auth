@@ -3,7 +3,7 @@ import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { getPgClient } from 'src/lib/postgres';
-import { getIdpAuthCredentials, getIdpUser, syncIdpUser } from 'src/modules/auth/auth.service';
+import { getIdpAuthCredentials, getIdpUser, syncIdpUser } from 'src/modules/idp/idp.service';
 
 const logger = getLogger('post-auth-idp-code');
 

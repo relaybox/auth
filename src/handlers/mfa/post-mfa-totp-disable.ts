@@ -1,14 +1,14 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import {
-  getAuthenticatedUserData,
-  processChallengeSoftwareToken,
-  processSetUserMfaTotpPreference,
-  setMfaDisabled
-} from 'src/modules/auth/auth.service';
+import { getAuthenticatedUserData } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import {
+  processChallengeSoftwareToken,
+  processSetUserMfaTotpPreference,
+  setMfaDisabled
+} from 'src/modules/mfa/mfa.service';
 
 const logger = getLogger('post-auth-mfa-totp-disable');
 

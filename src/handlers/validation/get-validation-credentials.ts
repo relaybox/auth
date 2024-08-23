@@ -6,7 +6,7 @@ import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
-const logger = getLogger('get-credentials');
+const logger = getLogger('get-validation-credentials');
 
 async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,

@@ -1,15 +1,12 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
-import {
-  getAuthenticatedUserData,
-  processAuthentication,
-  processSetUserMfaSmsPreference
-} from 'src/modules/auth/auth.service';
+import { getAuthenticatedUserData, processAuthentication } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { generateTotpQrCodeUrl, processAssociateSoftwareToken } from 'src/modules/mfa/mfa.service';
 
-const logger = getLogger('post-auth-mfa-sms-enable');
+const logger = getLogger('post-auth-mfa-totp-associate');
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 
@@ -33,10 +30,15 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { AccessToken: accessToken } = response.AuthenticationResult!;
 
-    const result = await processSetUserMfaSmsPreference(logger, cognitoClient, accessToken!, email);
+    const result = await processAssociateSoftwareToken(logger, cognitoClient, accessToken!);
 
-    return httpResponse._200(result);
+    // @ts-ignore
+    const secretCode = result.SecretCode;
+    const qrCodeUrl = await generateTotpQrCodeUrl(secretCode, email);
+
+    return httpResponse._200({ url: qrCodeUrl });
   } catch (err: any) {
+    logger.error(`Failed to associate mfa`, { err });
     return httpResponse._422({ message: err.message });
   } finally {
     pgClient.clean();

@@ -3,14 +3,16 @@ import * as httpResponse from 'src/util/http.util';
 import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import {
-  generateAuthHashId,
   getUserByHashId,
   processCodeConfirmation,
   saveUserVerification
 } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
+import { generateAuthHashId } from 'src/util/hash.util';
 
 const logger = getLogger('post-auth-confirmation-code');
+
+const AUTH_HASH_ID_SECRET = process.env.AUTH_HASH_ID_SECRET || '';
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 
@@ -30,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const codeConfirmation = await processCodeConfirmation(cognitoClient, email, confirmationCode);
-    const hashId = generateAuthHashId(email);
+    const hashId = generateAuthHashId(email, AUTH_HASH_ID_SECRET);
 
     const { id } = await getUserByHashId(logger, pgClient, hashId);
 

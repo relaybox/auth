@@ -87,64 +87,64 @@ post-auth-attributes-confirm:
         cors: ${self:custom.cors}
         authorizer: authenticated-authorizer
 
-post-auth-mfa-sms-enable:
-  handler: src/handlers/auth/post-auth-mfa-sms-enable.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/sms-enable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
+# post-auth-mfa-sms-enable:
+#   handler: src/handlers/auth/post-auth-mfa-sms-enable.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/sms-enable
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
 
-post-auth-mfa-totp-enable:
-  handler: src/handlers/auth/post-auth-mfa-totp-enable.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/totp-enable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
+# post-auth-mfa-totp-enable:
+#   handler: src/handlers/auth/post-auth-mfa-totp-enable.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/totp-enable
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
 
-post-auth-mfa-totp-associate:
-  handler: src/handlers/auth/post-auth-mfa-totp-associate.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/totp-associate
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
+# post-auth-mfa-totp-associate:
+#   handler: src/handlers/auth/post-auth-mfa-totp-associate.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/totp-associate
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
 
-post-auth-mfa-totp-verify:
-  handler: src/handlers/auth/post-auth-mfa-totp-verify.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/totp-verify
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
+# post-auth-mfa-totp-verify:
+#   handler: src/handlers/auth/post-auth-mfa-totp-verify.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/totp-verify
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
 
-post-auth-mfa-totp-challenge:
-  handler: src/handlers/auth/post-auth-mfa-totp-challenge.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/totp-challenge
-        method: post
-        cors: ${self:custom.cors}
+# post-auth-mfa-totp-challenge:
+#   handler: src/handlers/auth/post-auth-mfa-totp-challenge.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/totp-challenge
+#         method: post
+#         cors: ${self:custom.cors}
 
-post-auth-mfa-totp-disable:
-  handler: src/handlers/auth/post-auth-mfa-totp-disable.handler
-  timeout: 30
-  events:
-    - http:
-        path: /auth/mfa/totp-disable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: authenticated-authorizer
+# post-auth-mfa-totp-disable:
+#   handler: src/handlers/auth/post-auth-mfa-totp-disable.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /auth/mfa/totp-disable
+#         method: post
+#         cors: ${self:custom.cors}
+#         authorizer: authenticated-authorizer
 
 get-auth-refresh:
   handler: src/handlers/auth/get-auth-refresh.handler

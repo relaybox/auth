@@ -5,7 +5,7 @@ import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 
-const logger = getLogger('get-validate-api-key');
+const logger = getLogger('get-validation-api-key');
 
 async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,

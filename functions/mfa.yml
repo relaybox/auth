@@ -1,0 +1,93 @@
+post-auth-mfa-sms-enable:
+  handler: src/handlers/mfa/post-mfa-sms-enable.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/sms-enable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+    # Legacy
+    - http:
+        path: /auth/mfa/sms-enable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+
+post-auth-mfa-totp-enable:
+  handler: src/handlers/mfa/post-mfa-totp-enable.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/totp-enable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+    # Legacy
+    - http:
+        path: /auth/mfa/totp-enable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+
+post-auth-mfa-totp-associate:
+  handler: src/handlers/mfa/post-mfa-totp-associate.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/totp-associate
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+    # Legacy
+    - http:
+        path: /auth/mfa/totp-associate
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+
+post-auth-mfa-totp-verify:
+  handler: src/handlers/mfa/post-mfa-totp-verify.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/totp-verify
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+    # Legacy
+    - http:
+        path: /auth/mfa/totp-verify
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+
+post-auth-mfa-totp-challenge:
+  handler: src/handlers/mfa/post-mfa-totp-challenge.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/totp-challenge
+        method: post
+        cors: ${self:custom.cors}
+    # Legacy
+    - http:
+        path: /auth/mfa/totp-challenge
+        method: post
+        cors: ${self:custom.cors}
+
+post-auth-mfa-totp-disable:
+  handler: src/handlers/mfa/post-mfa-totp-disable.handler
+  timeout: 30
+  events:
+    - http:
+        path: /mfa/totp-disable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer
+    # Legacy
+    - http:
+        path: /auth/mfa/totp-disable
+        method: post
+        cors: ${self:custom.cors}
+        authorizer: authenticated-authorizer

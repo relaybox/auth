@@ -1,9 +1,5 @@
 import {
-  AdminSetUserMFAPreferenceCommand,
-  AdminSetUserMFAPreferenceCommandOutput,
-  AssociateSoftwareTokenCommand,
   AuthFlowType,
-  ChallengeNameType,
   CognitoIdentityProviderClient,
   ConfirmForgotPasswordCommand,
   ConfirmSignUpCommand,
@@ -13,12 +9,10 @@ import {
   GetUserAttributeVerificationCodeCommandOutput,
   InitiateAuthCommand,
   InitiateAuthCommandOutput,
-  RespondToAuthChallengeCommand,
   SignUpCommand,
   SignUpCommandOutput,
   UpdateUserAttributesCommand,
   UpdateUserAttributesCommandOutput,
-  VerifySoftwareTokenCommand,
   VerifyUserAttributeCommand,
   VerifyUserAttributeCommandOutput
 } from '@aws-sdk/client-cognito-identity-provider';
@@ -28,21 +22,14 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Moment } from 'moment-timezone';
 import { PolicyEffect } from 'src/types/aws.types';
 import { ExtendedJwtPayload } from 'src/types/jwt.types';
-import * as crypto from 'crypto';
 import * as repository from './auth.repository';
 import PgClient from 'serverless-postgres';
 import { User } from './auth.types';
 import { GuardOptions } from 'src/types/system.types';
 import { Logger } from 'winston';
-import { AuthConflictError, ForbiddenError, UnauthorizedError } from 'src/lib/errors';
-import qrcode from 'qrcode';
-import {
-  AuthMfaChallengeResponse,
-  AuthTokenResponse,
-  AuthUserData,
-  OAuthTokenCredentials
-} from 'src/types/auth.types';
-import parser from 'lambda-multipart-parser';
+import { ForbiddenError, UnauthorizedError } from 'src/lib/errors';
+import { AuthMfaChallengeResponse, AuthTokenResponse, AuthUserData } from 'src/types/auth.types';
+import { generateAuthSecretHash } from 'src/util/hash.util';
 
 const COGNITO_VERIFIER_TOKEN = 'id';
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
@@ -54,20 +41,6 @@ const COGNITO_SIGNUP_USER_ATTRIBUTE_NAME = 'email';
 const AUTH_HASH_ID_SECRET = process.env.AUTH_HASH_ID_SECRET || '';
 const OAUTH_GRANT_TYPE_AUTH_CODE = 'authorization_code';
 
-function generateAuthSecretHash(field: string): string {
-  return crypto
-    .createHmac('SHA256', COGNITO_CLIENT_SECRET)
-    .update(field + COGNITO_CLIENT_ID)
-    .digest('base64');
-}
-
-export function generateAuthHashId(email: string): string {
-  return crypto
-    .createHmac('SHA256', AUTH_HASH_ID_SECRET)
-    .update(email + AUTH_HASH_ID_SECRET)
-    .digest('base64');
-}
-
 export function processAuthentication(
   cognitoClient: CognitoIdentityProviderClient,
   email: string,
@@ -75,7 +48,7 @@ export function processAuthentication(
 ): Promise<InitiateAuthCommandOutput> {
   console.info(`Authenticating...`);
 
-  const secretHash = generateAuthSecretHash(email);
+  const secretHash = generateAuthSecretHash(email, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 
   const initiateAuthParams = {
     AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
@@ -99,7 +72,7 @@ export function processRegistration(
 ): Promise<SignUpCommandOutput> {
   console.info(`Registering...`);
 
-  const secretHash = generateAuthSecretHash(email);
+  const secretHash = generateAuthSecretHash(email, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 
   const signUpParams = {
     ClientId: COGNITO_CLIENT_ID,
@@ -124,7 +97,7 @@ export function processCodeConfirmation(
   email: string,
   confirmationCode: string
 ) {
-  const secretHash = generateAuthSecretHash(email);
+  const secretHash = generateAuthSecretHash(email, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 
   const confirmSignUpParams = {
     ClientId: COGNITO_CLIENT_ID,
@@ -139,7 +112,7 @@ export function processCodeConfirmation(
 }
 
 export function processForgotPassword(cognitoClient: CognitoIdentityProviderClient, email: string) {
-  const secretHash = generateAuthSecretHash(email);
+  const secretHash = generateAuthSecretHash(email, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 
   const forgotPasswordParams = {
     ClientId: COGNITO_CLIENT_ID,
@@ -158,7 +131,7 @@ export function processConfirmForgotPassword(
   password: string,
   confirmationCode: string
 ) {
-  const secretHash = generateAuthSecretHash(email);
+  const secretHash = generateAuthSecretHash(email, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 
   const confirmForgotPasswordParams = {
     ClientId: COGNITO_CLIENT_ID,
@@ -416,151 +389,6 @@ export function processConfirmUserAttributesVerificationCode(
   return cognitoClient.send(verifyUserAttributeCommand);
 }
 
-export function processSetUserMfaSmsPreference(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  email: string
-): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.debug(`Setting mfa sms preferences`);
-
-  const adminSetUserMFAPreferenceCommandInput = {
-    SMSMfaSettings: {
-      Enabled: true,
-      PreferredMfa: true
-    },
-    Username: email,
-    UserPoolId: COGNITO_USER_POOL_ID!,
-    AccessToken: accessToken
-  };
-
-  const adminSetUserMFAPreferenceCommand = new AdminSetUserMFAPreferenceCommand(
-    adminSetUserMFAPreferenceCommandInput
-  );
-
-  return cognitoClient.send(adminSetUserMFAPreferenceCommand);
-}
-
-export function processAssociateSoftwareToken(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string
-): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.debug(`Associating software token to user`);
-
-  const associateSoftwareTokenCommandInput = {
-    AccessToken: accessToken
-  };
-
-  const associateSoftwareTokenCommand = new AssociateSoftwareTokenCommand(
-    associateSoftwareTokenCommandInput
-  );
-
-  return cognitoClient.send(associateSoftwareTokenCommand);
-}
-
-export function processVerifySoftwareToken(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  userCode: string,
-  friendlyDeviceName?: string
-): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.debug(`Verifying software token`);
-
-  const verifySoftwareTokenCommandInput = {
-    AccessToken: accessToken,
-    UserCode: userCode
-    // FriendlyDeviceName: friendlyDeviceName
-  };
-
-  const verifySoftwareTokenCommand = new VerifySoftwareTokenCommand(
-    verifySoftwareTokenCommandInput
-  );
-
-  return cognitoClient.send(verifySoftwareTokenCommand);
-}
-
-export function processChallengeSoftwareToken(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  userCode: string,
-  email: string,
-  session: string
-): Promise<any> {
-  logger.debug(`Challenging mfa software token`);
-
-  const secretHash = generateAuthSecretHash(email);
-
-  const respondToAuthChallengeCommandInput = {
-    ChallengeName: ChallengeNameType.SOFTWARE_TOKEN_MFA,
-    ClientId: COGNITO_CLIENT_ID,
-    Session: session,
-    ChallengeResponses: {
-      SECRET_HASH: secretHash,
-      USERNAME: email,
-      SOFTWARE_TOKEN_MFA_CODE: userCode
-    }
-  };
-
-  const respondToAuthChallengeCommand = new RespondToAuthChallengeCommand(
-    respondToAuthChallengeCommandInput
-  );
-
-  return cognitoClient.send(respondToAuthChallengeCommand);
-}
-
-export function processSetUserMfaTotpPreference(
-  logger: Logger,
-  cognitoClient: CognitoIdentityProviderClient,
-  accessToken: string,
-  email: string,
-  enabled: boolean
-): Promise<AdminSetUserMFAPreferenceCommandOutput> {
-  logger.debug(`Setting mfa totp preferences`);
-
-  const adminSetUserMFAPreferenceCommandInput = {
-    Username: email,
-    UserPoolId: COGNITO_USER_POOL_ID!,
-    AccessToken: accessToken,
-    SoftwareTokenMfaSettings: {
-      Enabled: enabled,
-      PreferredMfa: enabled
-    }
-  };
-
-  const adminSetUserMFAPreferenceCommand = new AdminSetUserMFAPreferenceCommand(
-    adminSetUserMFAPreferenceCommandInput
-  );
-
-  return cognitoClient.send(adminSetUserMFAPreferenceCommand);
-}
-
-export function generateTotpQrCodeUrl(secretCode: string, email: string): Promise<string> {
-  const totpUri = `otpauth://totp/${email}?secret=${secretCode}&issuer=relayBox`;
-  return qrcode.toDataURL(totpUri);
-}
-
-export async function setMfaEnabled(
-  logger: Logger,
-  pgClient: PgClient,
-  uid: string
-): Promise<void> {
-  logger.debug(`Saving mfa enabled`, { uid });
-
-  const result = await repository.setMfaEnabled(pgClient, uid);
-}
-
-export async function setMfaDisabled(
-  logger: Logger,
-  pgClient: PgClient,
-  uid: string
-): Promise<void> {
-  logger.debug(`Saving mfa disabled`, { uid });
-
-  const result = await repository.setMfaDisabled(pgClient, uid);
-}
-
 export function formatAuthTokenResponse(
   response: InitiateAuthCommandOutput
 ): AuthTokenResponse | AuthMfaChallengeResponse {
@@ -618,167 +446,6 @@ export function getAuthenticatedUserData(
     };
   } catch (err: any) {
     logger.error(`Failed to parse user data`);
-    throw err;
-  }
-}
-
-export async function getIdpAuthCredentials(
-  logger: Logger,
-  code: string
-): Promise<OAuthTokenCredentials> {
-  logger.debug(`Fetching auth credentials from cognito oauth token endpoint`);
-
-  const basicAuth = `Basic ${Buffer.from(`${COGNITO_CLIENT_ID}:${COGNITO_CLIENT_SECRET}`).toString(
-    'base64'
-  )}`;
-
-  const requestBody = new URLSearchParams({
-    grant_type: OAUTH_GRANT_TYPE_AUTH_CODE,
-    client_id: COGNITO_CLIENT_ID,
-    code,
-    redirect_uri: COGNITO_OAUTH_CALLBACK_URL
-  });
-
-  const response = await fetch(`${COGNITO_USER_POOL_DOMAIN}/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      Authorization: basicAuth,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: requestBody.toString()
-  });
-
-  const data = await response.json();
-
-  return <OAuthTokenCredentials>data;
-}
-
-export async function syncIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<void> {
-  logger.debug(`Syncing idp user to local database`);
-
-  const {
-    email,
-    sub: id,
-    identities,
-    preferred_username: preferredUsername
-  } = <ExtendedJwtPayload>jwt.decode(idToken);
-
-  const hashId = generateAuthHashId(email!);
-  const username = preferredUsername || getUserNameFromEmail(email!);
-
-  if (!id || !username || !hashId) {
-    throw new Error(`Failed to parse user data from token`);
-  }
-
-  try {
-    await repository.syncIdpUser(
-      pgClient,
-      id,
-      username,
-      hashId,
-      <string>identities?.[0]?.providerName
-    );
-  } catch (err: any) {
-    if (err.message.includes(`duplicate key`)) {
-      throw new AuthConflictError(`Existing user found`);
-    } else {
-      throw err;
-    }
-  }
-}
-
-export async function getIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<User> {
-  logger.debug(`Getting idp user from local database`);
-
-  const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
-
-  return getUserById(logger, pgClient, uid!);
-}
-
-export async function getGitHubAuthToken(
-  logger: Logger,
-  event: APIGatewayProxyEvent
-): Promise<any> {
-  logger.debug(`Exchanging auth code for GitHub access tokens`);
-
-  try {
-    const { client_id, client_secret, code } = await parser.parse(event);
-
-    const queryParams = new URLSearchParams({
-      client_id,
-      client_secret,
-      code
-    });
-
-    const requestUrl = `https://github.com/login/oauth/access_token?${queryParams}`;
-
-    const response = await fetch(requestUrl, {
-      method: 'POST',
-      headers: {
-        accept: 'application/json'
-      }
-    });
-
-    const token = await response.json();
-
-    return token;
-  } catch (err: any) {
-    logger.error(`Failed to get GitHub auth token`, { err });
-    throw err;
-  }
-}
-
-export async function getGitHubUserData(logger: Logger, authorization: string): Promise<any> {
-  logger.debug(`Fetching GitHub user data`);
-
-  try {
-    const response = await fetch(`https://api.github.com/user`, {
-      method: 'GET',
-      headers: {
-        authorization,
-        accept: 'application/json'
-      }
-    });
-
-    const userData = <any>await response.json();
-
-    return userData;
-  } catch (err: any) {
-    logger.error(`Failed to fetch GitHub user data`, { err });
-    throw err;
-  }
-}
-
-export async function getGitHubUserPrimaryEmail(
-  logger: Logger,
-  authorization: string
-): Promise<any> {
-  logger.debug(`Fetching GitHub user email`);
-
-  try {
-    const response = await fetch(`https://api.github.com/user/emails`, {
-      method: 'GET',
-      headers: {
-        authorization,
-        accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    });
-
-    const emailData = <any>await response.json();
-    const primaryEmail = emailData.find((data: any) => data.primary);
-
-    return primaryEmail.email;
-  } catch (err: any) {
-    logger.error(`Failed to fetch GitHub user primary email`, { err });
     throw err;
   }
 }

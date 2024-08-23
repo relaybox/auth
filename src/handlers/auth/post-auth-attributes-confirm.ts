@@ -3,11 +3,11 @@ import * as httpResponse from 'src/util/http.util';
 import {
   getAuthenticatedUserData,
   processAuthentication,
-  processConfirmUserAttributesVerificationCode,
-  processSetUserMfaSmsPreference
+  processConfirmUserAttributesVerificationCode
 } from 'src/modules/auth/auth.service';
 import { getLogger } from 'src/util/logger.util';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { processSetUserMfaSmsPreference } from 'src/modules/mfa/mfa.service';
 
 const logger = getLogger('post-auth-attributes-confirm');
 
