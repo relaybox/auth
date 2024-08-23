@@ -9,13 +9,11 @@ import {
   ConfirmForgotPasswordCommandOutput
 } from '@aws-sdk/client-cognito-identity-provider';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import { APIGatewayProxyEvent } from 'aws-lambda';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { ExtendedJwtPayload } from 'src/types/jwt.types';
 import * as repository from './admin.repository';
-import { GuardOptions } from 'src/types/system.types';
 import { Logger } from 'winston';
-import { AuthConflictError, ForbiddenError, UnauthorizedError } from 'src/lib/errors';
+import { AuthConflictError } from 'src/lib/errors';
 import { OAuthTokenCredentials, User } from 'src/types/auth.types';
 import { generateAuthHashId, generateAuthSecretHash } from 'src/util/hash.util';
 import {
@@ -147,41 +145,6 @@ export function refreshAuthenticatedJwt(
   return refreshToken(cognitoClient, REFRESH_TOKEN, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 }
 
-export async function getAuthenticatedUser(
-  logger: Logger,
-  pgClient: PgClient,
-  event: APIGatewayProxyEvent,
-  guardOptions?: GuardOptions
-): Promise<User> {
-  logger.debug(`Getting authenticated user data`, {
-    id: event.requestContext.authorizer!.principalId
-  });
-
-  const id = event.requestContext.authorizer!.principalId;
-
-  const { rows: users } = await repository.getUserById(pgClient, id);
-
-  if (!users.length) {
-    throw new UnauthorizedError('Invalid authentication credentials');
-  }
-
-  const user = users[0];
-
-  if (guardOptions?.matchUidParam && user.id !== guardOptions.matchUidParam) {
-    throw new ForbiddenError('Forbidden');
-  }
-
-  if (guardOptions?.confirmed && !user.confirmed) {
-    throw new ForbiddenError('Unconfirmed user request');
-  }
-
-  if (guardOptions?.verified && !user.verified) {
-    throw new ForbiddenError('Unverified user request');
-  }
-
-  return <User>(<unknown>user);
-}
-
 export async function getUserByHashId(
   logger: Logger,
   pgClient: PgClient,
@@ -216,72 +179,6 @@ export async function getUserById(logger: Logger, pgClient: PgClient, uid: strin
   const { rows } = await repository.getUserById(pgClient, uid);
 
   return rows[0];
-}
-
-export async function processGetIdpAuthCredentials(
-  logger: Logger,
-  code: string
-): Promise<OAuthTokenCredentials> {
-  logger.debug(`getting idp auth credentials`);
-
-  return getIdpAuthCredentials(
-    code,
-    COGNITO_CLIENT_ID,
-    COGNITO_CLIENT_SECRET,
-    COGNITO_USER_POOL_DOMAIN,
-    COGNITO_OAUTH_CALLBACK_URL,
-    OAUTH_GRANT_TYPE_AUTH_CODE
-  );
-}
-
-export async function syncIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<void> {
-  logger.debug(`Syncing idp user to local database`);
-
-  const {
-    email,
-    sub: id,
-    identities,
-    preferred_username: preferredUsername
-  } = <ExtendedJwtPayload>jwt.decode(idToken);
-
-  const hashId = generateAuthHashId(email!, AUTH_HASH_ID_SECRET);
-  const username = preferredUsername || getUserNameFromEmail(email!);
-
-  if (!id || !username || !hashId) {
-    throw new Error(`Failed to parse user data from token`);
-  }
-
-  try {
-    await repository.syncIdpUser(
-      pgClient,
-      id,
-      username,
-      hashId,
-      <string>identities?.[0]?.providerName
-    );
-  } catch (err: any) {
-    if (err.message.includes(`duplicate key`)) {
-      throw new AuthConflictError(`Existing user found`);
-    } else {
-      throw err;
-    }
-  }
-}
-
-export async function getIdpUser(
-  logger: Logger,
-  pgClient: PgClient,
-  idToken: string
-): Promise<User> {
-  logger.debug(`Getting idp user from local database`);
-
-  const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
-
-  return getUserById(logger, pgClient, uid!);
 }
 
 export function processSetUserMfaSmsPreference(
@@ -374,4 +271,70 @@ export async function setMfaDisabled(
   logger.debug(`Saving mfa disabled`, { uid });
 
   const result = await repository.setMfaDisabled(pgClient, uid);
+}
+
+export async function processGetIdpAuthCredentials(
+  logger: Logger,
+  code: string
+): Promise<OAuthTokenCredentials> {
+  logger.debug(`getting idp auth credentials`);
+
+  return getIdpAuthCredentials(
+    code,
+    COGNITO_CLIENT_ID,
+    COGNITO_CLIENT_SECRET,
+    COGNITO_USER_POOL_DOMAIN,
+    COGNITO_OAUTH_CALLBACK_URL,
+    OAUTH_GRANT_TYPE_AUTH_CODE
+  );
+}
+
+export async function syncIdpUser(
+  logger: Logger,
+  pgClient: PgClient,
+  idToken: string
+): Promise<void> {
+  logger.debug(`Syncing idp user to local database`);
+
+  const {
+    email,
+    sub: id,
+    identities,
+    preferred_username: preferredUsername
+  } = <ExtendedJwtPayload>jwt.decode(idToken);
+
+  const hashId = generateAuthHashId(email!, AUTH_HASH_ID_SECRET);
+  const username = preferredUsername || getUserNameFromEmail(email!);
+
+  if (!id || !username || !hashId) {
+    throw new Error(`Failed to parse user data from token`);
+  }
+
+  try {
+    await repository.syncIdpUser(
+      pgClient,
+      id,
+      username,
+      hashId,
+      <string>identities?.[0]?.providerName
+    );
+  } catch (err: any) {
+    if (err.message.includes(`duplicate key`)) {
+      throw new AuthConflictError(`Existing user found`);
+    } else {
+      throw err;
+    }
+  }
+}
+
+export async function getIdpUser(
+  logger: Logger,
+  pgClient: PgClient,
+  idToken: string
+): Promise<User> {
+  logger.debug(`Getting idp user from local database`);
+
+  const { sub: uid } = <ExtendedJwtPayload>jwt.decode(idToken);
+
+  return getUserById(logger, pgClient, uid!);
 }

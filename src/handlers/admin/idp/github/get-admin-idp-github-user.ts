@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getLogger } from 'src/util/logger.util';
 import * as httpResponse from 'src/util/http.util';
-import { getGitHubUserData, getGitHubUserPrimaryEmail } from 'src/lib/auth';
+import { getGitHubUserData, getGitHubUserPrimaryEmail } from 'src/lib/github';
 
 const logger = getLogger('get-admin-idp-github-user');
 

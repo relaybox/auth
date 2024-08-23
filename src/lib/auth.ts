@@ -31,7 +31,6 @@ import {
   OAuthTokenCredentials
 } from 'src/types/auth.types';
 import qrcode from 'qrcode';
-import parser from 'lambda-multipart-parser';
 import { PolicyEffect } from 'src/types/aws.types';
 
 export function authenticate(
@@ -398,57 +397,4 @@ export async function getIdpAuthCredentials(
   const data = await response.json();
 
   return <OAuthTokenCredentials>data;
-}
-
-export async function getGitHubAuthToken(event: APIGatewayProxyEvent): Promise<any> {
-  const { client_id, client_secret, code } = await parser.parse(event);
-
-  const queryParams = new URLSearchParams({
-    client_id,
-    client_secret,
-    code
-  });
-
-  const requestUrl = `https://github.com/login/oauth/access_token?${queryParams}`;
-
-  const response = await fetch(requestUrl, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json'
-    }
-  });
-
-  const token = await response.json();
-
-  return token;
-}
-
-export async function getGitHubUserData(authorization: string): Promise<any> {
-  const response = await fetch(`https://api.github.com/user`, {
-    method: 'GET',
-    headers: {
-      authorization,
-      accept: 'application/json'
-    }
-  });
-
-  const userData = <any>await response.json();
-
-  return userData;
-}
-
-export async function getGitHubUserPrimaryEmail(authorization: string): Promise<any> {
-  const response = await fetch(`https://api.github.com/user/emails`, {
-    method: 'GET',
-    headers: {
-      authorization,
-      accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  });
-
-  const emailData = <any>await response.json();
-  const primaryEmail = emailData.find((data: any) => data.primary);
-
-  return primaryEmail.email;
 }

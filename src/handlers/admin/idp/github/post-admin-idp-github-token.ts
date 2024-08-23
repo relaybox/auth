@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getLogger } from 'src/util/logger.util';
 import * as httpResponse from 'src/util/http.util';
-import { getGitHubAuthToken } from 'src/lib/auth';
+import { getGitHubAuthToken } from 'src/lib/github';
 
 const logger = getLogger('poat-admin-idp-github-token');
 

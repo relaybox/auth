@@ -112,8 +112,5 @@ variablesResolutionMode: 20210326
 
 functions:
   - ${file(./functions/admin.yml)}
-  # - ${file(./functions/auth.yml)}
   - ${file(./functions/authorizers.yml)}
-  # - ${file(./functions/idp.yml)}
-  # - ${file(./functions/mfa.yml)}
   - ${file(./functions/validation.yml)}
