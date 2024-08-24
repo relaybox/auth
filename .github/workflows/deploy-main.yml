@@ -35,6 +35,11 @@ jobs:
         run: |
           touch .env
           echo AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} >> .env
+          echo COGNITO_CLIENT_ID=${{ vars.COGNITO_CLIENT_ID }} >> .env
+          echo COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} >> .env
+          echo COGNITO_OAUTH_CALLBACK_URL=${{ vars.COGNITO_OAUTH_CALLBACK_URL }} >> .env
+          echo COGNITO_USER_POOL_ID=${{ vars.COGNITO_USER_POOL_ID }} >> .env
+          echo COGNITO_USER_POOL_DOMAIN=${{ vars.COGNITO_USER_POOL_DOMAIN }} >> .env
           echo DB_HOST=${{ vars.DB_HOST }} >> .env
           echo DB_NAME=${{ vars.DB_NAME }} >> .env
           echo DB_PORT=${{ vars.DB_PORT }} >> .env
