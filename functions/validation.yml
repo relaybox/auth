@@ -28,7 +28,7 @@ get-validation-api-key:
         method: get
         cors: ${self:custom.cors}
 
-get-validationcredentials:
+get-validation-credentials:
   handler: src/handlers/validation/get-validation-credentials.handler
   timeout: 30
   events:
