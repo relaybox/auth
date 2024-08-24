@@ -19,7 +19,11 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const refreshToken = event.headers['X-Refresh-Token'];
 
-    const { AuthenticationResult } = await refreshAuthenticatedJwt(cognitoClient, refreshToken!);
+    const { AuthenticationResult } = await refreshAuthenticatedJwt(
+      logger,
+      cognitoClient,
+      refreshToken!
+    );
 
     return httpResponse._200({
       idToken: AuthenticationResult?.IdToken,

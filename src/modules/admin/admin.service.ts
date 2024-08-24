@@ -17,18 +17,18 @@ import { AuthConflictError } from 'src/lib/errors';
 import { OAuthTokenCredentials, User } from 'src/types/auth.types';
 import { generateAuthHashId, generateAuthSecretHash } from 'src/util/hash.util';
 import {
+  authenticate,
+  register,
+  confirmAuthenticationCode,
+  forgotPassword,
+  confirmForgotPassword,
+  refreshToken,
   adminSetUserMfaPreference,
   adminSetUserMfaTotpPreference,
   associcateSoftwareToken,
-  authenticate,
+  verifySoftwareToken,
   challengeSofwareToken,
-  confirmAuthenticationCode,
-  confirmForgotPassword,
-  forgotPassword,
-  getIdpAuthCredentials,
-  refreshToken,
-  register,
-  verifySoftwareToken
+  getIdpAuthCredentials
 } from 'src/lib/auth';
 
 const COGNITO_VERIFIER_TOKEN = 'id';
@@ -139,9 +139,11 @@ export async function verifyAuthenticatedJwt(token: string): Promise<JwtPayload>
 }
 
 export function refreshAuthenticatedJwt(
+  logger: Logger,
   cognitoClient: CognitoIdentityProviderClient,
   REFRESH_TOKEN: string
 ): Promise<InitiateAuthCommandOutput> {
+  logger.debug(`Refreshing auth id token`);
   return refreshToken(cognitoClient, REFRESH_TOKEN, COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET);
 }
 
