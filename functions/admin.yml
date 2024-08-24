@@ -6,11 +6,6 @@ post-admin-login:
         path: /admin/login
         method: post
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/login
-        method: post
-        cors: ${self:custom.cors}
 
 post-admin-register:
   handler: src/handlers/admin/post-admin-register.handler
@@ -18,11 +13,6 @@ post-admin-register:
   events:
     - http:
         path: /admin/register
-        method: post
-        cors: true
-    # Legacy
-    - http:
-        path: /auth/register
         method: post
         cors: true
 
@@ -34,11 +24,6 @@ post-admin-confirmation-code:
         path: /admin/confirmation-code
         method: post
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/confirmation-code
-        method: post
-        cors: ${self:custom.cors}
 
 post-admin-forgot-password:
   handler: src/handlers/admin/post-admin-forgot-password.handler
@@ -48,11 +33,6 @@ post-admin-forgot-password:
         path: /admin/forgot-password
         method: post
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/forgot-password
-        method: post
-        cors: ${self:custom.cors}
 
 post-admin-reset-password:
   handler: src/handlers/admin/post-admin-reset-password.handler
@@ -60,11 +40,6 @@ post-admin-reset-password:
   events:
     - http:
         path: /admin/reset-password
-        method: post
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/reset-password
         method: post
         cors: ${self:custom.cors}
 
@@ -77,12 +52,6 @@ post-admin-confirm-password:
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/confirm-password
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
 
 get-admin-refresh:
   handler: src/handlers/admin/get-admin-refresh.handler
@@ -90,11 +59,6 @@ get-admin-refresh:
   events:
     - http:
         path: /admin/refresh
-        method: get
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/refresh
         method: get
         cors: ${self:custom.cors}
 
@@ -108,12 +72,6 @@ get-admin-session:
         method: get
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/session
-        method: get
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
 
 post-admin-mfa-sms-enable:
   handler: src/handlers/admin/mfa/post-admin-mfa-sms-enable.handler
@@ -121,12 +79,6 @@ post-admin-mfa-sms-enable:
   events:
     - http:
         path: /admin/mfa/sms-enable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/mfa/sms-enable
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
@@ -140,12 +92,6 @@ post-admin-mfa-totp-enable:
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/mfa/totp-enable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
 
 post-admin-mfa-totp-associate:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-associate.handler
@@ -153,12 +99,6 @@ post-admin-mfa-totp-associate:
   events:
     - http:
         path: /admin/mfa/totp-associate
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/mfa/totp-associate
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
@@ -172,12 +112,6 @@ post-admin-mfa-totp-verify:
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/mfa/totp-verify
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
 
 post-admin-mfa-totp-challenge:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-challenge.handler
@@ -185,11 +119,6 @@ post-admin-mfa-totp-challenge:
   events:
     - http:
         path: /admin/mfa/totp-challenge
-        method: post
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/mfa/totp-challenge
         method: post
         cors: ${self:custom.cors}
 
@@ -202,12 +131,6 @@ post-admin-mfa-totp-disable:
         method: post
         cors: ${self:custom.cors}
         authorizer: admin-authorizer
-    # Legacy
-    - http:
-        path: /auth/mfa/totp-disable
-        method: post
-        cors: ${self:custom.cors}
-        authorizer: admin-authorizer
 
 post-admin-idp-code:
   handler: src/handlers/admin/idp/post-admin-idp-code.handler
@@ -215,11 +138,6 @@ post-admin-idp-code:
   events:
     - http:
         path: /admin/idp/code
-        method: post
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/idp/code
         method: post
         cors: ${self:custom.cors}
 
@@ -231,11 +149,6 @@ post-admin-idp-github-token:
         path: /admin/idp/github/token
         method: post
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/github/token
-        method: post
-        cors: ${self:custom.cors}
 
 get-admin-idp-github-user:
   handler: src/handlers/admin/idp/github/get-admin-idp-github-user.handler
@@ -243,10 +156,5 @@ get-admin-idp-github-user:
   events:
     - http:
         path: /admin/idp/github/user
-        method: get
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /auth/github/user
         method: get
         cors: ${self:custom.cors}
