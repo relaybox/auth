@@ -7,11 +7,6 @@ get-validation-token:
         path: /validation/token
         method: get
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /validate-token
-        method: get
-        cors: ${self:custom.cors}
 
 get-validation-api-key:
   handler: src/handlers/validation/get-validation-api-key.handler
@@ -22,11 +17,6 @@ get-validation-api-key:
         path: /validation/api-key
         method: get
         cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /validate-api-key
-        method: get
-        cors: ${self:custom.cors}
 
 get-validation-credentials:
   handler: src/handlers/validation/get-validation-credentials.handler
@@ -35,10 +25,5 @@ get-validation-credentials:
     - ${self:custom.keepAlive}
     - http:
         path: /validation/credentials
-        method: get
-        cors: ${self:custom.cors}
-    # Legacy
-    - http:
-        path: /credentials
         method: get
         cors: ${self:custom.cors}
