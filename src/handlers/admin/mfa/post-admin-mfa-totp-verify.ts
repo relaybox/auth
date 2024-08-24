@@ -3,13 +3,13 @@ import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { getPgClient } from 'src/lib/postgres';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { getAuthenticatedUserData } from 'src/lib/auth';
 import {
+  processAuthentication,
   processSetUserMfaTotpPreference,
   processVerifySoftwareToken,
   setMfaEnabled
-} from 'src/modules/~mfa/mfa.service';
-import { getAuthenticatedUserData } from 'src/lib/auth';
-import { processAuthentication } from 'src/modules/admin/admin.service';
+} from 'src/modules/admin/admin.service';
 
 const logger = getLogger('post-admin-mfa-totp-verify');
 
@@ -26,6 +26,8 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { password, userCode, friendlyDeviceName } = JSON.parse(event.body!);
     const { email, id: uid } = getAuthenticatedUserData(event);
+
+    logger.info(`Verifying mfa for user ${uid}`);
 
     if (!password || !userCode) {
       return httpResponse._400({ message: 'Password required' });

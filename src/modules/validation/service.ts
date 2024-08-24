@@ -27,7 +27,7 @@ export async function getSecretKey(
   appPid: string,
   keyId: string
 ): Promise<string> {
-  logger.info(`Getting secret key`, { appPid, keyId });
+  logger.debug(`Getting secret key`, { appPid, keyId });
 
   const { rows } = await getSecretKeybyKeyId(pgClient, appPid, keyId);
 
@@ -46,7 +46,7 @@ export async function getPermissions(
   keyId: string,
   inlinePermissions: any = {}
 ): Promise<Record<string, string[]> | string[]> {
-  logger.info(`Getting permissions for key`, { keyId });
+  logger.debug(`Getting permissions for key`, { keyId });
 
   const { rows } = await getPermissionsByKeyId(pgClient, keyId);
 
@@ -92,7 +92,7 @@ export function getClientCredentials(
   clientId?: string,
   connectionId?: string
 ): { uid: string; connectionId: string; clientId?: string } {
-  logger.info(`Getting credentials for auth`, { appPid, clientId, connectionId });
+  logger.debug(`Getting credentials for auth`, { appPid, clientId, connectionId });
 
   if (!connectionId) {
     const genId = nanoid(12);

@@ -340,3 +340,49 @@ export async function getIdpUser(
 
   return getUserById(logger, pgClient, uid!);
 }
+
+export async function getSessionData(logger: Logger, pgClient: PgClient, id: string): Promise<any> {
+  logger.debug(`Getting session data for user ${id}`);
+
+  const { rows } = await repository.getSessionData(pgClient, id);
+
+  if (!rows.length) {
+    throw new Error('Invalid token');
+  }
+
+  return rows[0];
+}
+
+export async function getUserBySub(logger: Logger, pgClient: PgClient, sub: string): Promise<User> {
+  logger.debug(`Getting user data for sub ${sub}`);
+
+  const { rows } = await repository.getUserBySub(pgClient, sub);
+
+  if (!rows.length) {
+    throw new Error('Invalid authentication credentials');
+  }
+
+  return <User>(<unknown>rows[0]);
+}
+
+export async function syncUser(
+  logger: Logger,
+  pgClient: PgClient,
+  sub: string,
+  username: string,
+  hashId: string
+): Promise<void> {
+  logger.debug(`Syncing user data for sub ${sub}`, { sub, username, hashId });
+
+  try {
+    await repository.syncUser(pgClient, sub, username, hashId);
+  } catch (err: any) {
+    logger.error(`Failed to sync user data for sub ${sub}`, { err });
+
+    if (err.message.includes(`duplicate key`)) {
+      throw new AuthConflictError(`Existing user found`);
+    } else {
+      throw err;
+    }
+  }
+}

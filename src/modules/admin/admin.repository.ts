@@ -1,7 +1,6 @@
 import moment, { Moment } from 'moment-timezone';
 import PgClient from 'serverless-postgres';
 import { QueryResult } from 'pg';
-import { User } from '../~auth/auth.types';
 
 export async function syncUser(
   pgClient: PgClient,
@@ -122,19 +121,13 @@ export function confirmSession(
   return pgClient.query(query, [username, moment.utc().toISOString(), sub]);
 }
 
-export async function getUserBySub(pgClient: PgClient, sub: string): Promise<User> {
+export function getUserBySub(pgClient: PgClient, sub: string): Promise<QueryResult> {
   const query = `
     SELECT * FROM admin_users 
     WHERE sub = $1;
   `;
 
-  const { rows } = await pgClient.query(query, [sub]);
-
-  if (!rows.length) {
-    throw new Error('Invalid authentication credentials');
-  }
-
-  return <User>(<unknown>rows[0]);
+  return pgClient.query(query, [sub]);
 }
 
 export async function getUserByEventSub(pgClient: PgClient, sub: string): Promise<QueryResult> {

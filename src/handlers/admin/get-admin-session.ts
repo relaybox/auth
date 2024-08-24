@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as httpResponse from 'src/util/http.util';
 import { getPgClient } from 'src/lib/postgres';
-import { getSessionData } from 'src/modules/~auth/auth.repository';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { getLogger } from 'src/util/logger.util';
+import { getSessionData } from 'src/modules/admin/admin.service';
 
 const logger = getLogger('get-admin-session');
 
@@ -18,13 +18,11 @@ async function lambdaProxyEventHandler(
   try {
     const id = event.requestContext.authorizer!.principalId;
 
-    const { rows } = await getSessionData(pgClient, id);
+    logger.info(`Getting admin session for user ${id}`);
 
-    if (!rows.length) {
-      throw new Error('Invalid token');
-    }
+    const sessionData = await getSessionData(logger, pgClient, id);
 
-    return httpResponse._200(rows[0]);
+    return httpResponse._200(sessionData);
   } catch (err: any) {
     return httpResponse._403({ message: err.message });
   } finally {

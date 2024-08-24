@@ -26,6 +26,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200(authTokenResponse);
   } catch (err: any) {
+    console.log(err);
     logger.error(`Login failed`, { err });
 
     if (err instanceof UserNotConfirmedException) {
