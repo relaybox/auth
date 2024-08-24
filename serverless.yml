@@ -117,5 +117,6 @@ variablesResolutionMode: 20210326
 
 functions:
   - ${file(./functions/admin.yml)}
+  - ${file(./functions/application.yml)}
   - ${file(./functions/authorizers.yml)}
   - ${file(./functions/validation.yml)}
