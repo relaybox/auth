@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  encrypt,
-  decrypt,
-  searchableEncrypt,
-  searchableDecrypt,
-  hashPassword,
-  verifyPassword
-} from 'src/lib/encryption';
+import { encrypt, decrypt, strongHash, verifyStrongHash, generateSalt } from 'src/lib/encryption';
 
 describe('encrypt / decrypt', () => {
   it('should encrpt an email address', () => {
@@ -19,31 +12,12 @@ describe('encrypt / decrypt', () => {
   });
 });
 
-describe('searchableEncrypt', () => {
-  it('should encrpt an email address', () => {
-    const email = 'test@test.com';
-    const encryptedEmail = searchableEncrypt(email);
-
-    expect(encryptedEmail).not.toBe(email);
-  });
-});
-
-describe('searchableDecrypt', () => {
-  it('should encrpt an email address', () => {
-    const email = 'test@test.com';
-    const encryptedEmail = searchableEncrypt(email);
-    const decryptedEmail = searchableDecrypt(encryptedEmail);
-
-    expect(decryptedEmail).toBe(email);
-  });
-});
-
-describe('hashPassword / verifyPassword', () => {
+describe('strongHash / verifyStrongHash', () => {
   it('should generate a hash for a password', () => {
     const password = 'password';
-
-    const hash = hashPassword(password);
-    const isValid = verifyPassword(password, hash);
+    const salt = generateSalt();
+    const hash = strongHash(password, salt);
+    const isValid = verifyStrongHash(password, hash, salt);
 
     expect(hash).toBeDefined();
     expect(isValid).toBe(true);
