@@ -15,3 +15,12 @@ post-users-authenticate:
         path: /users/authenticate
         method: post
         cors: true
+
+post-users-verify:
+  handler: src/handlers/users/post-users-verify.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/verify
+        method: post
+        cors: true

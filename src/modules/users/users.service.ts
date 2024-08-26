@@ -16,6 +16,7 @@ import {
   NotFoundError,
   TokenError,
   UnauthorizedError,
+  ValidationError,
   VerificationError
 } from 'src/lib/errors';
 import { AuthUser } from 'src/types/auth.types';
@@ -221,6 +222,52 @@ export async function sendAuthVerificationCode(
     return result?.messageId;
   } catch (err: any) {
     logger.error(`Failed to send contact request email`);
+    throw err;
+  }
+}
+
+export async function verifyUser(
+  logger: Logger,
+  pgClient: PgClient,
+  email: string,
+  code: number
+): Promise<void> {
+  try {
+    await pgClient.query('BEGIN');
+
+    const { id: uid } = await getUserByEmail(logger, pgClient, email);
+
+    logger.debug(`Verifying user`, { uid });
+
+    const { rows: validAuthVerifications } = await repository.validateVerificationCode(
+      pgClient,
+      uid,
+      code
+    );
+
+    if (!validAuthVerifications.length) {
+      throw new NotFoundError(`Invalid verification code`);
+    }
+
+    if (validAuthVerifications[0].expiresAt < new Date()) {
+      throw new NotFoundError(`Verification code expired`);
+    }
+
+    if (validAuthVerifications[0].verifiedAt !== null) {
+      throw new ValidationError(`Verification code used`);
+    }
+
+    if (validAuthVerifications[0].code !== code) {
+      throw new ValidationError(`Invalid verification code`);
+    }
+
+    await repository.verifyUserCode(pgClient, uid, code);
+    await repository.verifyUser(pgClient, uid);
+
+    await pgClient.query('COMMIT');
+  } catch (err: any) {
+    await pgClient.query('ROLLBACK');
+    logger.error(`Failed to verify user`, { err });
     throw err;
   }
 }

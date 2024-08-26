@@ -69,3 +69,46 @@ export function createAuthVerificationCode(
 
   return pgClient.query(query, [uid, code, expiresAt]);
 }
+
+export function validateVerificationCode(
+  pgClient: PgClient,
+  uid: string,
+  code: number
+): Promise<QueryResult> {
+  const query = `
+    SELECT "code", "expiresAt", "verifiedAt"
+    FROM authentication_users_verification
+    WHERE "uid" = $1 AND "code" = $2
+    LIMIT 1;
+  `;
+
+  return pgClient.query(query, [uid, code]);
+}
+
+export function verifyUserCode(
+  pgClient: PgClient,
+  uid: string,
+  code: number
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_users_verification 
+    SET "verifiedAt" = $2
+    WHERE "uid" = $1 AND "code" = $3;
+  `;
+
+  return pgClient.query(query, [uid, now, code]);
+}
+
+export function verifyUser(pgClient: PgClient, uid: string): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_users 
+    SET "verifiedAt" = $2
+    WHERE id = $1;
+  `;
+
+  return pgClient.query(query, [uid, now]);
+}
