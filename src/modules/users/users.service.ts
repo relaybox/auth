@@ -8,6 +8,7 @@ import {
   generateSalt,
   getKeyVersion,
   strongHash,
+  verifyAuthToken,
   verifyStrongHash
 } from 'src/lib/encryption';
 import { Logger } from 'winston';
@@ -225,6 +226,7 @@ export async function getAuthToken(
   const payload = {
     keyName,
     clientId,
+    typ: 'id_token',
     timestamp: new Date().toISOString()
   };
 
@@ -247,9 +249,8 @@ export async function getAuthRefreshToken(
   const payload = {
     keyName,
     clientId,
-    timestamp: new Date().toISOString(),
-    typ: 'refresh',
-    scope: 'refresh_token'
+    typ: 'refresh_token',
+    timestamp: new Date().toISOString()
   };
 
   const refreshExpiresIn = 7 * 24 * 60 * 60;
@@ -304,5 +305,18 @@ export async function sendAuthVerificationCode(
   } catch (err: any) {
     logger.error(`Failed to send contact request email`);
     throw err;
+  }
+}
+
+export function verifyRefreshToken(
+  token: string,
+  secretKey: string,
+  scope: string,
+  typ: string
+): void {
+  verifyAuthToken(token, secretKey);
+
+  if (typ !== 'refresh_token') {
+    throw new ValidationError(`Invalid typ`);
   }
 }

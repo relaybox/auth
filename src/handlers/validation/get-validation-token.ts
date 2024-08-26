@@ -1,15 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import {
-  decodeAuthToken,
-  getClientCredentials,
-  getPermissions,
-  getSecretKey,
-  verifyAuthToken
-} from 'src/modules/validation/service';
+import { getClientCredentials, getPermissions, getSecretKey } from 'src/modules/validation/service';
 import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
+import { decodeAuthToken, verifyAuthToken } from 'src/lib/encryption';
+import { ValidationError } from 'src/lib/errors';
 
 const logger = getLogger('get-validation-token');
 
@@ -30,8 +26,13 @@ async function lambdaProxyEventHandler(
       clientId,
       timestamp,
       exp,
+      typ,
       permissions: inlinePermissions
     } = decodeAuthToken(token);
+
+    if (typ !== 'id_token') {
+      throw new ValidationError(`Invalid scope`);
+    }
 
     logger.info(`Validating auth token`, { keyName, clientId });
 

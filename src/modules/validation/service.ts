@@ -1,25 +1,9 @@
 import PgClient from 'serverless-postgres';
-import jwt from 'jsonwebtoken';
 import { Logger } from 'winston';
 import { getPermissionsByKeyId, getSecretKeybyKeyId } from './repository';
 import { nanoid } from 'nanoid';
 
-const JWT_ISSUER = process.env.JWT_ISSUER!;
-const JWT_HASHING_ALGORITHM = 'HS256';
 const NSP_ANONYMOUS_ID = '__a__';
-
-export function decodeAuthToken(token: string): any {
-  return jwt.decode(token);
-}
-
-export function verifyAuthToken(token: string, secretKey: string) {
-  const payload = jwt.verify(token, secretKey, {
-    algorithms: [JWT_HASHING_ALGORITHM],
-    issuer: JWT_ISSUER
-  });
-
-  return payload;
-}
 
 export async function getSecretKey(
   logger: Logger,

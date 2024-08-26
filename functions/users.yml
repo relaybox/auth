@@ -34,11 +34,11 @@ post-users-generate-verification-code:
         method: post
         cors: true
 
-post-users-token-refresh:
-  handler: src/handlers/users/post-users-token-refresh.handler
+get-users-token-refresh:
+  handler: src/handlers/users/get-users-token-refresh.handler
   timeout: 30
   events:
     - http:
         path: /users/token/refresh
-        method: post
+        method: get
         cors: true
