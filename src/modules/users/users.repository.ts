@@ -17,7 +17,7 @@ export function createUser(
       "orgId", "clientId", username, email, "emailHash", password, salt, "keyVersion"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8
-    )
+    ) RETURNING id;
   `;
 
   return pgClient.query(query, [
@@ -49,4 +49,23 @@ export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<Q
   `;
 
   return pgClient.query(query, [keyId]);
+}
+
+export function createAuthVerificationCode(
+  pgClient: PgClient,
+  uid: string,
+  code: number
+): Promise<QueryResult> {
+  const now = Date.now();
+  const expiresAt = new Date(now + 5 * 60 * 1000);
+
+  const query = `
+    INSERT INTO authentication_users_verification (
+      "uid", "code", "expiresAt"
+    ) VALUES (
+      $1, $2, $3
+    ) RETURNING code;
+  `;
+
+  return pgClient.query(query, [uid, code, expiresAt]);
 }

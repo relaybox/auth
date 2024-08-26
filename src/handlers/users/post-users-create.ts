@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { createUser, getAuthDataByKeyId } from 'src/modules/users/users.service';
+import { registerUser } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -30,9 +30,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const [_, keyId] = apiKey.split('.');
 
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-
-    await createUser(logger, pgClient, orgId, email, password);
+    await registerUser(logger, pgClient, keyId, email, password);
 
     return httpResponse._200({ message: 'Registration successful' });
   } catch (err: any) {

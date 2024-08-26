@@ -76,3 +76,10 @@ export class TokenError extends Error {
     this.name = 'TokenError';
   }
 }
+
+export class VerificationError extends Error {
+  constructor(message: string, public details?: any) {
+    super(message);
+    this.name = 'VerificationError';
+  }
+}
