@@ -10,14 +10,16 @@ export function createUser(
   emailHash: string,
   password: string,
   salt: string,
-  keyVersion: number
+  keyVersion: number,
+  provider: string = 'email'
 ): Promise<QueryResult> {
+  const now = new Date().toISOString();
   const query = `
     INSERT INTO authentication_users (
-      "orgId", "clientId", username, email, "emailHash", password, salt, "keyVersion"
+      "orgId", "clientId", username, email, "emailHash", password, salt, "keyVersion", "provider", "verifiedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8
-    ) RETURNING id;
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+    ) RETURNING id, "clientId";
   `;
 
   return pgClient.query(query, [
@@ -28,7 +30,9 @@ export function createUser(
     emailHash,
     password,
     salt,
-    keyVersion
+    keyVersion,
+    provider,
+    provider ? now : null
   ]);
 }
 

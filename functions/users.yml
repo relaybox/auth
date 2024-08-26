@@ -42,3 +42,21 @@ get-users-token-refresh:
         path: /users/token/refresh
         method: get
         cors: true
+
+get-users-idp-github-authorize:
+  handler: src/handlers/users/idp/github/get-users-idp-github-authorize.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/idp/github/authorize
+        method: get
+        cors: true
+
+get-users-idp-github-callback:
+  handler: src/handlers/users/idp/github/get-users-idp-github-callback.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/idp/github/callback
+        method: get
+        cors: true

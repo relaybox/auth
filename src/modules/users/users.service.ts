@@ -22,6 +22,7 @@ import {
 } from 'src/lib/errors';
 import { AuthUser } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
+import { TokenType } from 'src/types/jwt.types';
 
 const AUTH_EMAIL_ADDRESS = 'no-reply@relaybox.net';
 
@@ -30,13 +31,14 @@ export async function registerUser(
   pgClient: PgClient,
   keyId: string,
   email: string,
-  password: string
+  password: string,
+  provider: string
 ): Promise<void> {
   try {
     await pgClient.query('BEGIN');
 
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const { id: uid } = await createUser(logger, pgClient, orgId, email, password);
+    const { id: uid } = await createUser(logger, pgClient, orgId, email, password, provider);
     const code = await createAuthVerificationCode(logger, pgClient, uid);
     await sendAuthVerificationCode(logger, email, code);
 
@@ -46,6 +48,27 @@ export async function registerUser(
     logger.error(`Failed to register user`, { err });
     throw err;
   }
+}
+
+export async function registerIdpUser(
+  logger: Logger,
+  pgClient: PgClient,
+  keyId: string,
+  email: string,
+  password: string,
+  provider: string
+): Promise<{ uid: string; clientId: string }> {
+  const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+  const { id: uid, clientId } = await createUser(
+    logger,
+    pgClient,
+    orgId,
+    email,
+    password,
+    provider
+  );
+
+  return { uid, clientId };
 }
 
 export async function authenticateUser(
@@ -161,7 +184,8 @@ export async function createUser(
   pgClient: PgClient,
   orgId: string,
   email: string,
-  password: string
+  password: string,
+  provider?: string
 ): Promise<AuthUser> {
   logger.debug(`Creating user`);
 
@@ -183,7 +207,8 @@ export async function createUser(
       emailHash,
       passwordHash,
       salt,
-      keyVersion
+      keyVersion,
+      provider
     );
 
     return rows[0];
@@ -226,7 +251,7 @@ export async function getAuthToken(
   const payload = {
     keyName,
     clientId,
-    typ: 'id_token',
+    tokenType: TokenType.ID_TOKEN,
     timestamp: new Date().toISOString()
   };
 
@@ -249,7 +274,7 @@ export async function getAuthRefreshToken(
   const payload = {
     keyName,
     clientId,
-    typ: 'refresh_token',
+    tokenType: TokenType.REFRESH_TOKEN,
     timestamp: new Date().toISOString()
   };
 
@@ -308,15 +333,10 @@ export async function sendAuthVerificationCode(
   }
 }
 
-export function verifyRefreshToken(
-  token: string,
-  secretKey: string,
-  scope: string,
-  typ: string
-): void {
+export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
   verifyAuthToken(token, secretKey);
 
-  if (typ !== 'refresh_token') {
+  if (tokenType !== 'refresh_token') {
     throw new ValidationError(`Invalid typ`);
   }
 }

@@ -11,3 +11,8 @@ export interface ExtendedClientJwtPayload extends JwtPayload {
   timestamp: string;
   // permissions?: Permissions | Permission[];
 }
+
+export enum TokenType {
+  ID_TOKEN = 'id_token',
+  REFRESH_TOKEN = 'refresh_token'
+}

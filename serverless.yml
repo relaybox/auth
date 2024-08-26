@@ -70,6 +70,7 @@ custom:
     DB_PROXY_ENABLED: ${env:DB_PROXY_ENABLED, ''}
     DB_TLS_DISABLED: ${env:DB_TLS_DISABLED, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
+    PUBLIC_URL: ${env:PUBLIC_URL, ''}
     VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
     VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
 

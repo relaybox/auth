@@ -6,6 +6,7 @@ import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/encryption';
 import { ValidationError } from 'src/lib/errors';
+import { TokenType } from 'src/types/jwt.types';
 
 const logger = getLogger('get-validation-token');
 
@@ -26,12 +27,12 @@ async function lambdaProxyEventHandler(
       clientId,
       timestamp,
       exp,
-      typ,
+      tokenType,
       permissions: inlinePermissions
     } = decodeAuthToken(token);
 
-    if (typ !== 'id_token') {
-      throw new ValidationError(`Invalid scope`);
+    if (tokenType !== TokenType.ID_TOKEN) {
+      throw new ValidationError(`Invalid token type`);
     }
 
     logger.info(`Validating auth token`, { keyName, clientId });

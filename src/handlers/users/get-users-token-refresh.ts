@@ -30,11 +30,11 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing refresh token header');
     }
 
-    const { keyName, clientId, scope, typ } = decodeAuthToken(refreshToken);
+    const { keyName, clientId, tokenType } = decodeAuthToken(refreshToken);
     const [_, keyId] = keyName.split('.');
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    verifyRefreshToken(refreshToken, secretKey, scope, typ);
+    verifyRefreshToken(refreshToken, secretKey, tokenType);
 
     const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
 
