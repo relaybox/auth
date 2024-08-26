@@ -6,3 +6,12 @@ post-users-create:
         path: /users/create
         method: post
         cors: true
+
+post-users-authenticate:
+  handler: src/handlers/users/post-users-authenticate.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/authenticate
+        method: post
+        cors: true

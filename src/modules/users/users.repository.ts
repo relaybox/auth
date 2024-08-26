@@ -4,7 +4,7 @@ import { QueryResult } from 'pg';
 export function createUser(
   pgClient: PgClient,
   orgId: string,
-  uid: string,
+  clientid: string,
   username: string,
   email: string,
   emailHash: string,
@@ -14,7 +14,7 @@ export function createUser(
 ): Promise<QueryResult> {
   const query = `
     INSERT INTO authentication_users (
-      "orgId", uid, username, email, "emailHash", password, salt, "keyVersion"
+      "orgId", "clientId", username, email, "emailHash", password, salt, "keyVersion"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8
     )
@@ -22,7 +22,7 @@ export function createUser(
 
   return pgClient.query(query, [
     orgId,
-    uid,
+    clientid,
     username,
     email,
     emailHash,
@@ -32,11 +32,21 @@ export function createUser(
   ]);
 }
 
-export function getUserByEmail(pgClient: PgClient, email: string): Promise<QueryResult> {
+export function getUserByEmailHash(pgClient: PgClient, emailHash: string): Promise<QueryResult> {
   const query = `
     SELECT * FROM authentication_users 
-    WHERE email = $1;
+    WHERE "emailHash" = $1;
   `;
 
-  return pgClient.query(query, [email]);
+  return pgClient.query(query, [emailHash]);
+}
+
+export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<QueryResult> {
+  const query = `
+    SELECT "orgId", "secretKey" 
+    FROM credentials
+    WHERE "keyId" = $1;
+  `;
+
+  return pgClient.query(query, [keyId]);
 }

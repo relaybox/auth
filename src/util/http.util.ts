@@ -79,7 +79,7 @@ export function _409(body?: any): APIGatewayProxyResult {
 }
 
 export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyResult {
-  logger.error(`Error response`, { err });
+  logger.warn(`Error response`, { err });
 
   if (err instanceof ValidationError || err.message.includes('duplicate key')) {
     return _400({ message: err.message });
@@ -104,6 +104,8 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
   if (err instanceof DuplicateKeyError) {
     return _409({ message: err.message });
   }
+
+  logger.error(`Unknown internal error`, { err });
 
   return _500({ message: err.message });
 }

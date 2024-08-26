@@ -69,3 +69,10 @@ export class AuthorizationError extends Error {
     }
   }
 }
+
+export class TokenError extends Error {
+  constructor(message: string, public details?: any) {
+    super(message);
+    this.name = 'TokenError';
+  }
+}

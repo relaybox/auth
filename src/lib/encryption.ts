@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { ExtendedClientJwtPayload } from 'src/types/jwt.types';
+import { TokenError, ValidationError } from './errors';
 
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
@@ -7,12 +10,18 @@ const AUTH_ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const SALT_LENGTH = 16;
 const ITERATIONS = 100000;
 const KEY_LENGTH = 64;
-const DIGEST = 'sha512';
+const JWT_ISSUER = `com.ds`;
+const JWT_HASHING_ALGORITHM = 'HS256';
 
 enum Encoding {
   BASE64 = 'base64',
   HEX = 'hex',
   UTF8 = 'utf-8'
+}
+
+enum Digest {
+  SHA256 = 'sha256',
+  SHA512 = 'sha512'
 }
 
 export function encrypt(value: string): string {
@@ -45,7 +54,7 @@ export function decrypt(encryptedValue: string): string {
 }
 
 export function generateHash(value: string): string {
-  const hmac = crypto.createHmac('sha256', AUTH_HMAC_KEY);
+  const hmac = crypto.createHmac(Digest.SHA256, AUTH_HMAC_KEY);
   hmac.update(value);
   return hmac.digest(Encoding.HEX);
 }
@@ -56,7 +65,7 @@ export function generateSalt(): string {
 
 export function strongHash(password: string, salt: string): string {
   const hash = crypto
-    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)
+    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512)
     .toString(Encoding.HEX);
 
   return hash;
@@ -64,7 +73,7 @@ export function strongHash(password: string, salt: string): string {
 
 export function verifyStrongHash(password: string, storedHash: string, salt: string): boolean {
   const hash = crypto
-    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)
+    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512)
     .toString(Encoding.HEX);
 
   return crypto.timingSafeEqual(
@@ -75,4 +84,16 @@ export function verifyStrongHash(password: string, storedHash: string, salt: str
 
 export function getKeyVersion() {
   return 1;
+}
+
+export function generateAuthToken(
+  payload: ExtendedClientJwtPayload,
+  secretKey: string,
+  expiresIn: number
+): string {
+  return jwt.sign(payload, secretKey, {
+    expiresIn,
+    algorithm: JWT_HASHING_ALGORITHM,
+    issuer: JWT_ISSUER
+  });
 }

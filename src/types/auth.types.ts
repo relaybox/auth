@@ -37,3 +37,12 @@ export interface User {
   mfaEnabled: boolean;
   pricingPlan: number;
 }
+
+export interface AuthUser {
+  id: string;
+  clientId: string;
+  orgId: string;
+  username: string;
+  createdAt: string;
+  updatedAt: string;
+}
