@@ -220,7 +220,7 @@ export async function getAuthToken(
   clientId: string,
   expiresIn: number = 900
 ): Promise<any> {
-  logger.debug(`Generating id token`);
+  logger.debug(`Generating auth token`);
 
   const payload = {
     keyName,
@@ -230,6 +230,32 @@ export async function getAuthToken(
 
   try {
     return generateAuthToken(payload, secretKey, expiresIn);
+  } catch (err: any) {
+    throw new TokenError(`Failed to generate token, ${err.message}`);
+  }
+}
+
+export async function getAuthRefreshToken(
+  logger: Logger,
+  keyName: string,
+  secretKey: string,
+  clientId: string,
+  expiresIn: number = 900
+): Promise<any> {
+  logger.debug(`Generating refresh token`);
+
+  const payload = {
+    keyName,
+    clientId,
+    timestamp: new Date().toISOString(),
+    typ: 'refresh',
+    scope: 'refresh_token'
+  };
+
+  const refreshExpiresIn = 7 * 24 * 60 * 60;
+
+  try {
+    return generateAuthToken(payload, secretKey, refreshExpiresIn);
   } catch (err: any) {
     throw new TokenError(`Failed to generate token, ${err.message}`);
   }

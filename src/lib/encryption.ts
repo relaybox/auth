@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ExtendedClientJwtPayload } from 'src/types/jwt.types';
-import { TokenError, ValidationError } from './errors';
 
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
@@ -10,7 +9,7 @@ const AUTH_ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const SALT_LENGTH = 16;
 const ITERATIONS = 100000;
 const KEY_LENGTH = 64;
-const JWT_ISSUER = `com.ds`;
+const JWT_ISSUER = process.env.JWT_ISSUER || '';
 const JWT_HASHING_ALGORITHM = 'HS256';
 
 enum Encoding {
