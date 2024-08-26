@@ -1,0 +1,8 @@
+post-users-create:
+  handler: src/handlers/users/post-users-create.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/create
+        method: post
+        cors: true

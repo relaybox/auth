@@ -1,9 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
+import { createUser } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
+import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-application-register');
+const logger = getLogger('post-authentication-register');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -14,12 +17,17 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const body = JSON.parse(event.body!);
+    const { orgId, email, password } = JSON.parse(event.body!);
+
+    if (!email || !password || !orgId) {
+      throw new ValidationError('Missing email, password or orgId');
+    }
+
+    await createUser(logger, pgClient, orgId, email, password);
 
     return httpResponse._200({ message: 'Registration successful' });
   } catch (err: any) {
-    logger.error(`Registration failed`, { err });
-    return httpResponse._400({ message: `Registration failed: ${err.message}` });
+    return handleErrorResponse(logger, err);
   } finally {
     pgClient.clean();
   }

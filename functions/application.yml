@@ -1,8 +1,0 @@
-post-application-register:
-  handler: src/handlers/application/post-application-register.handler
-  timeout: 30
-  events:
-    - http:
-        path: /application/register
-        method: post
-        cors: true

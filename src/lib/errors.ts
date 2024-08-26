@@ -26,6 +26,13 @@ export class ValidationError extends Error {
   }
 }
 
+export class DuplicateKeyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DuplicateKeyError';
+  }
+}
+
 export class AuthConflictError extends Error {
   constructor(message: string) {
     super(message);

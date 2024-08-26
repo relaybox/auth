@@ -1,6 +1,7 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 import {
   AuthConflictError,
+  DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
@@ -97,6 +98,10 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
   }
 
   if (err instanceof AuthConflictError) {
+    return _409({ message: err.message });
+  }
+
+  if (err instanceof DuplicateKeyError) {
     return _409({ message: err.message });
   }
 
