@@ -37,7 +37,7 @@ export async function registerUser(
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { id: uid } = await createUser(logger, pgClient, orgId, email, password);
     const code = await createAuthVerificationCode(logger, pgClient, uid);
-    // await sendAuthVerificationCode(logger, email, code);
+    await sendAuthVerificationCode(logger, email, code);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {
@@ -261,6 +261,9 @@ export async function sendAuthVerificationCode(
 ): Promise<string> {
   logger.debug(`Sending auth verification code`);
 
+  console.log('SES sandbox mode ON');
+  return '123';
+
   try {
     const options = {
       from: AUTH_EMAIL_ADDRESS,
@@ -268,8 +271,6 @@ export async function sendAuthVerificationCode(
       subject: 'Verification Code',
       text: `Your code is ${code}`
     };
-
-    console.log(options);
 
     const result = await smtpTransport.sendMail(options);
 

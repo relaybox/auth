@@ -1,7 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { createAuthVerificationCode, getUserByEmail } from 'src/modules/users/users.service';
+import {
+  createAuthVerificationCode,
+  getUserByEmail,
+  sendAuthVerificationCode
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -30,7 +34,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const code = await createAuthVerificationCode(logger, pgClient, uid);
-    // await sendAuthVerificationCode(logger, email, code)
+    await sendAuthVerificationCode(logger, email, code);
 
     return httpResponse._200({ message: 'Verification code sent' });
   } catch (err: any) {
