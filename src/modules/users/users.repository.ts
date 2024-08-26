@@ -57,7 +57,7 @@ export function createAuthVerificationCode(
   code: number
 ): Promise<QueryResult> {
   const now = Date.now();
-  const expiresAt = new Date(now + 5 * 60 * 1000);
+  const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
 
   const query = `
     INSERT INTO authentication_users_verification (

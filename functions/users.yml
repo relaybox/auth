@@ -24,3 +24,12 @@ post-users-verify:
         path: /users/verify
         method: post
         cors: true
+
+post-users-generate-verification-code:
+  handler: src/handlers/users/post-users-generate-verification-code.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/generate-verification-code
+        method: post
+        cors: true

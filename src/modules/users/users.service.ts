@@ -24,20 +24,6 @@ import { smtpTransport } from 'src/lib/smtp';
 
 const AUTH_EMAIL_ADDRESS = 'no-reply@relaybox.net';
 
-export async function getUserByEmail(
-  logger: Logger,
-  pgClient: PgClient,
-  email: string
-): Promise<any> {
-  logger.debug(`Getting user by email`);
-
-  const emailHash = generateHash(email);
-
-  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash);
-
-  return rows[0];
-}
-
 export async function registerUser(
   logger: Logger,
   pgClient: PgClient,
@@ -99,6 +85,74 @@ export async function authenticateUser(
   }
 
   return user;
+}
+
+export async function verifyUser(
+  logger: Logger,
+  pgClient: PgClient,
+  email: string,
+  code: number
+): Promise<void> {
+  try {
+    await pgClient.query('BEGIN');
+
+    const { id: uid, verifiedAt } = await getUserByEmail(logger, pgClient, email);
+
+    if (verifiedAt) {
+      throw new ValidationError(`User already verified`);
+    }
+
+    logger.debug(`Verifying user`, { uid });
+
+    const { rows: validAuthVerifications } = await repository.validateVerificationCode(
+      pgClient,
+      uid,
+      code
+    );
+
+    if (!validAuthVerifications.length) {
+      throw new NotFoundError(`Invalid verification code`);
+    }
+
+    if (validAuthVerifications[0].verifiedAt !== null) {
+      throw new ValidationError(`Verification code already used`);
+    }
+
+    if (validAuthVerifications[0].expiresAt < new Date().toISOString()) {
+      throw new NotFoundError(`Verification code expired`);
+    }
+
+    if (validAuthVerifications[0].code !== code) {
+      throw new ValidationError(`Invalid verification code`);
+    }
+
+    await repository.verifyUserCode(pgClient, uid, code);
+    await repository.verifyUser(pgClient, uid);
+
+    await pgClient.query('COMMIT');
+  } catch (err: any) {
+    await pgClient.query('ROLLBACK');
+    logger.error(`Failed to verify user`, { err });
+    throw err;
+  }
+}
+
+export async function getUserByEmail(
+  logger: Logger,
+  pgClient: PgClient,
+  email: string
+): Promise<any> {
+  logger.debug(`Getting user by email`);
+
+  const emailHash = generateHash(email);
+
+  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash);
+
+  if (!rows.length) {
+    throw new NotFoundError(`User not found`);
+  }
+
+  return rows[0];
 }
 
 export async function createUser(
@@ -222,52 +276,6 @@ export async function sendAuthVerificationCode(
     return result?.messageId;
   } catch (err: any) {
     logger.error(`Failed to send contact request email`);
-    throw err;
-  }
-}
-
-export async function verifyUser(
-  logger: Logger,
-  pgClient: PgClient,
-  email: string,
-  code: number
-): Promise<void> {
-  try {
-    await pgClient.query('BEGIN');
-
-    const { id: uid } = await getUserByEmail(logger, pgClient, email);
-
-    logger.debug(`Verifying user`, { uid });
-
-    const { rows: validAuthVerifications } = await repository.validateVerificationCode(
-      pgClient,
-      uid,
-      code
-    );
-
-    if (!validAuthVerifications.length) {
-      throw new NotFoundError(`Invalid verification code`);
-    }
-
-    if (validAuthVerifications[0].expiresAt < new Date()) {
-      throw new NotFoundError(`Verification code expired`);
-    }
-
-    if (validAuthVerifications[0].verifiedAt !== null) {
-      throw new ValidationError(`Verification code used`);
-    }
-
-    if (validAuthVerifications[0].code !== code) {
-      throw new ValidationError(`Invalid verification code`);
-    }
-
-    await repository.verifyUserCode(pgClient, uid, code);
-    await repository.verifyUser(pgClient, uid);
-
-    await pgClient.query('COMMIT');
-  } catch (err: any) {
-    await pgClient.query('ROLLBACK');
-    logger.error(`Failed to verify user`, { err });
     throw err;
   }
 }
