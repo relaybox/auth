@@ -3,8 +3,9 @@ import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   createAuthVerificationCode,
+  getAuthDataByKeyId,
+  getRequestAuthData,
   getUserByEmail,
-  registerUser,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
 import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
@@ -31,7 +32,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing email');
     }
 
-    const userData = await getUserByEmail(logger, pgClient, email, AuthProvider.EMAIL);
+    const { keyId } = getRequestAuthData(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 
     if (!userData) {
       throw new NotFoundError(`User not found`);

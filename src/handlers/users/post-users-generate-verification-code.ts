@@ -3,10 +3,12 @@ import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   createAuthVerificationCode,
+  getAuthDataByKeyId,
+  getRequestAuthData,
   getUserByEmail,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
-import { AuthProvider } from 'src/types/auth.types';
+import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -30,7 +32,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing email');
     }
 
-    const userData = await getUserByEmail(logger, pgClient, email, AuthProvider.EMAIL);
+    const { keyId } = getRequestAuthData(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 
     if (!userData) {
       throw new NotFoundError(`User not found`);
@@ -42,7 +46,13 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError(`User already verified`);
     }
 
-    const code = await createAuthVerificationCode(logger, pgClient, uid);
+    const code = await createAuthVerificationCode(
+      logger,
+      pgClient,
+      uid,
+      AuthVerificationCodeType.REGISTER
+    );
+
     await sendAuthVerificationCode(logger, email, code);
 
     return httpResponse._200({ message: 'Verification code sent' });

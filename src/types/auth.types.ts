@@ -15,6 +15,11 @@ export interface AuthUserData {
   email: string;
 }
 
+export interface AuthData {
+  secretKey: string;
+  orgId: string;
+}
+
 export interface OAuthTokenCredentials {
   id_token: string;
   refresh_token: string;

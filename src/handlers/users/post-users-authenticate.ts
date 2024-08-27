@@ -6,7 +6,7 @@ import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
   getAuthToken,
-  getKeyParts
+  getRequestAuthData
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -23,22 +23,18 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const keyName = event.headers['X-Ds-Key-Name'];
     const { email, password } = JSON.parse(event.body!);
-
-    logger.info(`Authenticating user`, { keyName });
-
-    if (!keyName) {
-      throw new ValidationError('Missing X-Ds-Key-Name header');
-    }
 
     if (!email || !password) {
       throw new ValidationError('Missing email, password or orgId');
     }
 
-    const [_, keyId] = getKeyParts(keyName);
-    const { clientId } = await authenticateUser(logger, pgClient, email, password);
-    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { keyName, keyId } = getRequestAuthData(event);
+    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+    logger.info(`Authenticating user`, { keyName });
+
+    const { clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
     const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
     const refreshToken = await getAuthRefreshToken(logger, keyName, secretKey, clientId);
 

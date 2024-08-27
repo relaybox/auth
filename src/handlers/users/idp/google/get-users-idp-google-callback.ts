@@ -29,7 +29,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
-  logger.info(`Fetching access token from github`);
+  logger.info(`Fetching access token from google`);
 
   let clientId;
 
@@ -43,7 +43,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const [_, keyId] = getKeyParts(keyName);
-    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
 
     const authorization = await getGoogleAuthToken(
@@ -55,7 +55,13 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { providerId, email, username } = await getGoogleUserData(authorization);
 
-    let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GOOGLE);
+    let userData = await getUserByProviderId(
+      logger,
+      pgClient,
+      orgId,
+      providerId,
+      AuthProvider.GOOGLE
+    );
 
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [

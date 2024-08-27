@@ -1,8 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { verifyUser } from 'src/modules/users/users.service';
-import { AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  getAuthDataByKeyId,
+  getRequestAuthData,
+  verifyUser
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -26,7 +29,10 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing email or code');
     }
 
-    await verifyUser(logger, pgClient, email, code);
+    const { keyId } = getRequestAuthData(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+    await verifyUser(logger, pgClient, orgId, email, code);
 
     return httpResponse._200({ message: 'User verification successful' });
   } catch (err: any) {

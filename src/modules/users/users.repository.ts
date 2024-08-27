@@ -43,28 +43,30 @@ export function createUser(
 
 export function getUserByEmailHash(
   pgClient: PgClient,
+  orgId: string,
   emailHash: string,
   provider: AuthProvider
 ): Promise<QueryResult> {
   let query = `
     SELECT * FROM authentication_users 
-    WHERE "emailHash" = $1 AND "provider" = $2
+    WHERE "orgId" = $1 AND "emailHash" = $2 AND "provider" = $3
   `;
 
-  return pgClient.query(query, [emailHash, provider]);
+  return pgClient.query(query, [orgId, emailHash, provider]);
 }
 
 export function getUserByProviderId(
   pgClient: PgClient,
+  orgId: string,
   providerId: string,
   provider: AuthProvider
 ): Promise<QueryResult> {
   let query = `
     SELECT * FROM authentication_users 
-    WHERE "providerId" = $1 AND "provider" = $2
+    WHERE "orgId" = $1 AND "providerId" = $2 AND "provider" = $3
   `;
 
-  return pgClient.query(query, [providerId, provider]);
+  return pgClient.query(query, [orgId, providerId, provider]);
 }
 
 export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<QueryResult> {

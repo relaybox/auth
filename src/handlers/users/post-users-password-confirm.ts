@@ -1,7 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { getUserByEmail, resetUserPassword } from 'src/modules/users/users.service';
+import {
+  getAuthDataByKeyId,
+  getRequestAuthData,
+  getUserByEmail,
+  resetUserPassword
+} from 'src/modules/users/users.service';
 import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -26,7 +31,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Email, password and code required');
     }
 
-    const userData = await getUserByEmail(logger, pgClient, email, AuthProvider.EMAIL);
+    const { keyId } = getRequestAuthData(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 
     if (!userData) {
       throw new NotFoundError(`User not found`);

@@ -1,7 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { getKeyParts, registerUser } from 'src/modules/users/users.service';
+import {
+  getAuthDataByKeyId,
+  getRequestAuthData,
+  registerUser
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -19,20 +23,16 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const keyName = event.headers['X-Ds-Key-Name'];
     const { email, password } = JSON.parse(event.body!);
-
-    if (!keyName) {
-      throw new ValidationError('Missing keyName header');
-    }
 
     if (!email || !password) {
       throw new ValidationError('Missing email or password');
     }
 
-    const [_, keyId] = getKeyParts(keyName);
+    const { keyId } = getRequestAuthData(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    await registerUser(logger, pgClient, keyId, email, password);
+    await registerUser(logger, pgClient, orgId, email, password);
 
     return httpResponse._200({ message: 'Registration successful' });
   } catch (err: any) {

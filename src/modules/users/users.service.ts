@@ -24,28 +24,30 @@ import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth
 import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
 import { generateUsername } from 'unique-username-generator';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
 export async function registerUser(
   logger: Logger,
   pgClient: PgClient,
-  keyId: string,
+  orgId: string,
   email: string,
   password: string,
-  provider: string = 'email'
+  provider: string = AuthProvider.EMAIL
 ): Promise<void> {
   try {
     await pgClient.query('BEGIN');
 
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { id: uid } = await createUser(logger, pgClient, orgId, email, password, provider);
+
     const code = await createAuthVerificationCode(
       logger,
       pgClient,
       uid,
       AuthVerificationCodeType.REGISTER
     );
+
     await sendAuthVerificationCode(logger, email, code);
 
     await pgClient.query('COMMIT');
@@ -86,13 +88,19 @@ export async function registerIdpUser(
 export async function authenticateUser(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   email: string,
   password: string
 ): Promise<AuthUser> {
   logger.debug(`Authenticating user`);
 
   const emailHash = generateHash(email);
-  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash, AuthProvider.EMAIL);
+  const { rows } = await repository.getUserByEmailHash(
+    pgClient,
+    orgId,
+    emailHash,
+    AuthProvider.EMAIL
+  );
 
   if (!rows.length) {
     throw new NotFoundError(`User not found`);
@@ -126,6 +134,7 @@ export async function authenticateUser(
 export async function verifyUser(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   email: string,
   code: number
 ): Promise<void> {
@@ -135,6 +144,7 @@ export async function verifyUser(
     const { id: uid, verifiedAt } = await getUserByEmail(
       logger,
       pgClient,
+      orgId,
       email,
       AuthProvider.EMAIL
     );
@@ -245,6 +255,7 @@ export async function updateUserData(
 export async function getUserByEmail(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   email: string,
   provider: AuthProvider
 ): Promise<any> {
@@ -252,7 +263,7 @@ export async function getUserByEmail(
 
   const emailHash = generateHash(email);
 
-  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash, provider);
+  const { rows } = await repository.getUserByEmailHash(pgClient, orgId, emailHash, provider);
 
   return rows[0];
 }
@@ -260,12 +271,13 @@ export async function getUserByEmail(
 export async function getUserByProviderId(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   providerId: string,
   provider: AuthProvider
 ): Promise<any> {
   logger.debug(`Getting user by provider id`);
 
-  const { rows } = await repository.getUserByProviderId(pgClient, providerId, provider);
+  const { rows } = await repository.getUserByProviderId(pgClient, orgId, providerId, provider);
 
   return rows[0];
 }
@@ -437,4 +449,32 @@ export function verifyRefreshToken(token: string, secretKey: string, tokenType: 
 
 export function getKeyParts(keyName: string): string[] {
   return keyName.split('.');
+}
+
+// export async function getAuthDataByKeyName(
+//   logger: Logger,
+//   pgClient: PgClient,
+//   keyName: string
+// ): Promise<AuthData> {
+//   const [appPid, keyId] = getKeyParts(keyName);
+//   const { secretKey, orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+//   return { keyName, appPid, keyId, secretKey, orgId };
+// }
+
+export function getRequestAuthData(event: APIGatewayProxyEvent): {
+  keyName: string;
+  appPid: string;
+  keyId: string;
+} {
+  const headers = event.headers;
+  const keyName = headers['X-Ds-Key-Name'];
+
+  if (!keyName) {
+    throw new ValidationError('Missing X-Ds-Key-Name header');
+  }
+
+  const [appPid, keyId] = getKeyParts(keyName);
+
+  return { keyName, appPid, keyId };
 }

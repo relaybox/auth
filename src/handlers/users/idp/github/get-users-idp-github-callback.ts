@@ -42,7 +42,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const [_, keyId] = getKeyParts(keyName);
-    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { providerId, username, email } = await getGitHubPrimaryData(
       GITHUB_CLIENT_ID,
@@ -50,7 +50,13 @@ export const handler: APIGatewayProxyHandler = async (
       code
     );
 
-    let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GITHUB);
+    let userData = await getUserByProviderId(
+      logger,
+      pgClient,
+      orgId,
+      providerId,
+      AuthProvider.GITHUB
+    );
 
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [
