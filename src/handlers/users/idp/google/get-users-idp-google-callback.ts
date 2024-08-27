@@ -31,8 +31,6 @@ export const handler: APIGatewayProxyHandler = async (
 
   logger.info(`Fetching access token from google`);
 
-  let clientId;
-
   const pgClient = await getPgClient();
 
   try {
@@ -74,6 +72,7 @@ export const handler: APIGatewayProxyHandler = async (
       userData = await registerIdpUser(
         logger,
         pgClient,
+        orgId,
         keyId,
         email,
         tmpPassword,
@@ -83,14 +82,14 @@ export const handler: APIGatewayProxyHandler = async (
       );
     }
 
-    clientId = userData.clientId;
+    const { clientId, id: sub } = userData;
 
     if (!clientId) {
       throw new ValidationError('Failed to register user');
     }
 
-    const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
-    const refreshToken = await getAuthRefreshToken(logger, keyName, secretKey, clientId);
+    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
+    const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
     const htmlContent = getUsersIdpCallbackHtml(authToken, refreshToken);
 
     return {

@@ -1,16 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import {
-  getAuthDataByKeyId,
-  getRequestAuthParams,
-  verifyUser
-} from 'src/modules/users/users.service';
+import { getSessionDataByClientId } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-verify');
+const logger = getLogger('post-users-id-session');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -20,21 +16,18 @@ export const handler: APIGatewayProxyHandler = async (
 
   const pgClient = await getPgClient();
 
-  logger.info(`Verifying user`);
-
   try {
-    const { email, code } = JSON.parse(event.body!);
+    const { id: clientId } = event.pathParameters!;
 
-    if (!email || !code) {
-      throw new ValidationError('Email and code required');
+    if (!clientId) {
+      throw new ValidationError('Missing client id');
     }
 
-    const { keyId } = getRequestAuthParams(event);
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    logger.info(`Getting session data for user`, { clientId });
 
-    await verifyUser(logger, pgClient, orgId, email, code);
+    const sessionData = await getSessionDataByClientId(logger, pgClient, clientId);
 
-    return httpResponse._200({ message: 'User verification successful' });
+    return httpResponse._200(sessionData);
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

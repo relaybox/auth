@@ -3,7 +3,7 @@ import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   getAuthDataByKeyId,
-  getRequestAuthData,
+  getRequestAuthParams,
   registerUser
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
@@ -26,10 +26,10 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, password } = JSON.parse(event.body!);
 
     if (!email || !password) {
-      throw new ValidationError('Missing email or password');
+      throw new ValidationError('Email and password required');
     }
 
-    const { keyId } = getRequestAuthData(event);
+    const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     await registerUser(logger, pgClient, orgId, email, password);

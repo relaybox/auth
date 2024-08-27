@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
 import {
+  decrypt,
   encrypt,
   generateAuthToken,
   generateHash,
@@ -20,11 +21,17 @@ import {
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
-import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  AuthProvider,
+  AuthUser,
+  AuthVerificationCodeType,
+  ReqquestAuthParams
+} from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
-import { TokenType } from 'src/types/jwt.types';
+import { ClientJwtPayload, TokenType } from 'src/types/jwt.types';
 import { generateUsername } from 'unique-username-generator';
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import jwt from 'jsonwebtoken';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
@@ -36,6 +43,8 @@ export async function registerUser(
   password: string,
   provider: string = AuthProvider.EMAIL
 ): Promise<void> {
+  logger.debug(`Registering user`, { orgId, provider });
+
   try {
     await pgClient.query('BEGIN');
 
@@ -61,6 +70,7 @@ export async function registerUser(
 export async function registerIdpUser(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   keyId: string,
   email: string,
   password: string,
@@ -68,8 +78,10 @@ export async function registerIdpUser(
   providerId: string,
   username?: string
 ): Promise<{ uid: string; clientId: string }> {
+  logger.debug(`Registering idp user`);
+
   const autoVerify = true;
-  const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
   const { id: uid, clientId } = await createUser(
     logger,
     pgClient,
@@ -319,6 +331,8 @@ export async function createUser(
       autoVerify
     );
 
+    logger.info(`User created`, { orgId, clientId, id: rows[0].id });
+
     return rows[0];
   } catch (err: any) {
     logger.error(`Failed to create user`, { err });
@@ -349,6 +363,7 @@ export async function getAuthDataByKeyId(
 
 export async function getAuthToken(
   logger: Logger,
+  sub: string,
   keyName: string,
   secretKey: string,
   clientId: string,
@@ -357,6 +372,7 @@ export async function getAuthToken(
   logger.debug(`Generating auth token`);
 
   const payload = {
+    sub,
     keyName,
     clientId,
     tokenType: TokenType.ID_TOKEN,
@@ -372,6 +388,7 @@ export async function getAuthToken(
 
 export async function getAuthRefreshToken(
   logger: Logger,
+  sub: string,
   keyName: string,
   secretKey: string,
   clientId: string,
@@ -380,6 +397,7 @@ export async function getAuthRefreshToken(
   logger.debug(`Generating refresh token`);
 
   const payload = {
+    sub,
     keyName,
     clientId,
     tokenType: TokenType.REFRESH_TOKEN,
@@ -443,7 +461,7 @@ export function verifyRefreshToken(token: string, secretKey: string, tokenType: 
   verifyAuthToken(token, secretKey);
 
   if (tokenType !== 'refresh_token') {
-    throw new ValidationError(`Invalid typ`);
+    throw new ValidationError(`Invalid token type`);
   }
 }
 
@@ -451,22 +469,7 @@ export function getKeyParts(keyName: string): string[] {
   return keyName.split('.');
 }
 
-// export async function getAuthDataByKeyName(
-//   logger: Logger,
-//   pgClient: PgClient,
-//   keyName: string
-// ): Promise<AuthData> {
-//   const [appPid, keyId] = getKeyParts(keyName);
-//   const { secretKey, orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-
-//   return { keyName, appPid, keyId, secretKey, orgId };
-// }
-
-export function getRequestAuthData(event: APIGatewayProxyEvent): {
-  keyName: string;
-  appPid: string;
-  keyId: string;
-} {
+export function getRequestAuthParams(event: APIGatewayProxyEvent): ReqquestAuthParams {
   const headers = event.headers;
   const keyName = headers['X-Ds-Key-Name'];
 
@@ -477,4 +480,68 @@ export function getRequestAuthData(event: APIGatewayProxyEvent): {
   const [appPid, keyId] = getKeyParts(keyName);
 
   return { keyName, appPid, keyId };
+}
+
+export async function getSessionDataByClientId(
+  logger: Logger,
+  pgClient: PgClient,
+  clientId: string
+): Promise<any> {
+  logger.debug(`Getting session data for client id`, { clientId });
+
+  const { rows } = await repository.getSessionDataByClientId(pgClient, clientId);
+
+  if (!rows.length) {
+    throw new NotFoundError(`Session data not found`);
+  }
+
+  const { email } = rows[0];
+
+  const sessionData = {
+    ...rows[0],
+    email: decrypt(email)
+  };
+
+  return sessionData;
+}
+
+export async function getSessionDataById(
+  logger: Logger,
+  pgClient: PgClient,
+  id: string
+): Promise<any> {
+  logger.debug(`Getting session data for client id`, { id });
+
+  const { rows } = await repository.getSessionDataById(pgClient, id);
+
+  if (!rows.length) {
+    throw new NotFoundError(`Session data not found`);
+  }
+
+  const { email } = rows[0];
+
+  const sessionData = {
+    ...rows[0],
+    email: decrypt(email)
+  };
+
+  return sessionData;
+}
+
+export async function authorizeClientRequest(
+  logger: Logger,
+  pgClient: PgClient,
+  token: string
+): Promise<any> {
+  const { sub: id, keyName, tokenType } = jwt.decode(token) as ClientJwtPayload;
+  const [_, keyId] = getKeyParts(keyName);
+  const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+  verifyAuthToken(token, secretKey);
+
+  if (tokenType !== 'id_token') {
+    throw new ValidationError(`Invalid token type`);
+  }
+
+  return { orgId, id };
 }

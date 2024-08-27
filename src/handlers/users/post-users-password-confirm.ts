@@ -3,7 +3,7 @@ import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   getAuthDataByKeyId,
-  getRequestAuthData,
+  getRequestAuthParams,
   getUserByEmail,
   resetUserPassword
 } from 'src/modules/users/users.service';
@@ -31,7 +31,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Email, password and code required');
     }
 
-    const { keyId } = getRequestAuthData(event);
+    const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 

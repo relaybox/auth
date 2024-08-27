@@ -16,3 +16,10 @@ export enum TokenType {
   ID_TOKEN = 'id_token',
   REFRESH_TOKEN = 'refresh_token'
 }
+
+export interface ClientJwtPayload extends JwtPayload {
+  keyName: string;
+  clientId?: string | string[];
+  tokenType: string;
+  timestamp: string;
+}

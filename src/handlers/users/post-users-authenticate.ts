@@ -6,7 +6,7 @@ import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
   getAuthToken,
-  getRequestAuthData
+  getRequestAuthParams
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -26,17 +26,17 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, password } = JSON.parse(event.body!);
 
     if (!email || !password) {
-      throw new ValidationError('Missing email, password or orgId');
+      throw new ValidationError('Email and password required');
     }
 
-    const { keyName, keyId } = getRequestAuthData(event);
+    const { keyName, keyId } = getRequestAuthParams(event);
     const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     logger.info(`Authenticating user`, { keyName });
 
-    const { clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
-    const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
-    const refreshToken = await getAuthRefreshToken(logger, keyName, secretKey, clientId);
+    const { id: sub, clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
+    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
+    const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
 
     return httpResponse._200({
       token: authToken,

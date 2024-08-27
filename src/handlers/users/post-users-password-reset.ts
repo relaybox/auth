@@ -4,7 +4,7 @@ import { getPgClient } from 'src/lib/postgres';
 import {
   createAuthVerificationCode,
   getAuthDataByKeyId,
-  getRequestAuthData,
+  getRequestAuthParams,
   getUserByEmail,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
@@ -29,10 +29,10 @@ export const handler: APIGatewayProxyHandler = async (
     const { email } = JSON.parse(event.body!);
 
     if (!email) {
-      throw new ValidationError('Missing email');
+      throw new ValidationError('Email required');
     }
 
-    const { keyId } = getRequestAuthData(event);
+    const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 

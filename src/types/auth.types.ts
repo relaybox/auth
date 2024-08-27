@@ -52,6 +52,12 @@ export interface AuthUser {
   updatedAt: string;
 }
 
+export interface ReqquestAuthParams {
+  keyName: string;
+  keyId: string;
+  appPid: string;
+}
+
 export enum AuthVerificationCodeType {
   REGISTER = 'register',
   PASSWORD_RESET = 'passwordReset'
