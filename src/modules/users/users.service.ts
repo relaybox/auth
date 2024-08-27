@@ -23,6 +23,7 @@ import {
 import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
+import { generateUsername } from 'unique-username-generator';
 
 const AUTH_EMAIL_ADDRESS = 'no-reply@relaybox.net';
 
@@ -282,7 +283,7 @@ export async function createUser(
 ): Promise<AuthUser> {
   logger.debug(`Creating user`);
 
-  username = username || email.split('@')[0];
+  username = username || generateUsername();
   const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);
   const emailHash = generateHash(email);
