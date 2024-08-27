@@ -14,6 +14,7 @@ import {
 import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
 import { encrypt } from 'src/lib/encryption';
+import { getUsersIdpCallbackHtml } from 'src/modules/users/users.html';
 
 const logger = getLogger('post-users-idp-github');
 
@@ -33,12 +34,14 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { code } = event.queryStringParameters!;
-    const keyName = 'ewRnbOj5f2yR.S379hDiTPeB7';
+    const { code, state: keyName } = event.queryStringParameters!;
 
-    if (!code) {
-      throw new ValidationError('Missing authorization code');
+    if (!code || !keyName) {
+      throw new ValidationError('Missing authorization code or keyName params');
     }
+
+    const [_, keyId] = keyName.split('.');
+    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { providerId, username, email } = await getGithubUserData(
       GITHUB_CLIENT_ID,
@@ -48,21 +51,20 @@ export const handler: APIGatewayProxyHandler = async (
 
     let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GITHUB);
 
-    const [_, keyId] = keyName.split('.');
-
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [
         { key: 'username', value: username },
         { key: 'email', value: encrypt(email) }
       ]);
     } else {
-      console.log('PASWROD', Math.random().toString(36));
+      const tmpPassword = Math.random().toString(36);
+
       userData = await registerIdpUser(
         logger,
         pgClient,
         keyId,
         email,
-        Math.random().toString(36),
+        tmpPassword,
         AuthProvider.GITHUB,
         providerId,
         username
@@ -75,36 +77,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Failed to register user');
     }
 
-    console.log(`User data received`, { email });
-    console.log(`User data received`, { username });
-    console.log(`User data received`, { clientId });
-
-    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
     const refreshToken = await getAuthRefreshToken(logger, keyName, secretKey, clientId);
-
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>OAuth Callback</title>
-            <script type="text/javascript">
-                // Send the access token back to the parent window
-                window.opener.postMessage({
-                    token: "${authToken}",
-                    refreshToken: "${refreshToken}"
-                }, 'http://localhost:5173');
-
-                // // Optionally close the popup window after sending the message
-                window.close();
-            </script>
-        </head>
-        <body>
-            <h1>Authentication Successful!</h1>
-            <p>You can close this window now.</p>
-        </body>
-        </html>
-    `;
+    const htmlContent = getUsersIdpCallbackHtml(authToken, refreshToken);
 
     return {
       statusCode: 200,

@@ -267,12 +267,12 @@ export async function getAuthDataByKeyId(
   pgClient: PgClient,
   keyId: string
 ): Promise<any> {
-  logger.debug(`Getting organization by key id`);
+  logger.debug(`Getting secure auth data by key id`);
 
   const { rows } = await repository.getAuthDataByKeyId(pgClient, keyId);
 
   if (!rows.length) {
-    throw new NotFoundError(`Organization not found`);
+    throw new NotFoundError(`Secure auth data not found`);
   }
 
   return rows[0];
