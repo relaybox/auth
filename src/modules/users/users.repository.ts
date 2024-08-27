@@ -148,7 +148,7 @@ export function updateUserData(
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
-  const setValues = userData.map(({ key }, i) => `${key} = $${i + 1}`);
+  const setValues = userData.map(({ key }, i) => `"${key}" = $${i + 1}`);
   const params = [...userData.map(({ value }) => value), uid];
 
   const query = `

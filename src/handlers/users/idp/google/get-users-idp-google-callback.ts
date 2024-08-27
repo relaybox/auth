@@ -13,7 +13,7 @@ import {
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
-import { encrypt } from 'src/lib/encryption';
+import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.html';
 import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
 
@@ -59,7 +59,8 @@ export const handler: APIGatewayProxyHandler = async (
 
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [
-        { key: 'email', value: encrypt(email) }
+        { key: 'email', value: encrypt(email) },
+        { key: 'emailHash', value: generateHash(email) }
       ]);
     } else {
       const tmpPassword = Math.random().toString(36);
