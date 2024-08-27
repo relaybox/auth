@@ -1,6 +1,6 @@
 import PgClient from 'serverless-postgres';
 import { QueryResult } from 'pg';
-import { AuthProvider } from 'src/types/auth.types';
+import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
 
 export function createUser(
   pgClient: PgClient,
@@ -80,38 +80,40 @@ export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<Q
 export function createAuthVerificationCode(
   pgClient: PgClient,
   uid: string,
-  code: number
+  code: number,
+  type: AuthVerificationCodeType
 ): Promise<QueryResult> {
   const now = Date.now();
   const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
 
   const query = `
     INSERT INTO authentication_users_verification (
-      "uid", "code", "expiresAt"
+      "uid", "code", "expiresAt", type
     ) VALUES (
-      $1, $2, $3
+      $1, $2, $3, $4
     ) RETURNING code;
   `;
 
-  return pgClient.query(query, [uid, code, expiresAt]);
+  return pgClient.query(query, [uid, code, expiresAt, type]);
 }
 
 export function validateVerificationCode(
   pgClient: PgClient,
   uid: string,
-  code: number
+  code: number,
+  type: AuthVerificationCodeType
 ): Promise<QueryResult> {
   const query = `
     SELECT "code", "expiresAt", "verifiedAt"
     FROM authentication_users_verification
-    WHERE "uid" = $1 AND "code" = $2
+    WHERE "uid" = $1 AND "code" = $2 AND type = $3
     LIMIT 1;
   `;
 
-  return pgClient.query(query, [uid, code]);
+  return pgClient.query(query, [uid, code, type]);
 }
 
-export function verifyUserCode(
+export function invalidateVerificationCode(
   pgClient: PgClient,
   uid: string,
   code: number

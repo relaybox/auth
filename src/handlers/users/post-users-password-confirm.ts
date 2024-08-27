@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ValidationError } from 'src/lib/errors';
+import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { verifyUser } from 'src/modules/users/users.service';
-import { AuthVerificationCodeType } from 'src/types/auth.types';
+import { getUserByEmail, resetUserPassword } from 'src/modules/users/users.service';
+import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -20,15 +20,23 @@ export const handler: APIGatewayProxyHandler = async (
   logger.info(`Verifying user`);
 
   try {
-    const { email, code } = JSON.parse(event.body!);
+    const { email, code, password } = JSON.parse(event.body!);
 
-    if (!email || !code) {
-      throw new ValidationError('Missing email or code');
+    if (!email || !code || !password) {
+      throw new ValidationError('Email, password and code required');
     }
 
-    await verifyUser(logger, pgClient, email, code);
+    const userData = await getUserByEmail(logger, pgClient, email, AuthProvider.EMAIL);
 
-    return httpResponse._200({ message: 'User verification successful' });
+    if (!userData) {
+      throw new NotFoundError(`User not found`);
+    }
+
+    const { id: uid } = userData;
+
+    await resetUserPassword(logger, pgClient, uid, code, password);
+
+    return httpResponse._200({ message: 'Password reset successful' });
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

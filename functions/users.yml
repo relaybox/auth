@@ -60,3 +60,21 @@ get-users-idp-github-callback:
         path: /users/idp/github/callback
         method: get
         cors: true
+
+post-users-password-reset:
+  handler: src/handlers/users/post-users-password-reset.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/password-reset
+        method: post
+        cors: true
+
+post-users-password-confirm:
+  handler: src/handlers/users/post-users-password-confirm.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/password-confirm
+        method: post
+        cors: true

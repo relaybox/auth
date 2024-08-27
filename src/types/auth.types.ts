@@ -47,6 +47,11 @@ export interface AuthUser {
   updatedAt: string;
 }
 
+export enum AuthVerificationCodeType {
+  REGISTER = 'register',
+  PASSWORD_RESET = 'passwordReset'
+}
+
 export enum AuthProvider {
   EMAIL = 'email',
   GITHUB = 'github',

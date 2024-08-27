@@ -20,7 +20,7 @@ import {
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
-import { AuthProvider, AuthUser } from 'src/types/auth.types';
+import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
 
@@ -39,7 +39,12 @@ export async function registerUser(
 
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { id: uid } = await createUser(logger, pgClient, orgId, email, password, provider);
-    const code = await createAuthVerificationCode(logger, pgClient, uid);
+    const code = await createAuthVerificationCode(
+      logger,
+      pgClient,
+      uid,
+      AuthVerificationCodeType.REGISTER
+    );
     await sendAuthVerificationCode(logger, email, code);
 
     await pgClient.query('COMMIT');
@@ -139,30 +144,10 @@ export async function verifyUser(
 
     logger.debug(`Verifying user`, { uid });
 
-    const { rows: validAuthVerifications } = await repository.validateVerificationCode(
-      pgClient,
-      uid,
-      code
-    );
+    await validateVerificationCode(logger, pgClient, uid, code, AuthVerificationCodeType.REGISTER);
 
-    if (!validAuthVerifications.length) {
-      throw new NotFoundError(`Invalid verification code`);
-    }
-
-    if (validAuthVerifications[0].verifiedAt !== null) {
-      throw new ValidationError(`Verification code already used`);
-    }
-
-    if (validAuthVerifications[0].expiresAt < new Date().toISOString()) {
-      throw new NotFoundError(`Verification code expired`);
-    }
-
-    if (validAuthVerifications[0].code !== code) {
-      throw new ValidationError(`Invalid verification code`);
-    }
-
-    await repository.verifyUserCode(pgClient, uid, code);
     await repository.verifyUser(pgClient, uid);
+    await repository.invalidateVerificationCode(pgClient, uid, code);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {
@@ -172,13 +157,84 @@ export async function verifyUser(
   }
 }
 
+export async function resetUserPassword(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  code: number,
+  password: string
+): Promise<void> {
+  logger.debug(`Resetting user password`);
+
+  try {
+    await pgClient.query('BEGIN');
+
+    await validateVerificationCode(
+      logger,
+      pgClient,
+      uid,
+      code,
+      AuthVerificationCodeType.PASSWORD_RESET
+    );
+
+    const salt = generateSalt();
+    const passwordHash = strongHash(password, salt);
+
+    await updateUserData(logger, pgClient, uid, [
+      { key: 'password', value: passwordHash },
+      { key: 'salt', value: salt }
+    ]);
+
+    await repository.invalidateVerificationCode(pgClient, uid, code);
+
+    await pgClient.query('COMMIT');
+  } catch (err: any) {
+    await pgClient.query('ROLLBACK');
+    logger.error(`Failed to reset user password`, { err });
+    throw err;
+  }
+}
+
+export async function validateVerificationCode(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  code: number,
+  type: AuthVerificationCodeType
+): Promise<void> {
+  logger.debug(`Validating verification code`);
+
+  const { rows: validAuthVerifications } = await repository.validateVerificationCode(
+    pgClient,
+    uid,
+    code,
+    type
+  );
+
+  if (!validAuthVerifications.length) {
+    throw new NotFoundError(`Invalid verification code`);
+  }
+
+  if (validAuthVerifications[0].verifiedAt !== null) {
+    throw new ValidationError(`Verification code already used`);
+  }
+
+  if (validAuthVerifications[0].expiresAt < new Date().toISOString()) {
+    throw new NotFoundError(`Verification code expired`);
+  }
+
+  if (validAuthVerifications[0].code !== code) {
+    throw new ValidationError(`Invalid verification code`);
+  }
+}
+
 export async function updateUserData(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
   userData: { key: string; value: string }[]
 ): Promise<void> {
-  logger.debug(`Updating user data`);
+  logger.debug(`Updating user data`, { uid, fields: Object.keys(userData) });
 
   const { rows } = await repository.updateUserData(pgClient, uid, userData);
 
@@ -329,14 +385,15 @@ export async function getAuthRefreshToken(
 export async function createAuthVerificationCode(
   logger: Logger,
   pgClient: PgClient,
-  uid: string
+  uid: string,
+  type: AuthVerificationCodeType
 ): Promise<number> {
   logger.debug(`Getting auth verification code`);
 
   const code = Math.floor(100000 + Math.random() * 900000);
 
   try {
-    const { rows } = await repository.createAuthVerificationCode(pgClient, uid, code);
+    const { rows } = await repository.createAuthVerificationCode(pgClient, uid, code, type);
 
     return rows[0].code;
   } catch (err: any) {
