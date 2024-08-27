@@ -352,9 +352,6 @@ export async function sendAuthVerificationCode(
 ): Promise<string> {
   logger.debug(`Sending auth verification code`);
 
-  console.log('SES sandbox mode ON');
-  return '123';
-
   try {
     const options = {
       from: AUTH_EMAIL_ADDRESS,

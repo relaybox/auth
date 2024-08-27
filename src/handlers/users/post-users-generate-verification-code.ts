@@ -19,6 +19,8 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
+  logger.info(`Generating verification code`);
+
   const pgClient = await getPgClient();
 
   try {
@@ -29,7 +31,6 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const userData = await getUserByEmail(logger, pgClient, email, AuthProvider.EMAIL);
-    console.log(userData);
 
     if (!userData) {
       throw new NotFoundError(`User not found`);

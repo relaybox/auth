@@ -14,6 +14,8 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
+  logger.info(`Creating user`);
+
   const pgClient = await getPgClient();
 
   try {

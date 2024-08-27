@@ -16,6 +16,8 @@ export const handler: APIGatewayProxyHandler = async (
 
   const pgClient = await getPgClient();
 
+  logger.info(`Verifying user`);
+
   try {
     const { email, code } = JSON.parse(event.body!);
 
