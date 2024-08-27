@@ -43,6 +43,24 @@ get-users-token-refresh:
         method: get
         cors: true
 
+post-users-password-reset:
+  handler: src/handlers/users/post-users-password-reset.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/password-reset
+        method: post
+        cors: true
+
+post-users-password-confirm:
+  handler: src/handlers/users/post-users-password-confirm.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/password-confirm
+        method: post
+        cors: true
+
 get-users-idp-github-authorize:
   handler: src/handlers/users/idp/github/get-users-idp-github-authorize.handler
   timeout: 30
@@ -61,20 +79,20 @@ get-users-idp-github-callback:
         method: get
         cors: true
 
-post-users-password-reset:
-  handler: src/handlers/users/post-users-password-reset.handler
+get-users-idp-google-authorize:
+  handler: src/handlers/users/idp/google/get-users-idp-google-authorize.handler
   timeout: 30
   events:
     - http:
-        path: /users/password-reset
-        method: post
+        path: /users/idp/google/authorize
+        method: get
         cors: true
 
-post-users-password-confirm:
-  handler: src/handlers/users/post-users-password-confirm.handler
+get-users-idp-google-callback:
+  handler: src/handlers/users/idp/google/get-users-idp-google-callback.handler
   timeout: 30
   events:
     - http:
-        path: /users/password-confirm
-        method: post
+        path: /users/idp/google/callback
+        method: get
         cors: true

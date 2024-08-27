@@ -5,7 +5,7 @@ import { GithubUserData } from 'src/types/auth.types';
 const GITHUB_WEB_URL = 'https://github.com';
 const GITHUB_API_URL = 'https://api.github.com';
 
-export async function getGithubUserData(
+export async function getGitHubPrimaryData(
   clientId: string,
   clientSecret: string,
   code: string

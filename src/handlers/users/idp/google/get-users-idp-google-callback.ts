@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { getPgClient } from 'src/lib/postgres';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
-import { getGitHubPrimaryData } from 'src/lib/github';
 import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
@@ -16,11 +15,13 @@ import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
 import { encrypt } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.html';
+import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
 
-const logger = getLogger('post-users-idp-github');
+const logger = getLogger('post-users-idp-google-callback');
 
-const GITHUB_CLIENT_ID = 'Ov23liE7QYs1UQ9axuJr';
-const GITHUB_CLIENT_SECRET = 'f1899c077d17dde34413a3e15e0939cd4aa20e57';
+const GOOGLE_CLIENT_ID = '716987004698-2903nfndh2v79ldg6ltm7bu8b38dttuk.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = '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';
+const API_SERVICE_URL = process.env.API_SERVICE_URL || '';
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -43,14 +44,18 @@ export const handler: APIGatewayProxyHandler = async (
 
     const [_, keyId] = getKeyParts(keyName);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
 
-    const { providerId, username, email } = await getGitHubPrimaryData(
-      GITHUB_CLIENT_ID,
-      GITHUB_CLIENT_SECRET,
-      code
+    const authorization = await getGoogleAuthToken(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      code,
+      redirectUri
     );
 
-    let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GITHUB);
+    const { providerId, email, username } = await getGoogleUserData(authorization);
+
+    let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GOOGLE);
 
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [
@@ -65,7 +70,7 @@ export const handler: APIGatewayProxyHandler = async (
         keyId,
         email,
         tmpPassword,
-        AuthProvider.GITHUB,
+        AuthProvider.GOOGLE,
         providerId,
         username
       );
