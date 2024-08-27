@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyResult } from 'aws-lambda';
 import {
   AuthConflictError,
   DuplicateKeyError,
@@ -117,13 +117,21 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
 
 export function redirect(
   logger: Logger,
-  url: string,
-  queryParams?: Record<string, string>
+  requestUrl: string,
+  queryParams?: Record<string, string>,
+  rawQueryparams?: boolean
 ): APIGatewayProxyResult {
-  logger.info(`Redirecting to ${url}`);
+  logger.info(`Redirecting to ${requestUrl}`);
 
-  const urlQueryParams = new URLSearchParams(queryParams);
-  const requestUrl = `${url}?${urlQueryParams.toString()}&redirect_uri=http://localhost:4005/dev/users/idp/github/callback`;
+  if (queryParams) {
+    const urlQueryParams = !rawQueryparams
+      ? new URLSearchParams(queryParams).toString()
+      : Object.entries(queryParams)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('&');
+
+    requestUrl = `${requestUrl}?${urlQueryParams}`;
+  }
 
   return {
     statusCode: 302,

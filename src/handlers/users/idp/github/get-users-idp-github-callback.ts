@@ -53,7 +53,6 @@ export const handler: APIGatewayProxyHandler = async (
 
     if (userData) {
       await updateUserData(logger, pgClient, userData.id, [
-        { key: 'username', value: username },
         { key: 'email', value: encrypt(email) }
       ]);
     } else {

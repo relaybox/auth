@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import parser from 'lambda-multipart-parser';
-import { GithubAuthCredentials, GithubUserData } from 'src/types/auth.types';
+import { GithubUserData } from 'src/types/auth.types';
 
 const GITHUB_WEB_URL = 'https://github.com';
 const GITHUB_API_URL = 'https://api.github.com';
