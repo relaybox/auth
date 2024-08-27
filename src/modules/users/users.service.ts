@@ -25,7 +25,7 @@ import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
 import { generateUsername } from 'unique-username-generator';
 
-const AUTH_EMAIL_ADDRESS = 'no-reply@relaybox.net';
+const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
 export async function registerUser(
   logger: Logger,
@@ -412,7 +412,7 @@ export async function sendAuthVerificationCode(
 
   try {
     const options = {
-      from: AUTH_EMAIL_ADDRESS,
+      from: SMTP_AUTH_EMAIL,
       to: email,
       subject: 'Verification Code',
       text: `Your code is ${code}`
