@@ -5,6 +5,7 @@ import { getPgClient } from 'src/lib/postgres';
 import {
   getAuthDataByKeyId,
   getAuthToken,
+  getKeyParts,
   verifyRefreshToken
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
@@ -31,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { keyName, clientId, tokenType } = decodeAuthToken(refreshToken);
-    const [_, keyId] = keyName.split('.');
+    const [_, keyId] = getKeyParts(keyName);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     verifyRefreshToken(refreshToken, secretKey, tokenType);

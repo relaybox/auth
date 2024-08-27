@@ -7,6 +7,7 @@ import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/encryption';
 import { ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
+import { getKeyParts } from 'src/modules/users/users.service';
 
 const logger = getLogger('get-validation-token');
 
@@ -37,7 +38,7 @@ async function lambdaProxyEventHandler(
 
     logger.info(`Validating auth token`, { keyName, clientId });
 
-    const [appPid, keyId] = keyName.split('.');
+    const [appPid, keyId] = getKeyParts(keyName);
     const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 
     verifyAuthToken(token, secretKey);

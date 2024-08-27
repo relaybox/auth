@@ -433,3 +433,7 @@ export function verifyRefreshToken(token: string, secretKey: string, tokenType: 
     throw new ValidationError(`Invalid typ`);
   }
 }
+
+export function getKeyParts(keyName: string): string[] {
+  return keyName.split('.');
+}

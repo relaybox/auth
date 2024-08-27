@@ -4,6 +4,7 @@ import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
+import { getKeyParts } from 'src/modules/users/users.service';
 
 const logger = getLogger('get-validation-api-key');
 
@@ -21,7 +22,7 @@ async function lambdaProxyEventHandler(
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
     const [keyName, providedSecret] = apiKey.split(':');
-    const [appPid, keyId] = keyName.split('.');
+    const [appPid, keyId] = getKeyParts(keyName);
 
     const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 

@@ -7,6 +7,7 @@ import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
   getAuthToken,
+  getKeyParts,
   getUserByProviderId,
   registerIdpUser,
   updateUserData
@@ -40,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing authorization code or keyName params');
     }
 
-    const [_, keyId] = keyName.split('.');
+    const [_, keyId] = getKeyParts(keyName);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { providerId, username, email } = await getGithubUserData(

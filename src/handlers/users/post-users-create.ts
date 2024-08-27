@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { registerUser } from 'src/modules/users/users.service';
+import { getKeyParts, registerUser } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -19,18 +19,18 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const apiKey = event.headers['X-Ds-Api-Key'];
+    const keyName = event.headers['X-Ds-Key-Name'];
     const { email, password } = JSON.parse(event.body!);
 
-    if (!apiKey) {
-      throw new ValidationError('Missing apiKey header');
+    if (!keyName) {
+      throw new ValidationError('Missing keyName header');
     }
 
     if (!email || !password) {
       throw new ValidationError('Missing email or password');
     }
 
-    const [_, keyId] = apiKey.split('.');
+    const [_, keyId] = getKeyParts(keyName);
 
     await registerUser(logger, pgClient, keyId, email, password);
 
