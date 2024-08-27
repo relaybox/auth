@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
 import {
+  decodeAuthToken,
   decrypt,
   encrypt,
   generateAuthToken,
@@ -28,10 +29,9 @@ import {
   ReqquestAuthParams
 } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
-import { ClientJwtPayload, TokenType } from 'src/types/jwt.types';
+import { TokenType } from 'src/types/jwt.types';
 import { generateUsername } from 'unique-username-generator';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import jwt from 'jsonwebtoken';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
@@ -43,7 +43,7 @@ export async function registerUser(
   password: string,
   provider: string = AuthProvider.EMAIL
 ): Promise<void> {
-  logger.debug(`Registering user`, { orgId, provider });
+  logger.info(`Registering user`, { orgId, provider });
 
   try {
     await pgClient.query('BEGIN');
@@ -78,7 +78,7 @@ export async function registerIdpUser(
   providerId: string,
   username?: string
 ): Promise<{ uid: string; clientId: string }> {
-  logger.debug(`Registering idp user`);
+  logger.info(`Registering idp user`, { orgId, provider });
 
   const autoVerify = true;
 
@@ -165,7 +165,7 @@ export async function verifyUser(
       throw new ValidationError(`User already verified`);
     }
 
-    logger.debug(`Verifying user`, { uid });
+    logger.info(`Verifying user`, { orgId, uid });
 
     await validateVerificationCode(logger, pgClient, uid, code, AuthVerificationCodeType.REGISTER);
 
@@ -177,6 +177,57 @@ export async function verifyUser(
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to verify user`, { err });
     throw err;
+  }
+}
+
+export async function createUser(
+  logger: Logger,
+  pgClient: PgClient,
+  orgId: string,
+  email: string,
+  password: string,
+  provider?: string,
+  providerId?: string,
+  username?: string,
+  autoVerify: boolean = false
+): Promise<AuthUser> {
+  logger.debug(`Creating user`);
+
+  username = username || generateUsername();
+  const clientId = nanoid(12);
+  const encryptedEmail = encrypt(email);
+  const emailHash = generateHash(email);
+  const salt = generateSalt();
+  const passwordHash = strongHash(password, salt);
+  const keyVersion = getKeyVersion();
+
+  try {
+    const { rows } = await repository.createUser(
+      pgClient,
+      orgId,
+      clientId,
+      encryptedEmail,
+      emailHash,
+      passwordHash,
+      salt,
+      keyVersion,
+      provider,
+      providerId,
+      username,
+      autoVerify
+    );
+
+    logger.info(`User created`, { orgId, clientId, id: rows[0].id });
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to create user`, { err });
+
+    if (err.message.includes(`duplicate key`)) {
+      throw new DuplicateKeyError(`User already exists`);
+    } else {
+      throw err;
+    }
   }
 }
 
@@ -294,57 +345,6 @@ export async function getUserByProviderId(
   return rows[0];
 }
 
-export async function createUser(
-  logger: Logger,
-  pgClient: PgClient,
-  orgId: string,
-  email: string,
-  password: string,
-  provider?: string,
-  providerId?: string,
-  username?: string,
-  autoVerify: boolean = false
-): Promise<AuthUser> {
-  logger.debug(`Creating user`);
-
-  username = username || generateUsername();
-  const clientId = nanoid(12);
-  const encryptedEmail = encrypt(email);
-  const emailHash = generateHash(email);
-  const salt = generateSalt();
-  const passwordHash = strongHash(password, salt);
-  const keyVersion = getKeyVersion();
-
-  try {
-    const { rows } = await repository.createUser(
-      pgClient,
-      orgId,
-      clientId,
-      encryptedEmail,
-      emailHash,
-      passwordHash,
-      salt,
-      keyVersion,
-      provider,
-      providerId,
-      username,
-      autoVerify
-    );
-
-    logger.info(`User created`, { orgId, clientId, id: rows[0].id });
-
-    return rows[0];
-  } catch (err: any) {
-    logger.error(`Failed to create user`, { err });
-
-    if (err.message.includes(`duplicate key`)) {
-      throw new DuplicateKeyError(`User already exists`);
-    } else {
-      throw err;
-    }
-  }
-}
-
 export async function getAuthDataByKeyId(
   logger: Logger,
   pgClient: PgClient,
@@ -457,14 +457,6 @@ export async function sendAuthVerificationCode(
   }
 }
 
-export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
-  verifyAuthToken(token, secretKey);
-
-  if (tokenType !== 'refresh_token') {
-    throw new ValidationError(`Invalid token type`);
-  }
-}
-
 export function getKeyParts(keyName: string): string[] {
   return keyName.split('.');
 }
@@ -528,12 +520,20 @@ export async function getSessionDataById(
   return sessionData;
 }
 
+export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
+  verifyAuthToken(token, secretKey);
+
+  if (tokenType !== 'refresh_token') {
+    throw new ValidationError(`Invalid token type`);
+  }
+}
+
 export async function authorizeClientRequest(
   logger: Logger,
   pgClient: PgClient,
   token: string
 ): Promise<any> {
-  const { sub: id, keyName, tokenType } = jwt.decode(token) as ClientJwtPayload;
+  const { sub: id, keyName, tokenType } = decodeAuthToken(token);
   const [_, keyId] = getKeyParts(keyName);
   const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
