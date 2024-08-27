@@ -46,3 +46,21 @@ export interface AuthUser {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface GithubAuthCredentials {
+  client_id: string;
+  client_secret: string;
+  code: string;
+}
+
+export interface GithubUserData {
+  providerId: string;
+  username: string;
+  email: string;
+}
+
+export enum AuthProvider {
+  EMAIL = 'email',
+  GITHUB = 'github',
+  GOOGLE = 'google'
+}

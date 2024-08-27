@@ -1,8 +1,24 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import parser from 'lambda-multipart-parser';
+import { GithubAuthCredentials, GithubUserData } from 'src/types/auth.types';
 
 const GITHUB_WEB_URL = 'https://github.com';
 const GITHUB_API_URL = 'https://api.github.com';
+
+export async function getGithubUserData(
+  clientId: string,
+  clientSecret: string,
+  code: string
+): Promise<GithubUserData> {
+  const accessToken = await getGitHubAuthTokenWeb(clientId, clientSecret, code);
+
+  const authorization = `Bearer ${accessToken}`;
+
+  const email = await getGitHubUserPrimaryEmail(authorization);
+  const { id: providerId, login: username } = await getGitHubUserData(authorization);
+
+  return { providerId, username, email };
+}
 
 export async function getGitHubAuthToken(event: APIGatewayProxyEvent): Promise<any> {
   const { client_id, client_secret, code } = await parser.parse(event);
@@ -25,6 +41,35 @@ export async function getGitHubAuthToken(event: APIGatewayProxyEvent): Promise<a
   const token = await response.json();
 
   return token;
+}
+
+export async function getGitHubAuthTokenWeb(
+  clientId: string,
+  clientSecret: string,
+  code: string
+): Promise<any> {
+  const requestBody = {
+    client_id: clientId,
+    client_secret: clientSecret,
+    code
+  };
+
+  const response = await fetch(`${GITHUB_WEB_URL}/login/oauth/access_token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  const data = <{ access_token: string }>await response.json();
+
+  if (!response.ok) {
+    throw new Error('Error fetching github token');
+  }
+
+  return data.access_token;
 }
 
 export async function getGitHubUserData(authorization: string): Promise<any> {

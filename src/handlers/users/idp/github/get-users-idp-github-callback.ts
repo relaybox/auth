@@ -2,13 +2,18 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { getPgClient } from 'src/lib/postgres';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
-import { getGitHubUserPrimaryEmail } from 'src/lib/github';
+import { getGithubUserData } from 'src/lib/github';
 import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
   getAuthToken,
-  registerIdpUser
+  getUserByProviderId,
+  registerIdpUser,
+  updateUserData
 } from 'src/modules/users/users.service';
+import { ValidationError } from 'src/lib/errors';
+import { AuthProvider } from 'src/types/auth.types';
+import { encrypt } from 'src/lib/encryption';
 
 const logger = getLogger('post-users-idp-github');
 
@@ -23,40 +28,57 @@ export const handler: APIGatewayProxyHandler = async (
 
   logger.info(`Fetching access token from github`);
 
+  let clientId;
+
   const pgClient = await getPgClient();
 
   try {
     const { code } = event.queryStringParameters!;
     const keyName = 'ewRnbOj5f2yR.S379hDiTPeB7';
 
-    const response = await fetch('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify({
-        client_id: GITHUB_CLIENT_ID,
-        client_secret: GITHUB_CLIENT_SECRET,
-        code
-      })
-    });
-
-    const data = <{ access_token: string }>await response.json();
-
-    if (!response.ok) {
-      logger.error(`Failed to fetch github token`, { data });
-      throw new Error('Error fetching github token');
+    if (!code) {
+      throw new ValidationError('Missing authorization code');
     }
 
-    console.log(`Access token received`, { data });
+    const { providerId, username, email } = await getGithubUserData(
+      GITHUB_CLIENT_ID,
+      GITHUB_CLIENT_SECRET,
+      code
+    );
 
-    const email = await getGitHubUserPrimaryEmail(`Bearer ${data.access_token}`);
-
-    console.log(`User data received`, { email });
+    let userData = await getUserByProviderId(logger, pgClient, providerId, AuthProvider.GITHUB);
 
     const [_, keyId] = keyName.split('.');
-    const { clientId } = await registerIdpUser(logger, pgClient, keyId, email, '123', 'github');
+
+    if (userData) {
+      await updateUserData(logger, pgClient, userData.id, [
+        { key: 'username', value: username },
+        { key: 'email', value: encrypt(email) }
+      ]);
+    } else {
+      console.log('PASWROD', Math.random().toString(36));
+      userData = await registerIdpUser(
+        logger,
+        pgClient,
+        keyId,
+        email,
+        Math.random().toString(36),
+        AuthProvider.GITHUB,
+        providerId,
+        username
+      );
+    }
+
+    clientId = userData.clientId;
+
+    if (!clientId) {
+      throw new ValidationError('Failed to register user');
+    }
+
+    console.log(`User data received`, { email });
+    console.log(`User data received`, { username });
+    console.log(`User data received`, { clientId });
+
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const authToken = await getAuthToken(logger, keyName, secretKey, clientId);
     const refreshToken = await getAuthRefreshToken(logger, keyName, secretKey, clientId);

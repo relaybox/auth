@@ -20,7 +20,7 @@ import {
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
-import { AuthUser } from 'src/types/auth.types';
+import { AuthProvider, AuthUser } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
 
@@ -32,7 +32,7 @@ export async function registerUser(
   keyId: string,
   email: string,
   password: string,
-  provider: string
+  provider: string = 'email'
 ): Promise<void> {
   try {
     await pgClient.query('BEGIN');
@@ -56,8 +56,11 @@ export async function registerIdpUser(
   keyId: string,
   email: string,
   password: string,
-  provider: string
+  provider: string,
+  providerId: string,
+  username?: string
 ): Promise<{ uid: string; clientId: string }> {
+  const autoVerify = true;
   const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
   const { id: uid, clientId } = await createUser(
     logger,
@@ -65,7 +68,10 @@ export async function registerIdpUser(
     orgId,
     email,
     password,
-    provider
+    provider,
+    providerId,
+    username,
+    autoVerify
   );
 
   return { uid, clientId };
@@ -80,7 +86,7 @@ export async function authenticateUser(
   logger.debug(`Authenticating user`);
 
   const emailHash = generateHash(email);
-  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash);
+  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash, AuthProvider.EMAIL);
 
   if (!rows.length) {
     throw new NotFoundError(`User not found`);
@@ -120,7 +126,12 @@ export async function verifyUser(
   try {
     await pgClient.query('BEGIN');
 
-    const { id: uid, verifiedAt } = await getUserByEmail(logger, pgClient, email);
+    const { id: uid, verifiedAt } = await getUserByEmail(
+      logger,
+      pgClient,
+      email,
+      AuthProvider.EMAIL
+    );
 
     if (verifiedAt) {
       throw new ValidationError(`User already verified`);
@@ -161,20 +172,43 @@ export async function verifyUser(
   }
 }
 
+export async function updateUserData(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  userData: { key: string; value: string }[]
+): Promise<void> {
+  logger.debug(`Updating user data`);
+
+  const { rows } = await repository.updateUserData(pgClient, uid, userData);
+
+  return rows[0];
+}
+
 export async function getUserByEmail(
   logger: Logger,
   pgClient: PgClient,
-  email: string
+  email: string,
+  provider: AuthProvider
 ): Promise<any> {
   logger.debug(`Getting user by email`);
 
   const emailHash = generateHash(email);
 
-  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash);
+  const { rows } = await repository.getUserByEmailHash(pgClient, emailHash, provider);
 
-  if (!rows.length) {
-    throw new NotFoundError(`User not found`);
-  }
+  return rows[0];
+}
+
+export async function getUserByProviderId(
+  logger: Logger,
+  pgClient: PgClient,
+  providerId: string,
+  provider: AuthProvider
+): Promise<any> {
+  logger.debug(`Getting user by provider id`);
+
+  const { rows } = await repository.getUserByProviderId(pgClient, providerId, provider);
 
   return rows[0];
 }
@@ -185,12 +219,15 @@ export async function createUser(
   orgId: string,
   email: string,
   password: string,
-  provider?: string
+  provider?: string,
+  providerId?: string,
+  username?: string,
+  autoVerify: boolean = false
 ): Promise<AuthUser> {
   logger.debug(`Creating user`);
 
-  const username = email.split('@')[0];
-  const uid = nanoid(12);
+  username = username || email.split('@')[0];
+  const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);
   const emailHash = generateHash(email);
   const salt = generateSalt();
@@ -201,14 +238,16 @@ export async function createUser(
     const { rows } = await repository.createUser(
       pgClient,
       orgId,
-      uid,
-      username,
+      clientId,
       encryptedEmail,
       emailHash,
       passwordHash,
       salt,
       keyVersion,
-      provider
+      provider,
+      providerId,
+      username,
+      autoVerify
     );
 
     return rows[0];
