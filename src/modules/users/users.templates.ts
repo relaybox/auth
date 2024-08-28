@@ -1,25 +1,13 @@
-import { AuthUser } from 'src/types/auth.types';
+import { AuthSession } from 'src/types/auth.types';
 
-export function getUsersIdpCallbackHtml(
-  authToken: string,
-  refreshToken: string,
-  expiresIn: number,
-  expiresAt: number,
-  user: AuthUser
-): string {
+export function getUsersIdpCallbackHtml(authSession: AuthSession): string {
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <title>OAuth Callback</title>
       <script type="text/javascript">
-        window.opener.postMessage({
-          token: "${authToken}",
-          refreshToken: "${refreshToken}",
-          expiresIn: ${expiresIn},
-          expiresAt: ${expiresAt},
-          user: ${JSON.stringify(user)}
-        }, 'http://localhost:5173');
+        window.opener.postMessage(${JSON.stringify(authSession)}, 'http://localhost:5173');
         window.close();
       </script>
     </head>

@@ -46,7 +46,7 @@ export const handler: APIGatewayProxyHandler = async (
     const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
     const authStorageType = AuthStorageType.SESSION;
 
-    return httpResponse._200({
+    const authSession = {
       token: authToken,
       refreshToken,
       expiresIn,
@@ -54,7 +54,9 @@ export const handler: APIGatewayProxyHandler = async (
       destroyAt,
       authStorageType,
       user
-    });
+    };
+
+    return httpResponse._200(authSession);
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

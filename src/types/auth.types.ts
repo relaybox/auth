@@ -54,6 +54,16 @@ export interface AuthUser {
   providerId?: string | null;
 }
 
+export interface AuthSession {
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+  expiresAt: number;
+  destroyAt: number;
+  authStorageType: AuthStorageType;
+  user: AuthUser;
+}
+
 export interface RequestAuthParams {
   keyName: string;
   keyId: string;

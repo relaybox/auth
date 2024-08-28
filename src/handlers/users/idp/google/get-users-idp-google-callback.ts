@@ -9,11 +9,12 @@ import {
   getKeyParts,
   getUserByProviderId,
   getUserDataById,
+  REFRESH_TOKEN_EXPIRES_IN_SECS,
   registerIdpUser,
   updateUserData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
-import { AuthProvider } from 'src/types/auth.types';
+import { AuthProvider, AuthStorageType } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
@@ -89,18 +90,25 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Failed to register user');
     }
 
+    const expiresIn = 300;
     const user = await getUserDataById(logger, pgClient, sub);
-    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
+    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);
     const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
-    const expiresIn = 900;
     const expiresAt = new Date().getTime() + expiresIn * 1000;
-    const htmlContent = getUsersIdpCallbackHtml(
-      authToken,
+    const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
+    const authStorageType = AuthStorageType.SESSION;
+
+    const authSession = {
+      token: authToken,
       refreshToken,
       expiresIn,
       expiresAt,
+      destroyAt,
+      authStorageType,
       user
-    );
+    };
+
+    const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {
       statusCode: 200,

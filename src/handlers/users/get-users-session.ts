@@ -31,18 +31,15 @@ export const handler: APIGatewayProxyHandler = async (
     const { keyName, keyId } = getRequestAuthParams(event);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    logger.info(`Authenticating user`, { keyName });
-
-    const { id: sub, clientId } = await getUserDataById(logger, pgClient, id);
     const expiresIn = 300;
-    const user = await getUserDataById(logger, pgClient, sub);
-    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);
-    const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
+    const user = await getUserDataById(logger, pgClient, id);
+    const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
+    const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId);
     const expiresAt = new Date().getTime() + expiresIn * 1000;
     const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
     const authStorageType = AuthStorageType.SESSION;
 
-    return httpResponse._200({
+    const authSession = {
       token: authToken,
       refreshToken,
       expiresIn,
@@ -50,7 +47,9 @@ export const handler: APIGatewayProxyHandler = async (
       destroyAt,
       authStorageType,
       user
-    });
+    };
+
+    return httpResponse._200(authSession);
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {
