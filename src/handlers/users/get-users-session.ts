@@ -15,7 +15,7 @@ import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-authenticate');
+const logger = getLogger('get-users-session');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -26,18 +26,14 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { email, password } = JSON.parse(event.body!);
-
-    if (!email || !password) {
-      throw new ValidationError('Email and password required');
-    }
+    const id = event.requestContext.authorizer!.principalId;
 
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     logger.info(`Authenticating user`, { keyName });
 
-    const { id: sub, clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
+    const { id: sub, clientId } = await getUserDataById(logger, pgClient, id);
     const expiresIn = 300;
     const user = await getUserDataById(logger, pgClient, sub);
     const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);

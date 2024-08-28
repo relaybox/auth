@@ -5,3 +5,7 @@ admin-authorizer:
 user-authorizer:
   handler: src/handlers/authorizers/user-authorizer.handler
   type: TOKEN
+
+session-authorizer:
+  handler: src/handlers/authorizers/session-authorizer.handler
+  type: TOKEN

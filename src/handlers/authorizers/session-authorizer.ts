@@ -18,7 +18,7 @@ export const handler = async (
 
   try {
     const token = event.authorizationToken!.substring(7);
-    const verified = await authorizeClientRequest(logger, pgClient, token, TokenType.ID_TOKEN);
+    const verified = await authorizeClientRequest(logger, pgClient, token, TokenType.REFRESH_TOKEN);
     const policyDocument = generateAuthResponsePolicyDocument(PolicyEffect.ALLOW, event.methodArn);
 
     return <AuthResponse>{

@@ -116,3 +116,13 @@ get-users-me:
         method: get
         cors: true
         authorizer: user-authorizer
+
+get-users-session:
+  handler: src/handlers/users/get-users-session.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/session
+        method: get
+        cors: true
+        authorizer: session-authorizer

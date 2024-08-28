@@ -482,22 +482,22 @@ export async function getUserDataByClientId(
   pgClient: PgClient,
   clientId: string
 ): Promise<AuthUser> {
-  logger.debug(`Getting session data for client id`, { clientId });
+  logger.debug(`Getting user data for client id`, { clientId });
 
   const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
 
   if (!rows.length) {
-    throw new NotFoundError(`Session data not found`);
+    throw new NotFoundError(`User data not found`);
   }
 
   const { email } = rows[0];
 
-  const sessionData = {
+  const userData = {
     ...rows[0],
     email: decrypt(email)
   };
 
-  return sessionData;
+  return userData;
 }
 
 export async function getUserDataById(
@@ -505,22 +505,22 @@ export async function getUserDataById(
   pgClient: PgClient,
   id: string
 ): Promise<AuthUser> {
-  logger.debug(`Getting session data for client id`, { id });
+  logger.debug(`Getting user data for user id`, { id });
 
   const { rows } = await repository.getUserDataById(pgClient, id);
 
   if (!rows.length) {
-    throw new NotFoundError(`Session data not found`);
+    throw new NotFoundError(`Session user not found`);
   }
 
   const { email } = rows[0];
 
-  const sessionData = {
+  const userData = {
     ...rows[0],
     email: decrypt(email)
   };
 
-  return sessionData;
+  return userData;
 }
 
 export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
@@ -538,7 +538,8 @@ export function verifyRefreshToken(token: string, secretKey: string, tokenType: 
 export async function authorizeClientRequest(
   logger: Logger,
   pgClient: PgClient,
-  token: string
+  token: string,
+  matchTokenType?: string
 ): Promise<any> {
   const { sub: id, keyName, tokenType } = decodeAuthToken(token);
   const { keyId } = getKeyParts(keyName);
@@ -546,7 +547,7 @@ export async function authorizeClientRequest(
 
   verifyAuthToken(token, secretKey);
 
-  if (tokenType !== 'id_token') {
+  if (tokenType !== matchTokenType) {
     throw new ValidationError(`Invalid token type`);
   }
 
