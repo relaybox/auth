@@ -6,6 +6,7 @@ import { getGitHubPrimaryData } from 'src/lib/github';
 import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
+  getAuthSession,
   getAuthToken,
   getKeyParts,
   getUserByProviderId,
@@ -79,30 +80,14 @@ export const handler: APIGatewayProxyHandler = async (
       );
     }
 
-    const { clientId, id: sub } = userData;
+    const { clientId, id } = userData;
 
     if (!clientId) {
       throw new ValidationError('Failed to register user');
     }
 
     const expiresIn = 300;
-    const user = await getUserDataById(logger, pgClient, sub);
-    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);
-    const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
-    const expiresAt = new Date().getTime() + expiresIn * 1000;
-    const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
-    const authStorageType = AuthStorageType.SESSION;
-
-    const authSession = {
-      token: authToken,
-      refreshToken,
-      expiresIn,
-      expiresAt,
-      destroyAt,
-      authStorageType,
-      user
-    };
-
+    const authSession = await getAuthSession(logger, pgClient, id, keyName, secretKey, expiresIn);
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {

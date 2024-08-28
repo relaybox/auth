@@ -24,6 +24,8 @@ import {
 } from 'src/lib/errors';
 import {
   AuthProvider,
+  AuthSession,
+  AuthStorageType,
   AuthUser,
   AuthVerificationCodeType,
   RequestAuthParams
@@ -552,4 +554,33 @@ export async function authorizeClientRequest(
   }
 
   return { orgId, id };
+}
+
+export async function getAuthSession(
+  logger: Logger,
+  pgClient: PgClient,
+  id: string,
+  keyName: string,
+  secretKey: string,
+  expiresIn: number = 300
+): Promise<AuthSession> {
+  logger.debug(`Getting auth session for user`, { id });
+
+  const now = Date.now();
+  const user = await getUserDataById(logger, pgClient, id);
+  const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
+  const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId);
+  const expiresAt = now + expiresIn * 1000;
+  const destroyAt = now + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
+  const authStorageType = AuthStorageType.SESSION;
+
+  return {
+    token: authToken,
+    refreshToken,
+    expiresIn,
+    expiresAt,
+    destroyAt,
+    authStorageType,
+    user
+  };
 }

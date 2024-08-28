@@ -5,6 +5,7 @@ import {
   authenticateUser,
   getAuthDataByKeyId,
   getAuthRefreshToken,
+  getAuthSession,
   getAuthToken,
   getRequestAuthParams,
   getUserDataById,
@@ -30,24 +31,8 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { keyName, keyId } = getRequestAuthParams(event);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-
     const expiresIn = 300;
-    const user = await getUserDataById(logger, pgClient, id);
-    const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
-    const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId);
-    const expiresAt = new Date().getTime() + expiresIn * 1000;
-    const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
-    const authStorageType = AuthStorageType.SESSION;
-
-    const authSession = {
-      token: authToken,
-      refreshToken,
-      expiresIn,
-      expiresAt,
-      destroyAt,
-      authStorageType,
-      user
-    };
+    const authSession = await getAuthSession(logger, pgClient, id, keyName, secretKey, expiresIn);
 
     return httpResponse._200(authSession);
   } catch (err: any) {
