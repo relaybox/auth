@@ -52,7 +52,17 @@ export interface AuthUser {
   updatedAt: string;
 }
 
-export interface ReqquestAuthParams {
+export interface AuthSession {
+  id: string;
+  username: string;
+  clientId: string;
+  email: string;
+  createdAt: string;
+  provider: AuthProvider;
+  providerId: string | null;
+}
+
+export interface RequestAuthParams {
   keyName: string;
   keyId: string;
   appPid: string;

@@ -97,15 +97,15 @@ get-users-idp-google-callback:
         method: get
         cors: true
 
-get-users-id-session:
-  handler: src/handlers/users/get-users-id-session.handler
-  timeout: 30
-  events:
-    - http:
-        path: /users/{id}/session
-        method: get
-        cors: true
-        authorizer: user-authorizer
+# get-users-id-session:
+#   handler: src/handlers/users/get-users-id-session.handler
+#   timeout: 30
+#   events:
+#     - http:
+#         path: /users/{id}/session
+#         method: get
+#         cors: true
+#         authorizer: user-authorizer
 
 get-users-session:
   handler: src/handlers/users/get-users-session.handler

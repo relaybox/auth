@@ -24,9 +24,10 @@ import {
 } from 'src/lib/errors';
 import {
   AuthProvider,
+  AuthSession,
   AuthUser,
   AuthVerificationCodeType,
-  ReqquestAuthParams
+  RequestAuthParams
 } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
@@ -465,7 +466,7 @@ export function getKeyParts(keyName: string): { appPid: string; keyId: string } 
   return { appPid, keyId };
 }
 
-export function getRequestAuthParams(event: APIGatewayProxyEvent): ReqquestAuthParams {
+export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthParams {
   const headers = event.headers;
   const keyName = headers['X-Ds-Key-Name'];
 
@@ -482,7 +483,7 @@ export async function getSessionDataByClientId(
   logger: Logger,
   pgClient: PgClient,
   clientId: string
-): Promise<any> {
+): Promise<AuthSession> {
   logger.debug(`Getting session data for client id`, { clientId });
 
   const { rows } = await repository.getSessionDataByClientId(pgClient, clientId);
@@ -505,7 +506,7 @@ export async function getSessionDataById(
   logger: Logger,
   pgClient: PgClient,
   id: string
-): Promise<any> {
+): Promise<AuthSession> {
   logger.debug(`Getting session data for client id`, { id });
 
   const { rows } = await repository.getSessionDataById(pgClient, id);
