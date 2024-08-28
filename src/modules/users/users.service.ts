@@ -191,7 +191,7 @@ export async function createUser(
   username?: string,
   autoVerify: boolean = false
 ): Promise<AuthUser> {
-  logger.debug(`Creating user`);
+  logger.debug(`Creating user`, { orgId, provider });
 
   username = username || generateUsername();
   const clientId = nanoid(12);
@@ -382,6 +382,7 @@ export async function getAuthToken(
   try {
     return generateAuthToken(payload, secretKey, expiresIn);
   } catch (err: any) {
+    logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);
   }
 }
@@ -409,6 +410,7 @@ export async function getAuthRefreshToken(
   try {
     return generateAuthToken(payload, secretKey, refreshExpiresIn);
   } catch (err: any) {
+    logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);
   }
 }
