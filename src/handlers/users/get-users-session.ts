@@ -1,17 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
-  authenticateUser,
   getAuthDataByKeyId,
-  getAuthRefreshToken,
   getAuthSession,
-  getAuthToken,
-  getRequestAuthParams,
-  getUserDataById,
-  REFRESH_TOKEN_EXPIRES_IN_SECS
+  getRequestAuthParams
 } from 'src/modules/users/users.service';
-import { AuthStorageType } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
