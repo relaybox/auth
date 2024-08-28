@@ -457,8 +457,10 @@ export async function sendAuthVerificationCode(
   }
 }
 
-export function getKeyParts(keyName: string): string[] {
-  return keyName.split('.');
+export function getKeyParts(keyName: string): { appPid: string; keyId: string } {
+  const [appPid, keyId] = keyName.split('.');
+
+  return { appPid, keyId };
 }
 
 export function getRequestAuthParams(event: APIGatewayProxyEvent): ReqquestAuthParams {
@@ -469,7 +471,7 @@ export function getRequestAuthParams(event: APIGatewayProxyEvent): ReqquestAuthP
     throw new ValidationError('Missing X-Ds-Key-Name header');
   }
 
-  const [appPid, keyId] = getKeyParts(keyName);
+  const { appPid, keyId } = getKeyParts(keyName);
 
   return { keyName, appPid, keyId };
 }
@@ -534,7 +536,7 @@ export async function authorizeClientRequest(
   token: string
 ): Promise<any> {
   const { sub: id, keyName, tokenType } = decodeAuthToken(token);
-  const [_, keyId] = getKeyParts(keyName);
+  const { keyId } = getKeyParts(keyName);
   const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
   verifyAuthToken(token, secretKey);

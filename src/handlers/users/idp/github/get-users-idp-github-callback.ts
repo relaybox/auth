@@ -39,7 +39,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing authorization code or keyName params');
     }
 
-    const [_, keyId] = getKeyParts(keyName);
+    const { keyId } = getKeyParts(keyName);
     const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { providerId, username, email } = await getGitHubPrimaryData(

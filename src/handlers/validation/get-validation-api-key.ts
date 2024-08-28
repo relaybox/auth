@@ -22,7 +22,7 @@ async function lambdaProxyEventHandler(
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
     const [keyName, providedSecret] = apiKey.split(':');
-    const [appPid, keyId] = getKeyParts(keyName);
+    const { appPid, keyId } = getKeyParts(keyName);
 
     const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
 

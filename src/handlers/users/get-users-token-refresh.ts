@@ -32,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { sub, keyName, clientId, tokenType } = decodeAuthToken(refreshToken);
-    const [_, keyId] = getKeyParts(keyName);
+    const { keyId } = getKeyParts(keyName);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     verifyRefreshToken(refreshToken, secretKey, tokenType);
