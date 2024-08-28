@@ -7,8 +7,10 @@ import {
   getAuthRefreshToken,
   getAuthToken,
   getRequestAuthParams,
-  getUserDataById
+  getUserDataById,
+  REFRESH_TOKEN_EXPIRES_IN_SECS
 } from 'src/modules/users/users.service';
+import { AuthStorageType } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -36,17 +38,21 @@ export const handler: APIGatewayProxyHandler = async (
     logger.info(`Authenticating user`, { keyName });
 
     const { id: sub, clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
+    const expiresIn = 2;
     const user = await getUserDataById(logger, pgClient, sub);
-    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
+    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);
     const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
-    const expiresIn = 900;
     const expiresAt = new Date().getTime() + expiresIn * 1000;
+    const destroyAt = new Date().getTime() + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
+    const authStorageType = AuthStorageType.SESSION;
 
     return httpResponse._200({
       token: authToken,
       refreshToken,
       expiresIn,
       expiresAt,
+      destroyAt,
+      authStorageType,
       user
     });
   } catch (err: any) {

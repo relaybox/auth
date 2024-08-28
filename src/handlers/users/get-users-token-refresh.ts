@@ -37,8 +37,8 @@ export const handler: APIGatewayProxyHandler = async (
 
     verifyRefreshToken(refreshToken, secretKey, tokenType);
 
-    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
-    const expiresIn = 900;
+    const expiresIn = 2;
+    const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId, expiresIn);
     const expiresAt = new Date().getTime() + expiresIn * 1000;
 
     return httpResponse._200({

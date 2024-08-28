@@ -34,6 +34,7 @@ import { generateUsername } from 'unique-username-generator';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
+export const REFRESH_TOKEN_EXPIRES_IN_SECS = 7 * 24 * 60 * 60;
 
 export async function registerUser(
   logger: Logger,
@@ -367,7 +368,7 @@ export async function getAuthToken(
   keyName: string,
   secretKey: string,
   clientId: string,
-  expiresIn: number = 900
+  expiresIn: number = 2
 ): Promise<any> {
   logger.debug(`Generating auth token`);
 
@@ -405,10 +406,8 @@ export async function getAuthRefreshToken(
     timestamp: new Date().toISOString()
   };
 
-  const refreshExpiresIn = 7 * 24 * 60 * 60;
-
   try {
-    return generateAuthToken(payload, secretKey, refreshExpiresIn);
+    return generateAuthToken(payload, secretKey, REFRESH_TOKEN_EXPIRES_IN_SECS);
   } catch (err: any) {
     logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);

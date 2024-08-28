@@ -10,15 +10,20 @@ import {
 } from '../lib/errors';
 import { Logger } from 'winston';
 
-const headers = {
+const defaultHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Credentials': true
 };
 
-export function _200(body?: any): APIGatewayProxyResult {
+export function _200(body?: any, headers: any = {}): APIGatewayProxyResult {
+  const responseheaders = {
+    ...defaultHeaders,
+    ...headers
+  };
+
   return {
     statusCode: 200,
-    headers,
+    headers: responseheaders,
     body: JSON.stringify(body)
   };
 }
@@ -26,7 +31,7 @@ export function _200(body?: any): APIGatewayProxyResult {
 export function _400(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 400,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -34,7 +39,7 @@ export function _400(body?: any): APIGatewayProxyResult {
 export function _500(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 500,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -42,7 +47,7 @@ export function _500(body?: any): APIGatewayProxyResult {
 export function _403(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 403,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -50,7 +55,7 @@ export function _403(body?: any): APIGatewayProxyResult {
 export function _404(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 404,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -58,7 +63,7 @@ export function _404(body?: any): APIGatewayProxyResult {
 export function _401(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 401,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -66,7 +71,7 @@ export function _401(body?: any): APIGatewayProxyResult {
 export function _422(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 422,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }
@@ -74,7 +79,7 @@ export function _422(body?: any): APIGatewayProxyResult {
 export function _409(body?: any): APIGatewayProxyResult {
   return {
     statusCode: 409,
-    headers,
+    headers: defaultHeaders,
     body: JSON.stringify(body)
   };
 }

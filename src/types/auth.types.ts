@@ -65,6 +65,11 @@ export enum AuthVerificationCodeType {
   PASSWORD_RESET = 'passwordReset'
 }
 
+export enum AuthStorageType {
+  PERSIST = 'persist',
+  SESSION = 'session'
+}
+
 export enum AuthProvider {
   EMAIL = 'email',
   GITHUB = 'github',
