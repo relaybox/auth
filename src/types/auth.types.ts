@@ -46,20 +46,12 @@ export interface User {
 export interface AuthUser {
   id: string;
   clientId: string;
-  orgId: string;
-  username: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AuthSession {
-  id: string;
-  username: string;
-  clientId: string;
-  email: string;
-  createdAt: string;
-  provider: AuthProvider;
-  providerId: string | null;
+  username?: string;
+  email?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  provider?: AuthProvider;
+  providerId?: string | null;
 }
 
 export interface RequestAuthParams {

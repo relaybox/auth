@@ -9,13 +9,14 @@ import {
   getAuthToken,
   getKeyParts,
   getUserByProviderId,
+  getUserDataById,
   registerIdpUser,
   updateUserData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
-import { getUsersIdpCallbackHtml } from 'src/modules/users/users.html';
+import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 
 const logger = getLogger('post-users-idp-github');
 
@@ -83,9 +84,18 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Failed to register user');
     }
 
+    const user = await getUserDataById(logger, pgClient, sub);
     const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
     const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
-    const htmlContent = getUsersIdpCallbackHtml(authToken, refreshToken);
+    const expiresIn = 900;
+    const expiresAt = new Date().getTime() + expiresIn * 1000;
+    const htmlContent = getUsersIdpCallbackHtml(
+      authToken,
+      refreshToken,
+      expiresIn,
+      expiresAt,
+      user
+    );
 
     return {
       statusCode: 200,

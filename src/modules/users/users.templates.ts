@@ -1,4 +1,12 @@
-export function getUsersIdpCallbackHtml(authToken: string, refreshToken: string): string {
+import { AuthUser } from 'src/types/auth.types';
+
+export function getUsersIdpCallbackHtml(
+  authToken: string,
+  refreshToken: string,
+  expiresIn: number,
+  expiresAt: number,
+  user: AuthUser
+): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -7,9 +15,11 @@ export function getUsersIdpCallbackHtml(authToken: string, refreshToken: string)
       <script type="text/javascript">
         window.opener.postMessage({
           token: "${authToken}",
-          refreshToken: "${refreshToken}"
+          refreshToken: "${refreshToken}",
+          expiresIn: ${expiresIn},
+          expiresAt: ${expiresAt},
+          user: ${JSON.stringify(user)}
         }, 'http://localhost:5173');
-
         window.close();
       </script>
     </head>

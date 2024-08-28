@@ -24,7 +24,6 @@ import {
 } from 'src/lib/errors';
 import {
   AuthProvider,
-  AuthSession,
   AuthUser,
   AuthVerificationCodeType,
   RequestAuthParams
@@ -479,14 +478,14 @@ export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthPa
   return { keyName, appPid, keyId };
 }
 
-export async function getSessionDataByClientId(
+export async function getUserDataByClientId(
   logger: Logger,
   pgClient: PgClient,
   clientId: string
-): Promise<AuthSession> {
+): Promise<AuthUser> {
   logger.debug(`Getting session data for client id`, { clientId });
 
-  const { rows } = await repository.getSessionDataByClientId(pgClient, clientId);
+  const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
 
   if (!rows.length) {
     throw new NotFoundError(`Session data not found`);
@@ -502,14 +501,14 @@ export async function getSessionDataByClientId(
   return sessionData;
 }
 
-export async function getSessionDataById(
+export async function getUserDataById(
   logger: Logger,
   pgClient: PgClient,
   id: string
-): Promise<AuthSession> {
+): Promise<AuthUser> {
   logger.debug(`Getting session data for client id`, { id });
 
-  const { rows } = await repository.getSessionDataById(pgClient, id);
+  const { rows } = await repository.getUserDataById(pgClient, id);
 
   if (!rows.length) {
     throw new NotFoundError(`Session data not found`);

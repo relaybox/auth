@@ -1,12 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { getSessionDataById } from 'src/modules/users/users.service';
+import { getUserDataByClientId } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-session');
+const logger = getLogger('post-users-id-session');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -17,15 +17,15 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const id = event.requestContext.authorizer!.principalId;
+    const { id: clientId } = event.pathParameters!;
 
-    if (!id) {
+    if (!clientId) {
       throw new ValidationError('Missing client id');
     }
 
-    logger.info(`Getting session data for user`, { id });
+    logger.info(`Getting session data for user`, { clientId });
 
-    const sessionData = await getSessionDataById(logger, pgClient, id);
+    const sessionData = await getUserDataByClientId(logger, pgClient, clientId);
 
     return httpResponse._200(sessionData);
   } catch (err: any) {

@@ -162,25 +162,25 @@ export function updateUserData(
   return pgClient.query(query, params);
 }
 
-function getSessionDataQueryBy(idFilter: string): string {
+function getUserDataQueryBy(idFilter: string): string {
   return `
-    SELECT id, username, "clientId", email, "createdAt", "provider", "providerId" 
+    SELECT id, username, "clientId", email, "createdAt", "updatedAt", "provider", "providerId" 
     FROM authentication_users
     WHERE "${idFilter}" = $1;
   `;
 }
 
-export async function getSessionDataByClientId(
+export async function getUserDataByClientId(
   pgClient: PgClient,
   clientId: string
 ): Promise<QueryResult> {
-  const query = getSessionDataQueryBy('clientId');
+  const query = getUserDataQueryBy('clientId');
 
   return pgClient.query(query, [clientId]);
 }
 
-export async function getSessionDataById(pgClient: PgClient, id: string): Promise<QueryResult> {
-  const query = getSessionDataQueryBy('id');
+export async function getUserDataById(pgClient: PgClient, id: string): Promise<QueryResult> {
+  const query = getUserDataQueryBy('id');
 
   return pgClient.query(query, [id]);
 }

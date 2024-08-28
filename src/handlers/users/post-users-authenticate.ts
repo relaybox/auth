@@ -6,7 +6,8 @@ import {
   getAuthDataByKeyId,
   getAuthRefreshToken,
   getAuthToken,
-  getRequestAuthParams
+  getRequestAuthParams,
+  getUserDataById
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -35,13 +36,18 @@ export const handler: APIGatewayProxyHandler = async (
     logger.info(`Authenticating user`, { keyName });
 
     const { id: sub, clientId } = await authenticateUser(logger, pgClient, orgId, email, password);
+    const user = await getUserDataById(logger, pgClient, sub);
     const authToken = await getAuthToken(logger, sub, keyName, secretKey, clientId);
     const refreshToken = await getAuthRefreshToken(logger, sub, keyName, secretKey, clientId);
+    const expiresIn = 900;
+    const expiresAt = new Date().getTime() + expiresIn * 1000;
 
     return httpResponse._200({
       token: authToken,
       refreshToken,
-      expiresIn: 900
+      expiresIn,
+      expiresAt,
+      user
     });
   } catch (err: any) {
     return handleErrorResponse(logger, err);
