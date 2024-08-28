@@ -4,6 +4,7 @@ import {
   DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
+  TokenError,
   UnauthorizedError,
   ValidationError,
   VerificationError
@@ -112,6 +113,10 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
   }
 
   if (err instanceof VerificationError) {
+    return _403({ message: err.message });
+  }
+
+  if (err instanceof TokenError) {
     return _403({ message: err.message });
   }
 

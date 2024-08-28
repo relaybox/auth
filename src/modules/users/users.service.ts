@@ -394,7 +394,7 @@ export async function getAuthRefreshToken(
   keyName: string,
   secretKey: string,
   clientId: string,
-  expiresIn: number = 900
+  expiresIn: number = REFRESH_TOKEN_EXPIRES_IN_SECS
 ): Promise<any> {
   logger.debug(`Generating refresh token`);
 
@@ -407,7 +407,7 @@ export async function getAuthRefreshToken(
   };
 
   try {
-    return generateAuthToken(payload, secretKey, REFRESH_TOKEN_EXPIRES_IN_SECS);
+    return generateAuthToken(payload, secretKey, expiresIn);
   } catch (err: any) {
     logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);
@@ -524,7 +524,11 @@ export async function getUserDataById(
 }
 
 export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
-  verifyAuthToken(token, secretKey);
+  try {
+    verifyAuthToken(token, secretKey);
+  } catch (err: any) {
+    throw new TokenError(`Refresh token invalid`);
+  }
 
   if (tokenType !== 'refresh_token') {
     throw new ValidationError(`Invalid token type`);
