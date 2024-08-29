@@ -2,8 +2,11 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { SchemaValidationError } from './errors';
 
 export function validateEventSchema(event: APIGatewayProxyEvent, schema: any): any {
-  const body = JSON.parse(event.body!);
+  if (!event.body) {
+    throw new SchemaValidationError('Request body undefined');
+  }
 
+  const body = JSON.parse(event.body!);
   const result = schema.safeParse(body);
 
   if (!result.success) {

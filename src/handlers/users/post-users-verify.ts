@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
+import { validateEventSchema } from 'src/lib/validation';
 import {
   getAuthDataByKeyId,
   getRequestAuthParams,
@@ -9,8 +10,14 @@ import {
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
+import { z } from 'zod';
 
 const logger = getLogger('post-users-verify');
+
+const schema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6)
+});
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -23,12 +30,7 @@ export const handler: APIGatewayProxyHandler = async (
   logger.info(`Verifying user`);
 
   try {
-    const { email, code } = JSON.parse(event.body!);
-
-    if (!email || !code) {
-      throw new ValidationError('Email and code required');
-    }
-
+    const { email, code } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
