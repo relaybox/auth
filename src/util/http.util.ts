@@ -4,6 +4,7 @@ import {
   DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
+  SchemaValidationError,
   TokenError,
   UnauthorizedError,
   ValidationError,
@@ -88,41 +89,53 @@ export function _409(body?: any): APIGatewayProxyResult {
 export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyResult {
   logger.warn(`Error response`, { err });
 
+  if (err instanceof SchemaValidationError) {
+    return _400({
+      ...err,
+      messgage: err.message
+    });
+  }
+
+  const errorResponse = {
+    name: err.name,
+    message: err.message
+  };
+
   if (err instanceof ValidationError || err.message.includes('duplicate key')) {
-    return _400({ message: err.message });
+    return _400(errorResponse);
   }
 
   if (err instanceof UnauthorizedError) {
-    return _401({ message: err.message });
+    return _401(errorResponse);
   }
 
   if (err instanceof ForbiddenError) {
-    return _403({ message: err.message });
+    return _403(errorResponse);
   }
 
   if (err instanceof NotFoundError) {
-    return _404({ message: err.message });
+    return _404(errorResponse);
   }
 
   if (err instanceof AuthConflictError) {
-    return _409({ message: err.message });
+    return _409(errorResponse);
   }
 
   if (err instanceof DuplicateKeyError) {
-    return _409({ message: err.message });
+    return _409(errorResponse);
   }
 
   if (err instanceof VerificationError) {
-    return _403({ message: err.message });
+    return _403(errorResponse);
   }
 
   if (err instanceof TokenError) {
-    return _403({ message: err.message });
+    return _403(errorResponse);
   }
 
   logger.error(`Unknown internal error`, { err });
 
-  return _500({ message: err.message });
+  return _500(errorResponse);
 }
 
 export function redirect(

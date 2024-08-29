@@ -83,3 +83,13 @@ export class VerificationError extends Error {
     this.name = 'VerificationError';
   }
 }
+
+export class SchemaValidationError extends Error {
+  public data?: any;
+
+  constructor(message: string, data?: any) {
+    super(message);
+    this.name = 'SchemaValidationError';
+    this.data = data;
+  }
+}

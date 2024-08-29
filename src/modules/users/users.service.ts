@@ -45,7 +45,7 @@ export async function registerUser(
   email: string,
   password: string,
   provider: string = AuthProvider.EMAIL
-): Promise<void> {
+): Promise<string> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
@@ -63,6 +63,8 @@ export async function registerUser(
     await sendAuthVerificationCode(logger, email, code);
 
     await pgClient.query('COMMIT');
+
+    return uid;
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to register user`, { err });
@@ -124,7 +126,7 @@ export async function authenticateUser(
   const user = rows[0];
 
   if (!user.verifiedAt) {
-    throw new VerificationError(`User verification incomplete`);
+    throw new VerificationError(`User identity verification incomplete`);
   }
 
   if (!user.password) {
