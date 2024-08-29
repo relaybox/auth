@@ -93,7 +93,7 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
   if (err instanceof SchemaValidationError) {
     return _400({
       ...err,
-      messgage: err.message
+      message: err.message
     });
   }
 

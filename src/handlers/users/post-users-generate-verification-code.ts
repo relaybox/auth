@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
+import { validateEventSchema } from 'src/lib/validation';
 import {
   createAuthVerificationCode,
   getAuthDataByKeyId,
@@ -12,8 +13,13 @@ import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
+import { z } from 'zod';
 
 const logger = getLogger('post-users-generate-verification-code');
+
+const schema = z.object({
+  email: z.string().email()
+});
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -26,24 +32,21 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { email } = JSON.parse(event.body!);
-
-    if (!email) {
-      throw new ValidationError('Email required');
-    }
-
+    const { email } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
 
     if (!userData) {
-      throw new NotFoundError(`User not found`);
+      logger.warn(`Enumeration: User not found`, { email });
+      return httpResponse._200({ message: `Verification code sent to ${email}` });
     }
 
     const { id: uid, verifiedAt } = userData;
 
     if (verifiedAt) {
-      throw new ValidationError(`User already verified`);
+      logger.warn(`Enumeration: User already verified`, { email });
+      return httpResponse._200({ message: `Verification code sent to ${email}` });
     }
 
     const code = await createAuthVerificationCode(
@@ -55,7 +58,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     await sendAuthVerificationCode(logger, email, code);
 
-    return httpResponse._200({ message: 'Verification code sent' });
+    return httpResponse._200({ message: `Verification code sent to ${email}` });
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {
