@@ -1,6 +1,7 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 import {
   AuthConflictError,
+  AuthenticationError,
   DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
@@ -103,6 +104,10 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
 
   if (err instanceof ValidationError || err.message.includes('duplicate key')) {
     return _400(errorResponse);
+  }
+
+  if (err instanceof AuthenticationError) {
+    return _401(errorResponse);
   }
 
   if (err instanceof UnauthorizedError) {

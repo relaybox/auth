@@ -15,6 +15,7 @@ import {
 } from 'src/lib/encryption';
 import { Logger } from 'winston';
 import {
+  AuthenticationError,
   DuplicateKeyError,
   NotFoundError,
   TokenError,
@@ -120,29 +121,25 @@ export async function authenticateUser(
   );
 
   if (!rows.length) {
-    throw new NotFoundError(`User not found`);
+    throw new AuthenticationError('Login failed');
   }
 
   const user = rows[0];
 
-  if (!user.verifiedAt) {
-    throw new VerificationError(`User identity verification incomplete`);
-  }
-
-  if (!user.password) {
-    throw new NotFoundError(`User not found`);
+  if (!user.verifiedAt || !user.password) {
+    throw new AuthenticationError('Login failed');
   }
 
   const passwordHash = strongHash(password, user.salt);
 
   if (!passwordHash) {
-    throw new NotFoundError(`User not found`);
+    throw new AuthenticationError('Login failed');
   }
 
   const verifiedPassword = verifyStrongHash(password, user.password, user.salt);
 
   if (!verifiedPassword) {
-    throw new UnauthorizedError(`Invalid password`);
+    throw new AuthenticationError('Login failed');
   }
 
   return user;
@@ -181,7 +178,7 @@ export async function verifyUser(
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to verify user`, { err });
-    throw err;
+    throw new VerificationError(`Failed to verify user`);
   }
 }
 
@@ -227,12 +224,7 @@ export async function createUser(
     return rows[0];
   } catch (err: any) {
     logger.error(`Failed to create user`, { err });
-
-    if (err.message.includes(`duplicate key`)) {
-      throw new DuplicateKeyError(`User already exists`);
-    } else {
-      throw err;
-    }
+    throw new AuthenticationError(`Failed to create user`);
   }
 }
 

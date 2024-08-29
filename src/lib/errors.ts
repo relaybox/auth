@@ -93,3 +93,10 @@ export class SchemaValidationError extends Error {
     this.data = data;
   }
 }
+
+export class AuthenticationError extends Error {
+  constructor(message: string, public details?: any) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
