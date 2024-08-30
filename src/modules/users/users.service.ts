@@ -50,7 +50,7 @@ export async function registerUser(
   try {
     await pgClient.query('BEGIN');
 
-    const { id } = await createUser(logger, pgClient, orgId, email, password, provider);
+    const { id } = await getOrCreateUser(logger, pgClient, orgId, email);
     const { id: identityId } = await createUserIdentity(
       logger,
       pgClient,
@@ -95,17 +95,7 @@ export async function registerIdpUser(
 
   const autoVerify = true;
 
-  const userData = await createUser(
-    logger,
-    pgClient,
-    orgId,
-    email,
-    password,
-    provider,
-    providerId,
-    username,
-    autoVerify
-  );
+  const userData = await getOrCreateUser(logger, pgClient, orgId, email, username, autoVerify);
 
   await createUserIdentity(
     logger,
@@ -215,21 +205,15 @@ export async function createUser(
   pgClient: PgClient,
   orgId: string,
   email: string,
-  password: string,
-  provider?: AuthProvider,
-  providerId?: string,
   username?: string,
   autoVerify: boolean = false
 ): Promise<AuthUser> {
-  logger.debug(`Creating user`, { orgId, provider });
+  logger.debug(`Creating user`, { orgId });
 
   username = username || generateUsername();
   const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);
   const emailHash = generateHash(email);
-  const salt = generateSalt();
-  const passwordHash = strongHash(password, salt);
-  const keyVersion = getKeyVersion();
 
   try {
     const { rows } = await repository.createUser(
@@ -238,11 +222,6 @@ export async function createUser(
       clientId,
       encryptedEmail,
       emailHash,
-      passwordHash,
-      salt,
-      keyVersion,
-      provider,
-      providerId,
       username,
       autoVerify
     );
@@ -377,6 +356,27 @@ export async function validateVerificationCode(
   }
 }
 
+export async function getOrCreateUser(
+  logger: Logger,
+  pgClient: PgClient,
+  orgId: string,
+  email: string,
+  username?: string,
+  autoVerify: boolean = false
+): Promise<AuthUser> {
+  logger.debug(`Getting existing or creating new user`, { orgId });
+
+  const existingUser = await getUserByEmail(logger, pgClient, orgId, email);
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const newUser = await createUser(logger, pgClient, orgId, email, username, autoVerify);
+
+  return newUser;
+}
+
 export async function updateUserData(
   logger: Logger,
   pgClient: PgClient,
@@ -407,14 +407,13 @@ export async function getUserByEmail(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
-  email: string,
-  provider: AuthProvider
+  email: string
 ): Promise<any> {
   logger.debug(`Getting user by email`);
 
   const emailHash = generateHash(email);
 
-  const { rows } = await repository.getUserByEmailHash(pgClient, orgId, emailHash, provider);
+  const { rows } = await repository.getUserByEmailHash(pgClient, orgId, emailHash);
 
   return rows[0];
 }

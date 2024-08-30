@@ -4,18 +4,14 @@ import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import {
   getAuthDataByKeyId,
-  getAuthRefreshToken,
   getAuthSession,
-  getAuthToken,
   getKeyParts,
   getUserIdentityByProviderId,
-  getUserDataById,
-  REFRESH_TOKEN_EXPIRES_IN_SECS,
   registerIdpUser,
   updateUserData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
-import { AuthProvider, AuthStorageType } from 'src/types/auth.types';
+import { AuthProvider } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';

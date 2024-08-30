@@ -8,11 +8,6 @@ export function createUser(
   clientid: string,
   email: string,
   emailHash: string,
-  password: string,
-  salt: string,
-  keyVersion: number,
-  provider: string = 'email',
-  providerId: string | null = null,
   username: string,
   autoVerify: boolean = false
 ): Promise<QueryResult> {
@@ -20,9 +15,9 @@ export function createUser(
 
   const query = `
     INSERT INTO authentication_users (
-      "orgId", "clientId", email, "emailHash", password, salt, "keyVersion", "provider", "providerId", username, "verifiedAt"
+      "orgId", "clientId", "email", "emailHash", username, "verifiedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+      $1, $2, $3, $4, $5, $6
     ) RETURNING id, "clientId";
   `;
 
@@ -31,11 +26,6 @@ export function createUser(
     clientid,
     email,
     emailHash,
-    password,
-    salt,
-    keyVersion,
-    provider,
-    providerId,
     username,
     autoVerify ? now : null
   ]);
@@ -79,15 +69,14 @@ export function createUserIdentity(
 export function getUserByEmailHash(
   pgClient: PgClient,
   orgId: string,
-  emailHash: string,
-  provider: AuthProvider
+  emailHash: string
 ): Promise<QueryResult> {
   let query = `
     SELECT * FROM authentication_users
-    WHERE "orgId" = $1 AND "emailHash" = $2 AND "provider" = $3
+    WHERE "orgId" = $1 AND "emailHash" = $2;
   `;
 
-  return pgClient.query(query, [orgId, emailHash, provider]);
+  return pgClient.query(query, [orgId, emailHash]);
 }
 
 export function getUserIdentityByEmailHash(
@@ -120,20 +109,6 @@ export function getUserIdentityByEmailHash(
 
   return pgClient.query(query, [orgId, emailHash, provider]);
 }
-
-// export function getUserByProviderId(
-//   pgClient: PgClient,
-//   orgId: string,
-//   providerId: string,
-//   provider: AuthProvider
-// ): Promise<QueryResult> {
-//   let query = `
-//     SELECT * FROM authentication_users
-//     WHERE "orgId" = $1 AND "providerId" = $2 AND "provider" = $3
-//   `;
-
-//   return pgClient.query(query, [orgId, providerId, provider]);
-// }
 
 export function getUserIdentityByProviderId(
   pgClient: PgClient,
