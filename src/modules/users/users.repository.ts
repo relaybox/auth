@@ -49,7 +49,7 @@ export function createUserIdentity(
   password: string,
   salt: string,
   keyVersion: number,
-  provider: string = 'email',
+  provider = AuthProvider.EMAIL,
   providerId: string | null = null,
   autoVerify: boolean = false
 ): Promise<QueryResult> {
@@ -90,18 +90,33 @@ export function getUserByEmailHash(
   return pgClient.query(query, [orgId, emailHash, provider]);
 }
 
-export function getUserEmailIdentityAuthCredentials(
+export function getUserIdentityByEmailHash(
   pgClient: PgClient,
   orgId: string,
   emailHash: string,
-  provider: AuthProvider
+  provider?: AuthProvider
 ): Promise<QueryResult> {
   let query = `
-    SELECT au.id, aui."verifiedAt", aui.password, aui.salt FROM authentication_users au
+    SELECT 
+      aui.uid, 
+      aui.id as "identityId", 
+      aui."verifiedAt", 
+      aui.email,
+      aui.password, 
+      aui.salt,
+      aui.provider,
+      aui."providerId"
+    FROM authentication_users au
     INNER JOIN authentication_users_identities aui 
     ON aui."uid" = au."id"
-    WHERE au."orgId" = $1 AND aui."emailHash" = $2 AND aui."provider" = $3
+    WHERE au."orgId" = $1 AND aui."emailHash" = $2
   `;
+
+  if (provider) {
+    query += `
+      AND aui."provider" = $3
+    `;
+  }
 
   return pgClient.query(query, [orgId, emailHash, provider]);
 }
@@ -120,6 +135,50 @@ export function getUserByProviderId(
   return pgClient.query(query, [orgId, providerId, provider]);
 }
 
+export function getUserIdentityByProviderId(
+  pgClient: PgClient,
+  orgId: string,
+  providerId: string,
+  provider: AuthProvider
+): Promise<QueryResult> {
+  const query = `
+    SELECT 
+      au.id as uid,
+      au."clientId",
+      aui.id as "identityId", 
+      aui."verifiedAt", 
+      aui.email,
+      aui.password, 
+      aui.salt,
+      aui.provider,
+      aui."providerId"
+    FROM authentication_users au
+    INNER JOIN authentication_users_identities aui 
+    ON aui."uid" = au."id"
+    WHERE au."orgId" = $1 AND aui."providerId" = $2 AND aui."provider" = $3
+  `;
+
+  return pgClient.query(query, [orgId, providerId, provider]);
+}
+
+export function getUserIdentityByVerificationCode(
+  pgClient: PgClient,
+  code: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT 
+      aui.uid,
+      aui.id as "identityId", 
+      aui."verifiedAt", 
+    FROM authentication_users_verification auv
+    INNER JOIN authentication_users_identities aui 
+    ON aui."id" = auv."identityId"
+    WHERE auv."code" = $1
+  `;
+
+  return pgClient.query(query, [code]);
+}
+
 export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<QueryResult> {
   const query = `
     SELECT "orgId", "secretKey" 
@@ -133,6 +192,7 @@ export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<Q
 export function createAuthVerificationCode(
   pgClient: PgClient,
   uid: string,
+  identityId: string,
   code: number,
   type: AuthVerificationCodeType
 ): Promise<QueryResult> {
@@ -141,34 +201,34 @@ export function createAuthVerificationCode(
 
   const query = `
     INSERT INTO authentication_users_verification (
-      "uid", "code", "expiresAt", type
+      "uid", "identityId", "code", "expiresAt", type
     ) VALUES (
-      $1, $2, $3, $4
+      $1, $2, $3, $4, $5
     ) RETURNING code;
   `;
 
-  return pgClient.query(query, [uid, code, expiresAt, type]);
+  return pgClient.query(query, [uid, identityId, code, expiresAt, type]);
 }
 
 export function validateVerificationCode(
   pgClient: PgClient,
-  uid: string,
+  identityId: string,
   code: string,
   type: AuthVerificationCodeType
 ): Promise<QueryResult> {
   const query = `
     SELECT "code", "expiresAt", "verifiedAt", "createdAt"
     FROM authentication_users_verification
-    WHERE "uid" = $1 AND "code" = $2 AND type = $3
+    WHERE "identityId" = $1 AND "code" = $2 AND type = $3
     LIMIT 1;
   `;
 
-  return pgClient.query(query, [uid, code, type]);
+  return pgClient.query(query, [identityId, code, type]);
 }
 
 export function invalidateVerificationCode(
   pgClient: PgClient,
-  uid: string,
+  identityId: string,
   code: string
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
@@ -176,10 +236,10 @@ export function invalidateVerificationCode(
   const query = `
     UPDATE authentication_users_verification 
     SET "verifiedAt" = $2
-    WHERE "uid" = $1 AND "code" = $3;
+    WHERE "identityId" = $1 AND "code" = $3;
   `;
 
-  return pgClient.query(query, [uid, now, code]);
+  return pgClient.query(query, [identityId, now, code]);
 }
 
 export function verifyUser(pgClient: PgClient, uid: string): Promise<QueryResult> {
@@ -194,16 +254,16 @@ export function verifyUser(pgClient: PgClient, uid: string): Promise<QueryResult
   return pgClient.query(query, [uid, now]);
 }
 
-export function verifyUserIdentity(pgClient: PgClient, uid: string): Promise<QueryResult> {
+export function verifyUserIdentity(pgClient: PgClient, identityId: string): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     UPDATE authentication_users_identities
     SET "verifiedAt" = $2
-    WHERE uid = $1;
+    WHERE id = $1;
   `;
 
-  return pgClient.query(query, [uid, now]);
+  return pgClient.query(query, [identityId, now]);
 }
 
 export function updateUserData(
@@ -227,18 +287,18 @@ export function updateUserData(
 
 export function updateUserIdentityData(
   pgClient: PgClient,
-  uid: string,
+  identityId: string,
   userData: { key: string; value: string }[]
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const setValues = userData.map(({ key }, i) => `"${key}" = $${i + 1}`);
-  const params = [...userData.map(({ value }) => value), uid];
+  const params = [...userData.map(({ value }) => value), identityId];
 
   const query = `
     UPDATE authentication_users_identities 
     SET ${setValues.join(', ')}
-    WHERE uid = $${params.length} AND provider = '${AuthProvider.EMAIL}'; 
+    WHERE id = $${params.length}; 
   `;
 
   return pgClient.query(query, params);
@@ -256,6 +316,7 @@ function getUserDataQueryBy(idFilter: string): string {
       au."verifiedAt",
       json_agg(
         json_build_object(
+          'id', aui.id,
           'provider', aui.provider,
           'providerId', aui."providerId",
           'verifiedAt', aui."verifiedAt"

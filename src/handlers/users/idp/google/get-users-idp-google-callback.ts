@@ -8,7 +8,7 @@ import {
   getAuthSession,
   getAuthToken,
   getKeyParts,
-  getUserByProviderId,
+  getUserIdentityByProviderId,
   getUserDataById,
   REFRESH_TOKEN_EXPIRES_IN_SECS,
   registerIdpUser,
@@ -56,7 +56,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { providerId, email, username } = await getGoogleUserData(authorization);
 
-    let userData = await getUserByProviderId(
+    let userData = await getUserIdentityByProviderId(
       logger,
       pgClient,
       orgId,
@@ -64,8 +64,10 @@ export const handler: APIGatewayProxyHandler = async (
       AuthProvider.GOOGLE
     );
 
+    console.log('USER DATA 1', userData);
+
     if (userData) {
-      await updateUserData(logger, pgClient, userData.id, [
+      await updateUserData(logger, pgClient, userData.uid, [
         { key: 'email', value: encrypt(email) },
         { key: 'emailHash', value: generateHash(email) }
       ]);
@@ -85,14 +87,16 @@ export const handler: APIGatewayProxyHandler = async (
       );
     }
 
-    const { clientId, id } = userData;
+    const { uid, clientId } = userData;
 
     if (!clientId) {
       throw new ValidationError('Failed to register user');
     }
 
     const expiresIn = 300;
-    const authSession = await getAuthSession(logger, pgClient, id, keyName, secretKey, expiresIn);
+    const authSession = await getAuthSession(logger, pgClient, uid, keyName, secretKey, expiresIn);
+
+    console.log('AUTH SESSION 1', authSession);
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {

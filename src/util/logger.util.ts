@@ -8,17 +8,15 @@ enum LogLevel {
 }
 
 const easyLogFormat = winston.format.printf((info) => {
-  const { level, service, message, ...rest } = info;
+  const { level, service, message } = info;
 
-  const values = [];
+  let baseLog = `[${level}]:${new Date().toISOString().slice(11)} ${service} - ${message}`;
 
-  for (const key of Object.keys(rest)) {
-    if (typeof rest[key] === 'string') {
-      values.push(`${key}: ${rest[key]}`);
-    }
+  if (info.err && info.err.stack) {
+    baseLog += `\n${info.err.stack}`;
   }
 
-  return `[${level}]:${new Date().toISOString().slice(11)} ${service} - ${message}`;
+  return baseLog;
 });
 
 const customLogFormat = winston.format.printf((info) => {
@@ -41,13 +39,20 @@ const prettyPrint = new winston.transports.Console({
 const easyPrint = new winston.transports.Console({
   level: process.env.LOG_LEVEL || LogLevel.INFO,
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
     winston.format.timestamp(),
     winston.format.colorize(),
     easyLogFormat
   )
 });
 
-const flatPrint = new winston.transports.Console();
+const flatPrint = new winston.transports.Console({
+  level: process.env.LOG_LEVEL || LogLevel.INFO,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }) // Ensures stack trace is captured
+  )
+});
 
 const transports = process.env.LOCALHOST === 'true' ? [easyPrint] : [flatPrint];
 

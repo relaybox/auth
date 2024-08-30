@@ -43,20 +43,28 @@ export async function registerUser(
   orgId: string,
   email: string,
   password: string,
-  provider: string = AuthProvider.EMAIL
+  provider: AuthProvider = AuthProvider.EMAIL
 ): Promise<string> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
     await pgClient.query('BEGIN');
 
-    const { id: uid } = await createUser(logger, pgClient, orgId, email, password, provider);
-    const { id: auid } = await createUserIdentity(logger, pgClient, uid, email, password, provider);
+    const { id } = await createUser(logger, pgClient, orgId, email, password, provider);
+    const { id: identityId } = await createUserIdentity(
+      logger,
+      pgClient,
+      id,
+      email,
+      password,
+      provider
+    );
 
     const code = await createAuthVerificationCode(
       logger,
       pgClient,
-      uid,
+      id,
+      identityId,
       AuthVerificationCodeType.REGISTER
     );
 
@@ -64,7 +72,7 @@ export async function registerUser(
 
     await pgClient.query('COMMIT');
 
-    return uid;
+    return id;
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to register user`, { err });
@@ -79,7 +87,7 @@ export async function registerIdpUser(
   keyId: string,
   email: string,
   password: string,
-  provider: string,
+  provider: AuthProvider,
   providerId: string,
   username?: string
 ): Promise<{ uid: string; clientId: string }> {
@@ -99,6 +107,17 @@ export async function registerIdpUser(
     autoVerify
   );
 
+  await createUserIdentity(
+    logger,
+    pgClient,
+    uid,
+    email,
+    password,
+    provider,
+    providerId,
+    autoVerify
+  );
+
   return { uid, clientId };
 }
 
@@ -108,11 +127,11 @@ export async function authenticateUser(
   orgId: string,
   email: string,
   password: string
-): Promise<AuthUser> {
+): Promise<string> {
   logger.debug(`Authenticating user`);
 
   const emailHash = generateHash(email);
-  const userAuthcredentials = await getUserEmailIdentityAuthCredentials(
+  const userIdentity = await getUserIdentityByEmail(
     logger,
     pgClient,
     orgId,
@@ -120,35 +139,33 @@ export async function authenticateUser(
     AuthProvider.EMAIL
   );
 
-  if (!userAuthcredentials) {
+  console.log(userIdentity);
+
+  if (!userIdentity) {
     logger.warn(`User auth credenials not found`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  if (!userAuthcredentials.verifiedAt || !userAuthcredentials.password) {
+  if (!userIdentity.verifiedAt || !userIdentity.password) {
     logger.warn(`User not verified`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  const passwordHash = strongHash(password, userAuthcredentials.salt);
+  const passwordHash = strongHash(password, userIdentity.salt);
 
   if (!passwordHash) {
     logger.warn(`Password hash failed`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  const verifiedPassword = verifyStrongHash(
-    password,
-    userAuthcredentials.password,
-    userAuthcredentials.salt
-  );
+  const verifiedPassword = verifyStrongHash(password, userIdentity.password, userIdentity.salt);
 
   if (!verifiedPassword) {
     logger.warn(`Invalid password`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  return userAuthcredentials;
+  return userIdentity.uid;
 }
 
 export async function verifyUser(
@@ -161,7 +178,7 @@ export async function verifyUser(
   try {
     await pgClient.query('BEGIN');
 
-    const { id: uid, verifiedAt } = await getUserByEmail(
+    const { uid, identityId, verifiedAt } = await getUserIdentityByEmail(
       logger,
       pgClient,
       orgId,
@@ -173,13 +190,19 @@ export async function verifyUser(
       throw new ValidationError(`User already verified`);
     }
 
-    logger.info(`Verifying user`, { orgId, uid });
+    logger.info(`Verifying user`, { orgId, identityId });
 
-    await validateVerificationCode(logger, pgClient, uid, code, AuthVerificationCodeType.REGISTER);
+    await validateVerificationCode(
+      logger,
+      pgClient,
+      identityId,
+      code,
+      AuthVerificationCodeType.REGISTER
+    );
 
     await repository.verifyUser(pgClient, uid);
-    await repository.verifyUserIdentity(pgClient, uid);
-    await repository.invalidateVerificationCode(pgClient, uid, code);
+    await repository.verifyUserIdentity(pgClient, identityId);
+    await repository.invalidateVerificationCode(pgClient, identityId, code);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {
@@ -195,7 +218,7 @@ export async function createUser(
   orgId: string,
   email: string,
   password: string,
-  provider?: string,
+  provider?: AuthProvider,
   providerId?: string,
   username?: string,
   autoVerify: boolean = false
@@ -246,7 +269,7 @@ export async function createUserIdentity(
   uid: string,
   email: string,
   password: string,
-  provider?: string,
+  provider?: AuthProvider,
   providerId?: string,
   autoVerify: boolean = false
 ): Promise<AuthUser> {
@@ -285,6 +308,7 @@ export async function resetUserPassword(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
+  identityId: string,
   code: string,
   password: string
 ): Promise<void> {
@@ -296,7 +320,7 @@ export async function resetUserPassword(
     await validateVerificationCode(
       logger,
       pgClient,
-      uid,
+      identityId,
       code,
       AuthVerificationCodeType.PASSWORD_RESET
     );
@@ -304,7 +328,7 @@ export async function resetUserPassword(
     const salt = generateSalt();
     const passwordHash = strongHash(password, salt);
 
-    await updateUserIdentityData(logger, pgClient, uid, [
+    await updateUserIdentityData(logger, pgClient, identityId, [
       { key: 'password', value: passwordHash },
       { key: 'salt', value: salt }
     ]);
@@ -322,7 +346,7 @@ export async function resetUserPassword(
 export async function validateVerificationCode(
   logger: Logger,
   pgClient: PgClient,
-  uid: string,
+  identityId: string,
   code: string,
   type: AuthVerificationCodeType
 ): Promise<void> {
@@ -330,28 +354,28 @@ export async function validateVerificationCode(
 
   const { rows: validAuthVerifications } = await repository.validateVerificationCode(
     pgClient,
-    uid,
+    identityId,
     code,
     type
   );
 
   if (!validAuthVerifications.length) {
-    logger.warn(`Invalid verification code`, { uid, code, type });
+    logger.warn(`Invalid verification code`, { identityId, code, type });
     throw new NotFoundError(`Invalid verification code`);
   }
 
   if (validAuthVerifications[0].verifiedAt !== null) {
-    logger.warn(`Code already verfied`, { uid, code, type });
+    logger.warn(`Code already verfied`, { identityId, code, type });
     throw new ValidationError(`Verification code already used`);
   }
 
   if (new Date(validAuthVerifications[0].expiresAt).getTime() < Date.now()) {
-    logger.warn(`Code expired`, { uid, code, type });
+    logger.warn(`Code expired`, { identityId, code, type });
     throw new NotFoundError(`Verification code expired`);
   }
 
   if (validAuthVerifications[0].code !== code) {
-    logger.warn(`Code not matched`, { uid, code, type });
+    logger.warn(`Code not matched`, { identityId, code, type });
     throw new ValidationError(`Invalid verification code`);
   }
 }
@@ -372,12 +396,12 @@ export async function updateUserData(
 export async function updateUserIdentityData(
   logger: Logger,
   pgClient: PgClient,
-  uid: string,
+  identityId: string,
   userData: { key: string; value: string }[]
 ): Promise<void> {
-  logger.debug(`Updating user idenitity data`, { uid, fields: Object.keys(userData) });
+  logger.debug(`Updating user idenitity data`, { identityId, fields: Object.keys(userData) });
 
-  const { rows } = await repository.updateUserIdentityData(pgClient, uid, userData);
+  const { rows } = await repository.updateUserIdentityData(pgClient, identityId, userData);
 
   return rows[0];
 }
@@ -398,18 +422,18 @@ export async function getUserByEmail(
   return rows[0];
 }
 
-export async function getUserEmailIdentityAuthCredentials(
+export async function getUserIdentityByEmail(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
   email: string,
-  provider: AuthProvider
+  provider?: AuthProvider
 ): Promise<any> {
   logger.debug(`Getting user by email identity`);
 
   const emailHash = generateHash(email);
 
-  const { rows } = await repository.getUserEmailIdentityAuthCredentials(
+  const { rows } = await repository.getUserIdentityByEmailHash(
     pgClient,
     orgId,
     emailHash,
@@ -419,7 +443,7 @@ export async function getUserEmailIdentityAuthCredentials(
   return rows[0];
 }
 
-export async function getUserByProviderId(
+export async function getUserIdentityByProviderId(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
@@ -428,7 +452,12 @@ export async function getUserByProviderId(
 ): Promise<any> {
   logger.debug(`Getting user by provider id`);
 
-  const { rows } = await repository.getUserByProviderId(pgClient, orgId, providerId, provider);
+  const { rows } = await repository.getUserIdentityByProviderId(
+    pgClient,
+    orgId,
+    providerId,
+    provider
+  );
 
   return rows[0];
 }
@@ -451,7 +480,7 @@ export async function getAuthDataByKeyId(
 
 export async function getAuthToken(
   logger: Logger,
-  sub: string,
+  id: string,
   keyName: string,
   secretKey: string,
   clientId: string,
@@ -460,7 +489,7 @@ export async function getAuthToken(
   logger.debug(`Generating auth token`);
 
   const payload = {
-    sub,
+    sub: id,
     keyName,
     clientId,
     tokenType: TokenType.ID_TOKEN,
@@ -477,7 +506,7 @@ export async function getAuthToken(
 
 export async function getAuthRefreshToken(
   logger: Logger,
-  sub: string,
+  id: string,
   keyName: string,
   secretKey: string,
   clientId: string,
@@ -486,7 +515,7 @@ export async function getAuthRefreshToken(
   logger.debug(`Generating refresh token`);
 
   const payload = {
-    sub,
+    sub: id,
     keyName,
     clientId,
     tokenType: TokenType.REFRESH_TOKEN,
@@ -505,6 +534,7 @@ export async function createAuthVerificationCode(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
+  identityId: string,
   type: AuthVerificationCodeType
 ): Promise<number> {
   logger.debug(`Getting auth verification code`);
@@ -512,7 +542,13 @@ export async function createAuthVerificationCode(
   const code = Math.floor(100000 + Math.random() * 900000);
 
   try {
-    const { rows } = await repository.createAuthVerificationCode(pgClient, uid, code, type);
+    const { rows } = await repository.createAuthVerificationCode(
+      pgClient,
+      uid,
+      identityId,
+      code,
+      type
+    );
 
     return rows[0].code;
   } catch (err: any) {
@@ -592,7 +628,7 @@ export async function getUserDataById(
   pgClient: PgClient,
   id: string
 ): Promise<AuthUser> {
-  logger.debug(`Getting user data for user id`, { id });
+  logger.debug(`Getting user data for user id: ${id}`, { id });
 
   const { rows } = await repository.getUserDataById(pgClient, id);
 
@@ -649,7 +685,7 @@ export async function getAuthSession(
   secretKey: string,
   expiresIn: number = 300
 ): Promise<AuthSession> {
-  logger.debug(`Getting auth session for user`, { id });
+  logger.debug(`Getting auth session for user ${id}`, { id });
 
   const now = Date.now();
   const user = await getUserDataById(logger, pgClient, id);

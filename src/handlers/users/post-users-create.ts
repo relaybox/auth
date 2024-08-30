@@ -1,11 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { get } from 'http';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
   getAuthDataByKeyId,
   getRequestAuthParams,
+  getUserIdentityByEmail,
   registerUser
 } from 'src/modules/users/users.service';
+import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';

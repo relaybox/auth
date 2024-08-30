@@ -5,18 +5,14 @@ import { getLogger } from 'src/util/logger.util';
 import { getGitHubPrimaryData } from 'src/lib/github';
 import {
   getAuthDataByKeyId,
-  getAuthRefreshToken,
   getAuthSession,
-  getAuthToken,
   getKeyParts,
-  getUserByProviderId,
-  getUserDataById,
-  REFRESH_TOKEN_EXPIRES_IN_SECS,
+  getUserIdentityByProviderId,
   registerIdpUser,
-  updateUserData
+  updateUserIdentityData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
-import { AuthProvider, AuthSession, AuthStorageType } from 'src/types/auth.types';
+import { AuthProvider } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 
@@ -51,7 +47,7 @@ export const handler: APIGatewayProxyHandler = async (
       code
     );
 
-    let userData = await getUserByProviderId(
+    let userData = await getUserIdentityByProviderId(
       logger,
       pgClient,
       orgId,
@@ -60,7 +56,7 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     if (userData) {
-      await updateUserData(logger, pgClient, userData.id, [
+      await updateUserIdentityData(logger, pgClient, userData.identityId, [
         { key: 'email', value: encrypt(email) },
         { key: 'emailHash', value: generateHash(email) }
       ]);
@@ -80,14 +76,14 @@ export const handler: APIGatewayProxyHandler = async (
       );
     }
 
-    const { clientId, id } = userData;
+    const { uid, clientId } = userData;
 
     if (!clientId) {
       throw new ValidationError('Failed to register user');
     }
 
     const expiresIn = 300;
-    const authSession = await getAuthSession(logger, pgClient, id, keyName, secretKey, expiresIn);
+    const authSession = await getAuthSession(logger, pgClient, uid, keyName, secretKey, expiresIn);
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {
