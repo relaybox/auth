@@ -121,7 +121,6 @@ export async function authenticateUser(
 ): Promise<string> {
   logger.debug(`Authenticating user`);
 
-  const emailHash = generateHash(email);
   const userIdentity = await getUserIdentityByEmail(
     logger,
     pgClient,
@@ -131,26 +130,26 @@ export async function authenticateUser(
   );
 
   if (!userIdentity) {
-    logger.warn(`User auth credenials not found`, { emailHash });
+    logger.warn(`User auth credenials not found`);
     throw new AuthenticationError('Login failed');
   }
 
   if (!userIdentity.verifiedAt || !userIdentity.password) {
-    logger.warn(`User not verified`, { emailHash });
+    logger.warn(`User not verified`);
     throw new AuthenticationError('Login failed');
   }
 
   const passwordHash = strongHash(password, userIdentity.salt);
 
   if (!passwordHash) {
-    logger.warn(`Password hash failed`, { emailHash });
+    logger.warn(`Password hash failed`);
     throw new AuthenticationError('Login failed');
   }
 
   const verifiedPassword = verifyStrongHash(password, userIdentity.password, userIdentity.salt);
 
   if (!verifiedPassword) {
-    logger.warn(`Invalid password`, { emailHash });
+    logger.warn(`Invalid password`);
     throw new AuthenticationError('Login failed');
   }
 
@@ -273,7 +272,7 @@ export async function createUserIdentity(
       autoVerify
     );
 
-    logger.info(`User created`, { uid, id: rows[0].id });
+    logger.info(`User identity created`, { uid, id: rows[0].id });
 
     return rows[0];
   } catch (err: any) {
