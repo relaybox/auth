@@ -51,6 +51,7 @@ export async function registerUser(
     await pgClient.query('BEGIN');
 
     const { id } = await getOrCreateUser(logger, pgClient, orgId, email);
+
     const { id: identityId } = await createUserIdentity(
       logger,
       pgClient,
@@ -336,22 +337,18 @@ export async function validateVerificationCode(
   );
 
   if (!validAuthVerifications.length) {
-    logger.warn(`Invalid verification code`, { identityId, code, type });
     throw new NotFoundError(`Invalid verification code`);
   }
 
   if (validAuthVerifications[0].verifiedAt !== null) {
-    logger.warn(`Code already verfied`, { identityId, code, type });
     throw new ValidationError(`Verification code already used`);
   }
 
   if (new Date(validAuthVerifications[0].expiresAt).getTime() < Date.now()) {
-    logger.warn(`Code expired`, { identityId, code, type });
     throw new NotFoundError(`Verification code expired`);
   }
 
   if (validAuthVerifications[0].code !== code) {
-    logger.warn(`Code not matched`, { identityId, code, type });
     throw new ValidationError(`Invalid verification code`);
   }
 }
