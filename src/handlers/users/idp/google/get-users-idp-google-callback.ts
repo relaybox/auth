@@ -64,8 +64,6 @@ export const handler: APIGatewayProxyHandler = async (
       AuthProvider.GOOGLE
     );
 
-    console.log('USER DATA 1', userData);
-
     if (userData) {
       await updateUserData(logger, pgClient, userData.uid, [
         { key: 'email', value: encrypt(email) },
@@ -95,8 +93,6 @@ export const handler: APIGatewayProxyHandler = async (
 
     const expiresIn = 300;
     const authSession = await getAuthSession(logger, pgClient, uid, keyName, secretKey, expiresIn);
-
-    console.log('AUTH SESSION 1', authSession);
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {

@@ -55,9 +55,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new AuthenticationError('Password reset failed');
     }
 
-    const { id: uid } = userIdentity;
+    const { identityId } = userIdentity;
 
-    await resetUserPassword(logger, pgClient, uid, userIdentity.identityId, code, password);
+    await resetUserPassword(logger, pgClient, identityId, code, password);
 
     return httpResponse._200({ message: 'Password reset successful' });
   } catch (err: any) {

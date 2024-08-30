@@ -20,13 +20,11 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { email, password } = JSON.parse(event.body!);
-
     const response = await processAuthentication(logger, cognitoClient, email, password);
     const authTokenResponse = formatAuthTokenResponse(response);
 
     return httpResponse._200(authTokenResponse);
   } catch (err: any) {
-    console.log(err);
     logger.error(`Login failed`, { err });
 
     if (err instanceof UserNotConfirmedException) {

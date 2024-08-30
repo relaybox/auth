@@ -49,7 +49,7 @@ export const handler: APIGatewayProxyHandler = async (
       return httpResponse._200({ message: 'Password reset request initialized' });
     }
 
-    const { id: uid, identityId } = userIdentity;
+    const { uid, identityId } = userIdentity;
 
     const code = await createAuthVerificationCode(
       logger,

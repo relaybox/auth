@@ -1,12 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { NotFoundError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
   createAuthVerificationCode,
   getAuthDataByKeyId,
   getRequestAuthParams,
-  getUserByEmail,
+  getUserIdentityByEmail,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
 import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
@@ -35,17 +34,23 @@ export const handler: APIGatewayProxyHandler = async (
     const { email } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
+    const userData = await getUserIdentityByEmail(
+      logger,
+      pgClient,
+      orgId,
+      email,
+      AuthProvider.EMAIL
+    );
 
     if (!userData) {
-      logger.warn(`Enumeration: User not found`, { email });
+      logger.warn(`Enumeration: User not found`, { id: userData.uid });
       return httpResponse._200({ message: `Verification code sent to ${email}` });
     }
 
-    const { id: uid, verifiedAt } = userData;
+    const { uid, identityId, verifiedAt } = userData;
 
     if (verifiedAt) {
-      logger.warn(`Enumeration: User already verified`, { email });
+      logger.warn(`Enumeration: User already verified`, { id: userData.uid, verifiedAt });
       return httpResponse._200({ message: `Verification code sent to ${email}` });
     }
 
@@ -53,6 +58,7 @@ export const handler: APIGatewayProxyHandler = async (
       logger,
       pgClient,
       uid,
+      identityId,
       AuthVerificationCodeType.REGISTER
     );
 

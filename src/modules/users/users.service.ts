@@ -139,8 +139,6 @@ export async function authenticateUser(
     AuthProvider.EMAIL
   );
 
-  console.log(userIdentity);
-
   if (!userIdentity) {
     logger.warn(`User auth credenials not found`, { emailHash });
     throw new AuthenticationError('Login failed');
@@ -307,7 +305,6 @@ export async function createUserIdentity(
 export async function resetUserPassword(
   logger: Logger,
   pgClient: PgClient,
-  uid: string,
   identityId: string,
   code: string,
   password: string
@@ -333,7 +330,7 @@ export async function resetUserPassword(
       { key: 'salt', value: salt }
     ]);
 
-    await repository.invalidateVerificationCode(pgClient, uid, code);
+    await repository.invalidateVerificationCode(pgClient, identityId, code);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {

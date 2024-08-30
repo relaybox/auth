@@ -24,7 +24,7 @@ export function createClient({ host, port }: RedisOptions) {
     }
   });
 
-  connection.on('error', (err) => {
+  connection.on('error', (err: any) => {
     console.log(err);
   });
 
