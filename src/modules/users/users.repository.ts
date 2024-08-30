@@ -41,6 +41,41 @@ export function createUser(
   ]);
 }
 
+export function createUserIdentity(
+  pgClient: PgClient,
+  uid: string,
+  email: string,
+  emailHash: string,
+  password: string,
+  salt: string,
+  keyVersion: number,
+  provider: string = 'email',
+  providerId: string | null = null,
+  autoVerify: boolean = false
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    INSERT INTO authentication_users_identities (
+      "uid", email, "emailHash", password, salt, "keyVersion", "provider", "providerId", "verifiedAt"
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9
+    ) RETURNING id;
+  `;
+
+  return pgClient.query(query, [
+    uid,
+    email,
+    emailHash,
+    password,
+    salt,
+    keyVersion,
+    provider,
+    providerId,
+    autoVerify ? now : null
+  ]);
+}
+
 export function getUserByEmailHash(
   pgClient: PgClient,
   orgId: string,
@@ -102,7 +137,7 @@ export function createAuthVerificationCode(
 export function validateVerificationCode(
   pgClient: PgClient,
   uid: string,
-  code: number,
+  code: string,
   type: AuthVerificationCodeType
 ): Promise<QueryResult> {
   const query = `
@@ -118,7 +153,7 @@ export function validateVerificationCode(
 export function invalidateVerificationCode(
   pgClient: PgClient,
   uid: string,
-  code: number
+  code: string
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
@@ -138,6 +173,18 @@ export function verifyUser(pgClient: PgClient, uid: string): Promise<QueryResult
     UPDATE authentication_users 
     SET "verifiedAt" = $2
     WHERE id = $1;
+  `;
+
+  return pgClient.query(query, [uid, now]);
+}
+
+export function verifyUserIdentity(pgClient: PgClient, uid: string): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_users_identities
+    SET "verifiedAt" = $2
+    WHERE uid = $1;
   `;
 
   return pgClient.query(query, [uid, now]);

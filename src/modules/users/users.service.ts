@@ -16,10 +16,8 @@ import {
 import { Logger } from 'winston';
 import {
   AuthenticationError,
-  DuplicateKeyError,
   NotFoundError,
   TokenError,
-  UnauthorizedError,
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
@@ -53,6 +51,7 @@ export async function registerUser(
     await pgClient.query('BEGIN');
 
     const { id: uid } = await createUser(logger, pgClient, orgId, email, password, provider);
+    const { id: auid } = await createUserIdentity(logger, pgClient, uid, email, password, provider);
 
     const code = await createAuthVerificationCode(
       logger,
@@ -150,7 +149,7 @@ export async function verifyUser(
   pgClient: PgClient,
   orgId: string,
   email: string,
-  code: number
+  code: string
 ): Promise<void> {
   try {
     await pgClient.query('BEGIN');
@@ -172,6 +171,7 @@ export async function verifyUser(
     await validateVerificationCode(logger, pgClient, uid, code, AuthVerificationCodeType.REGISTER);
 
     await repository.verifyUser(pgClient, uid);
+    await repository.verifyUserIdentity(pgClient, uid);
     await repository.invalidateVerificationCode(pgClient, uid, code);
 
     await pgClient.query('COMMIT');
@@ -223,6 +223,52 @@ export async function createUser(
 
     return rows[0];
   } catch (err: any) {
+    if (err.message.includes(`duplicate key`)) {
+      logger.warn(`User already exists`, { err });
+    } else {
+      logger.error(`Failed to create user`, { err });
+    }
+
+    throw new AuthenticationError(`Failed to create user`);
+  }
+}
+
+export async function createUserIdentity(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  email: string,
+  password: string,
+  provider?: string,
+  providerId?: string,
+  autoVerify: boolean = false
+): Promise<AuthUser> {
+  logger.debug(`Creating user identity`, { uid, provider });
+
+  const encryptedEmail = encrypt(email);
+  const emailHash = generateHash(email);
+  const salt = generateSalt();
+  const passwordHash = strongHash(password, salt);
+  const keyVersion = getKeyVersion();
+
+  try {
+    const { rows } = await repository.createUserIdentity(
+      pgClient,
+      uid,
+      encryptedEmail,
+      emailHash,
+      passwordHash,
+      salt,
+      keyVersion,
+      provider,
+      providerId,
+      autoVerify
+    );
+
+    logger.info(`User created`, { uid, id: rows[0].id });
+
+    return rows[0];
+  } catch (err: any) {
     logger.error(`Failed to create user`, { err });
     throw new AuthenticationError(`Failed to create user`);
   }
@@ -232,7 +278,7 @@ export async function resetUserPassword(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
-  code: number,
+  code: string,
   password: string
 ): Promise<void> {
   logger.debug(`Resetting user password`);
@@ -270,7 +316,7 @@ export async function validateVerificationCode(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
-  code: number,
+  code: string,
   type: AuthVerificationCodeType
 ): Promise<void> {
   logger.debug(`Validating verification code`);
