@@ -121,19 +121,19 @@ export function getUserIdentityByEmailHash(
   return pgClient.query(query, [orgId, emailHash, provider]);
 }
 
-export function getUserByProviderId(
-  pgClient: PgClient,
-  orgId: string,
-  providerId: string,
-  provider: AuthProvider
-): Promise<QueryResult> {
-  let query = `
-    SELECT * FROM authentication_users 
-    WHERE "orgId" = $1 AND "providerId" = $2 AND "provider" = $3
-  `;
+// export function getUserByProviderId(
+//   pgClient: PgClient,
+//   orgId: string,
+//   providerId: string,
+//   provider: AuthProvider
+// ): Promise<QueryResult> {
+//   let query = `
+//     SELECT * FROM authentication_users
+//     WHERE "orgId" = $1 AND "providerId" = $2 AND "provider" = $3
+//   `;
 
-  return pgClient.query(query, [orgId, providerId, provider]);
-}
+//   return pgClient.query(query, [orgId, providerId, provider]);
+// }
 
 export function getUserIdentityByProviderId(
   pgClient: PgClient,
@@ -143,7 +143,7 @@ export function getUserIdentityByProviderId(
 ): Promise<QueryResult> {
   const query = `
     SELECT 
-      au.id as uid,
+      au.id,
       au."clientId",
       aui.id as "identityId", 
       aui."verifiedAt", 

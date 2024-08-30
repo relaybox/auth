@@ -76,14 +76,14 @@ export const handler: APIGatewayProxyHandler = async (
       );
     }
 
-    const { uid, clientId } = userData;
+    const { id } = userData;
 
-    if (!clientId) {
+    if (!id) {
       throw new ValidationError('Failed to register user');
     }
 
     const expiresIn = 300;
-    const authSession = await getAuthSession(logger, pgClient, uid, keyName, secretKey, expiresIn);
+    const authSession = await getAuthSession(logger, pgClient, id, keyName, secretKey, expiresIn);
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 
     return {

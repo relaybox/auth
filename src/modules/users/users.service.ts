@@ -90,12 +90,12 @@ export async function registerIdpUser(
   provider: AuthProvider,
   providerId: string,
   username?: string
-): Promise<{ uid: string; clientId: string }> {
+): Promise<AuthUser> {
   logger.info(`Registering idp user`, { orgId, provider });
 
   const autoVerify = true;
 
-  const { id: uid, clientId } = await createUser(
+  const userData = await createUser(
     logger,
     pgClient,
     orgId,
@@ -110,7 +110,7 @@ export async function registerIdpUser(
   await createUserIdentity(
     logger,
     pgClient,
-    uid,
+    userData.id,
     email,
     password,
     provider,
@@ -118,7 +118,7 @@ export async function registerIdpUser(
     autoVerify
   );
 
-  return { uid, clientId };
+  return userData;
 }
 
 export async function authenticateUser(
