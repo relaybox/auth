@@ -83,8 +83,24 @@ export function getUserByEmailHash(
   provider: AuthProvider
 ): Promise<QueryResult> {
   let query = `
-    SELECT * FROM authentication_users 
+    SELECT * FROM authentication_users
     WHERE "orgId" = $1 AND "emailHash" = $2 AND "provider" = $3
+  `;
+
+  return pgClient.query(query, [orgId, emailHash, provider]);
+}
+
+export function getUserEmailIdentityAuthCredentials(
+  pgClient: PgClient,
+  orgId: string,
+  emailHash: string,
+  provider: AuthProvider
+): Promise<QueryResult> {
+  let query = `
+    SELECT au.id, aui."verifiedAt", aui.password, aui.salt FROM authentication_users au
+    INNER JOIN authentication_users_identities aui 
+    ON aui."uid" = au."id"
+    WHERE au."orgId" = $1 AND aui."emailHash" = $2 AND aui."provider" = $3
   `;
 
   return pgClient.query(query, [orgId, emailHash, provider]);
@@ -141,7 +157,7 @@ export function validateVerificationCode(
   type: AuthVerificationCodeType
 ): Promise<QueryResult> {
   const query = `
-    SELECT "code", "expiresAt", "verifiedAt"
+    SELECT "code", "expiresAt", "verifiedAt", "createdAt"
     FROM authentication_users_verification
     WHERE "uid" = $1 AND "code" = $2 AND type = $3
     LIMIT 1;
@@ -209,11 +225,46 @@ export function updateUserData(
   return pgClient.query(query, params);
 }
 
+export function updateUserIdentityData(
+  pgClient: PgClient,
+  uid: string,
+  userData: { key: string; value: string }[]
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const setValues = userData.map(({ key }, i) => `"${key}" = $${i + 1}`);
+  const params = [...userData.map(({ value }) => value), uid];
+
+  const query = `
+    UPDATE authentication_users_identities 
+    SET ${setValues.join(', ')}
+    WHERE uid = $${params.length} AND provider = '${AuthProvider.EMAIL}'; 
+  `;
+
+  return pgClient.query(query, params);
+}
+
 function getUserDataQueryBy(idFilter: string): string {
   return `
-    SELECT id, username, "clientId", email, "createdAt", "updatedAt", "provider", "providerId" 
-    FROM authentication_users
-    WHERE "${idFilter}" = $1;
+    SELECT 
+      au.id, 
+      au.username, 
+      au."clientId", 
+      au.email, 
+      au."createdAt", 
+      au."updatedAt", 
+      au."verifiedAt",
+      json_agg(
+        json_build_object(
+          'provider', aui.provider,
+          'providerId', aui."providerId",
+          'verifiedAt', aui."verifiedAt"
+        )
+      ) AS identities
+    FROM authentication_users au
+    LEFT JOIN authentication_users_identities aui ON au.id = aui."uid"
+    WHERE au."${idFilter}" = $1
+    GROUP BY au.id;
   `;
 }
 

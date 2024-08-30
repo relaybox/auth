@@ -1,11 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { NotFoundError, ValidationError, VerificationError } from 'src/lib/errors';
+import {
+  AuthenticationError,
+  NotFoundError,
+  ValidationError,
+  VerificationError
+} from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
   getAuthDataByKeyId,
   getRequestAuthParams,
   getUserByEmail,
+  getUserEmailIdentityAuthCredentials,
   resetUserPassword
 } from 'src/modules/users/users.service';
 import { AuthProvider } from 'src/types/auth.types';
@@ -36,14 +42,20 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, code, password } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
+    const userAuthCredentials = await getUserEmailIdentityAuthCredentials(
+      logger,
+      pgClient,
+      orgId,
+      email,
+      AuthProvider.EMAIL
+    );
 
-    if (!userData) {
+    if (!userAuthCredentials) {
       logger.warn(`User not found`, { email });
-      throw new VerificationError('Password reset failed');
+      throw new AuthenticationError('Password reset failed');
     }
 
-    const { id: uid } = userData;
+    const { id: uid } = userAuthCredentials;
 
     await resetUserPassword(logger, pgClient, uid, code, password);
 

@@ -7,6 +7,7 @@ import {
   getAuthDataByKeyId,
   getRequestAuthParams,
   getUserByEmail,
+  getUserEmailIdentityAuthCredentials,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
 import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
@@ -35,14 +36,20 @@ export const handler: APIGatewayProxyHandler = async (
     const { email } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const userData = await getUserByEmail(logger, pgClient, orgId, email, AuthProvider.EMAIL);
+    const userAuthCredentials = await getUserEmailIdentityAuthCredentials(
+      logger,
+      pgClient,
+      orgId,
+      email,
+      AuthProvider.EMAIL
+    );
 
-    if (!userData) {
+    if (!userAuthCredentials) {
       logger.warn(`User not found`, { email });
       return httpResponse._200({ message: 'Password reset request initialized' });
     }
 
-    const { id: uid } = userData;
+    const { id: uid } = userAuthCredentials;
 
     const code = await createAuthVerificationCode(
       logger,

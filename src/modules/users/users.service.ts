@@ -112,36 +112,43 @@ export async function authenticateUser(
   logger.debug(`Authenticating user`);
 
   const emailHash = generateHash(email);
-  const { rows } = await repository.getUserByEmailHash(
+  const userAuthcredentials = await getUserEmailIdentityAuthCredentials(
+    logger,
     pgClient,
     orgId,
-    emailHash,
+    email,
     AuthProvider.EMAIL
   );
 
-  if (!rows.length) {
+  if (!userAuthcredentials) {
+    logger.warn(`User auth credenials not found`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  const user = rows[0];
-
-  if (!user.verifiedAt || !user.password) {
+  if (!userAuthcredentials.verifiedAt || !userAuthcredentials.password) {
+    logger.warn(`User not verified`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  const passwordHash = strongHash(password, user.salt);
+  const passwordHash = strongHash(password, userAuthcredentials.salt);
 
   if (!passwordHash) {
+    logger.warn(`Password hash failed`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  const verifiedPassword = verifyStrongHash(password, user.password, user.salt);
+  const verifiedPassword = verifyStrongHash(
+    password,
+    userAuthcredentials.password,
+    userAuthcredentials.salt
+  );
 
   if (!verifiedPassword) {
+    logger.warn(`Invalid password`, { emailHash });
     throw new AuthenticationError('Login failed');
   }
 
-  return user;
+  return userAuthcredentials;
 }
 
 export async function verifyUser(
@@ -297,7 +304,7 @@ export async function resetUserPassword(
     const salt = generateSalt();
     const passwordHash = strongHash(password, salt);
 
-    await updateUserData(logger, pgClient, uid, [
+    await updateUserIdentityData(logger, pgClient, uid, [
       { key: 'password', value: passwordHash },
       { key: 'salt', value: salt }
     ]);
@@ -329,18 +336,22 @@ export async function validateVerificationCode(
   );
 
   if (!validAuthVerifications.length) {
+    logger.warn(`Invalid verification code`, { uid, code, type });
     throw new NotFoundError(`Invalid verification code`);
   }
 
   if (validAuthVerifications[0].verifiedAt !== null) {
+    logger.warn(`Code already verfied`, { uid, code, type });
     throw new ValidationError(`Verification code already used`);
   }
 
-  if (validAuthVerifications[0].expiresAt < new Date().toISOString()) {
+  if (new Date(validAuthVerifications[0].expiresAt).getTime() < Date.now()) {
+    logger.warn(`Code expired`, { uid, code, type });
     throw new NotFoundError(`Verification code expired`);
   }
 
   if (validAuthVerifications[0].code !== code) {
+    logger.warn(`Code not matched`, { uid, code, type });
     throw new ValidationError(`Invalid verification code`);
   }
 }
@@ -358,6 +369,19 @@ export async function updateUserData(
   return rows[0];
 }
 
+export async function updateUserIdentityData(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  userData: { key: string; value: string }[]
+): Promise<void> {
+  logger.debug(`Updating user idenitity data`, { uid, fields: Object.keys(userData) });
+
+  const { rows } = await repository.updateUserIdentityData(pgClient, uid, userData);
+
+  return rows[0];
+}
+
 export async function getUserByEmail(
   logger: Logger,
   pgClient: PgClient,
@@ -370,6 +394,27 @@ export async function getUserByEmail(
   const emailHash = generateHash(email);
 
   const { rows } = await repository.getUserByEmailHash(pgClient, orgId, emailHash, provider);
+
+  return rows[0];
+}
+
+export async function getUserEmailIdentityAuthCredentials(
+  logger: Logger,
+  pgClient: PgClient,
+  orgId: string,
+  email: string,
+  provider: AuthProvider
+): Promise<any> {
+  logger.debug(`Getting user by email identity`);
+
+  const emailHash = generateHash(email);
+
+  const { rows } = await repository.getUserEmailIdentityAuthCredentials(
+    pgClient,
+    orgId,
+    emailHash,
+    provider
+  );
 
   return rows[0];
 }

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
     "build": "etsc --minify",
     "start": "node ./build/app.js",
     "test": "vitest",
