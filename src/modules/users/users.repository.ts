@@ -339,3 +339,35 @@ export function createUserMfaFactor(
 
   return pgClient.query(query, [uid, type, secret, salt, now]);
 }
+
+export async function getUserMfaFactorById(
+  pgClient: PgClient,
+  id: string,
+  uid: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT * FROM authentication_user_mfa_factors
+    WHERE "id" = $1 AND "uid" = $2;
+  `;
+
+  return pgClient.query(query, [id, uid]);
+}
+
+export async function createUserMfaChallenge(
+  pgClient: PgClient,
+  uid: string,
+  factorId: string,
+  expiresAt: number
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    INSERT INTO authentication_user_mfa_challenges (
+      "uid", "factorId", "createdAt", "expiresAt"
+    ) VALUES (
+      $1, $2, $3, $4
+    ) RETURNING id, "expiresAt";
+  `;
+
+  return pgClient.query(query, [uid, factorId, now, expiresAt]);
+}

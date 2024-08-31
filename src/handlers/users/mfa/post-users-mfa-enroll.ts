@@ -21,7 +21,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { id, type, secret } = await createUserMfaFactor(logger, pgClient, uid);
     const { email } = await getUserDataById(logger, pgClient, uid);
-    const qrCodeUri = await generateTotpQrCodeUrl(secret, email, 'RelayBox');
+    const qrCodeUri = await generateTotpQrCodeUrl(secret, email, 'RelayBox'); // GET ORG ID BASED ON KEY NAME
 
     return httpResponse._200({ id, type, secret, qrCodeUri });
   } catch (err: any) {

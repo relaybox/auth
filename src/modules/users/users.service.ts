@@ -36,6 +36,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { generateUsername } from 'unique-username-generator';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
+
 export const REFRESH_TOKEN_EXPIRES_IN_SECS = 7 * 24 * 60 * 60;
 
 export async function createUser(
@@ -528,5 +529,44 @@ export async function createUserMfaFactor(
   } catch (err: any) {
     logger.error(`Failed to create user mfa factor`, { err });
     throw new AuthenticationError(`Failed to create user mfa factor`);
+  }
+}
+
+export async function getUserMfaFactorById(
+  logger: Logger,
+  pgClient: PgClient,
+  id: string,
+  uid: string
+): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+  logger.debug(`Getting user mfa factor by id`, { uid });
+
+  try {
+    const { rows } = await repository.getUserMfaFactorById(pgClient, id, uid);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to create user mfa factor`, { err });
+    throw new AuthenticationError(`Failed to create user mfa factor`);
+  }
+}
+
+export async function createUserMfaChallenge(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  factorId: string
+): Promise<{ id: string; expiresAt: string }> {
+  logger.debug(`Creating user mfa factor challenge`, { uid });
+
+  try {
+    const now = Date.now();
+    const expiresAt = now + 5 * 60 * 1000;
+
+    const { rows } = await repository.createUserMfaChallenge(pgClient, uid, factorId, expiresAt);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to create user mfa factor`, { err });
+    throw new AuthenticationError(`Failed to create user mfa factor challange`);
   }
 }

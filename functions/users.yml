@@ -136,3 +136,13 @@ post-users-mfa-enroll:
         method: post
         cors: true
         authorizer: user-authorizer
+
+post-users-mfa-challenge:
+  handler: src/handlers/users/mfa/post-users-mfa-challenge.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/mfa/challenge
+        method: post
+        cors: true
+        authorizer: user-authorizer
