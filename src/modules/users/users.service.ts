@@ -18,6 +18,7 @@ import {
   AuthenticationError,
   NotFoundError,
   TokenError,
+  UnauthorizedError,
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
@@ -458,7 +459,7 @@ export async function getAuthDataByKeyId(
   logger: Logger,
   pgClient: PgClient,
   keyId: string
-): Promise<any> {
+): Promise<{ orgId: string; secretKey: string }> {
   logger.debug(`Getting secure auth data by key id`);
 
   const { rows } = await repository.getAuthDataByKeyId(pgClient, keyId);
@@ -673,19 +674,25 @@ export async function getAuthSession(
   logger: Logger,
   pgClient: PgClient,
   id: string,
+  orgId: string,
   keyName: string,
   secretKey: string,
-  expiresIn: number = 300
+  expiresIn: number = 300,
+  authStorageType: AuthStorageType = AuthStorageType.PERSIST
 ): Promise<AuthSession> {
   logger.debug(`Getting auth session for user ${id}`, { id });
 
   const now = Date.now();
   const user = await getUserDataById(logger, pgClient, id);
+
+  if (user.orgId !== orgId) {
+    throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+  }
+
   const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
   const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId);
   const expiresAt = now + expiresIn * 1000;
   const destroyAt = now + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
-  const authStorageType = AuthStorageType.SESSION;
 
   return {
     token: authToken,

@@ -43,15 +43,22 @@ export interface User {
   pricingPlan: number;
 }
 
+export interface AuthUserIdentity {
+  id: string;
+  provider: AuthProvider;
+  providerId: string | null;
+  verifiedAt: Date;
+}
+
 export interface AuthUser {
   id: string;
+  orgId: string;
   clientId: string;
   username?: string;
   email?: string;
   createdAt?: string;
   updatedAt?: string;
-  provider?: AuthProvider;
-  providerId?: string | null;
+  identities: AuthUserIdentity[];
 }
 
 export interface AuthSession {

@@ -282,7 +282,8 @@ export function updateUserIdentityData(
 function getUserDataQueryBy(idFilter: string): string {
   return `
     SELECT 
-      au.id, 
+      au.id,
+      au."orgId",
       au.username, 
       au."clientId", 
       au.email, 
