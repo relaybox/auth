@@ -16,6 +16,7 @@ import {
 import { Logger } from 'winston';
 import {
   AuthenticationError,
+  DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
   TokenError,
@@ -530,6 +531,24 @@ export async function createUserMfaFactor(
   } catch (err: any) {
     logger.error(`Failed to create user mfa factor`, { err });
     throw new AuthenticationError(`Failed to create user mfa factor`);
+  }
+}
+
+export async function getMfaFactorTypeForUser(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  type = AuthMfaFactorType.TOTP
+): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+  logger.debug(`Getting mfa factores for user`, { uid });
+
+  try {
+    const { rows } = await repository.getMfaFactorTypeForUser(pgClient, uid, type);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to get user mfa factor`, { err });
+    throw new AuthenticationError(`Failed to get user mfa factor`);
   }
 }
 

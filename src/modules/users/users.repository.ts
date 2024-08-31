@@ -281,6 +281,33 @@ export function updateUserIdentityData(
 
 function getUserDataQueryBy(idFilter: string): string {
   return `
+    WITH identities_cte AS (
+      SELECT 
+      aui."uid" AS user_id,
+      json_agg(
+        json_build_object(
+          'id', aui.id,
+          'provider', aui.provider,
+          'providerId', aui."providerId",
+          'verifiedAt', aui."verifiedAt"
+        )
+      ) AS identities
+      FROM authentication_user_identities aui
+      GROUP BY aui."uid"
+    ),
+    factors_cte AS (
+      SELECT 
+      aumf."uid" AS user_id,
+      json_agg(
+        json_build_object(
+          'id', aumf.id,
+          'type', aumf.type,
+          'verifiedAt', aumf."verifiedAt"
+        )
+      ) AS factors
+      FROM authentication_user_mfa_factors aumf
+      GROUP BY aumf."uid"
+    )
     SELECT 
       au.id,
       au."orgId",
@@ -290,18 +317,12 @@ function getUserDataQueryBy(idFilter: string): string {
       au."createdAt", 
       au."updatedAt", 
       au."verifiedAt",
-      json_agg(
-        json_build_object(
-          'id', aui.id,
-          'provider', aui.provider,
-          'providerId', aui."providerId",
-          'verifiedAt', aui."verifiedAt"
-        )
-      ) AS identities
+    COALESCE(identities_cte.identities, '[]') AS identities,
+    COALESCE(factors_cte.factors, '[]') AS factors
     FROM authentication_users au
-    LEFT JOIN authentication_user_identities aui ON au.id = aui."uid"
-    WHERE au."${idFilter}" = $1
-    GROUP BY au.id;
+    LEFT JOIN identities_cte ON au.id = identities_cte.user_id
+    LEFT JOIN factors_cte ON au.id = factors_cte.user_id
+    WHERE au."${idFilter}" = $1;
   `;
 }
 
@@ -383,4 +404,17 @@ export async function getUserMfaChallengeById(
   `;
 
   return pgClient.query(query, [id, uid]);
+}
+
+export async function getMfaFactorTypeForUser(
+  pgClient: PgClient,
+  uid: string,
+  type: AuthMfaFactorType
+): Promise<QueryResult> {
+  const query = `
+    SELECT * FROM authentication_user_mfa_factors
+    WHERE "uid" = $1 AND "type" = $2 AND "deletedAt" IS NULL;
+  `;
+
+  return pgClient.query(query, [uid, type]);
 }
