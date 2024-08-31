@@ -7,7 +7,6 @@ import {
   getAuthSession,
   getKeyParts,
   getUserIdentityByProviderId,
-  registerIdpUser,
   updateUserData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
@@ -15,6 +14,7 @@ import { AuthProvider } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
+import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-google-callback');
 

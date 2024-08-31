@@ -1,18 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import {
-  AuthenticationError,
-  NotFoundError,
-  ValidationError,
-  VerificationError
-} from 'src/lib/errors';
+import { AuthenticationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
+import { resetUserPassword } from 'src/modules/users/users.actions';
 import {
   getAuthDataByKeyId,
   getRequestAuthParams,
-  getUserByEmail,
-  getUserIdentityByEmail,
-  resetUserPassword
+  getUserIdentityByEmail
 } from 'src/modules/users/users.service';
 import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';

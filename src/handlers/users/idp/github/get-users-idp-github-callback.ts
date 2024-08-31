@@ -8,13 +8,13 @@ import {
   getAuthSession,
   getKeyParts,
   getUserIdentityByProviderId,
-  registerIdpUser,
   updateUserIdentityData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
 import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
+import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-github');
 

@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
+import { authenticateUser } from 'src/modules/users/users.actions';
 import {
-  authenticateUser,
   getAuthDataByKeyId,
   getAuthSession,
   getRequestAuthParams
