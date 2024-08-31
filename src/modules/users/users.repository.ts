@@ -366,8 +366,21 @@ export async function createUserMfaChallenge(
       "uid", "factorId", "createdAt", "expiresAt"
     ) VALUES (
       $1, $2, $3, $4
-    ) RETURNING id, "expiresAt";
+    ) RETURNING id;
   `;
 
   return pgClient.query(query, [uid, factorId, now, expiresAt]);
+}
+
+export async function getUserMfaChallengeById(
+  pgClient: PgClient,
+  id: string,
+  uid: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT * FROM authentication_user_mfa_challenges
+    WHERE "id" = $1 AND "uid" = $2;
+  `;
+
+  return pgClient.query(query, [id, uid]);
 }

@@ -2,13 +2,20 @@ import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
 import { generateSalt, strongHash, verifyStrongHash } from 'src/lib/encryption';
 import { Logger } from 'winston';
-import { AuthenticationError, ValidationError, VerificationError } from 'src/lib/errors';
+import {
+  AuthenticationError,
+  ForbiddenError,
+  ValidationError,
+  VerificationError
+} from 'src/lib/errors';
 import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
 import {
   createAuthVerificationCode,
   createUserIdentity,
   getOrCreateUser,
   getUserIdentityByEmail,
+  getUserMfaChallengeById,
+  getUserMfaFactorById,
   sendAuthVerificationCode,
   updateUserIdentityData,
   validateVerificationCode
@@ -214,5 +221,33 @@ export async function resetUserPassword(
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to reset user password`, { err });
     throw err;
+  }
+}
+
+export async function verifyUserMfaChallenge(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  factorId: string,
+  challengeId: string,
+  code: string
+): Promise<void> {
+  logger.debug(`Verifying user mfa challenge`, { uid });
+
+  const validatedUserMfaFactor = await getUserMfaFactorById(logger, pgClient, factorId, uid);
+
+  if (!validatedUserMfaFactor) {
+    throw new ForbiddenError('Invalid factor id');
+  }
+
+  const validatedUserMfaChallenge = await getUserMfaChallengeById(
+    logger,
+    pgClient,
+    challengeId,
+    uid
+  );
+
+  if (!validatedUserMfaFactor) {
+    throw new ForbiddenError('Invalid factor id');
   }
 }

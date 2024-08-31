@@ -16,6 +16,7 @@ import {
 import { Logger } from 'winston';
 import {
   AuthenticationError,
+  ForbiddenError,
   NotFoundError,
   TokenError,
   UnauthorizedError,
@@ -545,8 +546,8 @@ export async function getUserMfaFactorById(
 
     return rows[0];
   } catch (err: any) {
-    logger.error(`Failed to create user mfa factor`, { err });
-    throw new AuthenticationError(`Failed to create user mfa factor`);
+    logger.error(`Failed to get user mfa factor`, { err });
+    throw new AuthenticationError(`Failed to get user mfa factor`);
   }
 }
 
@@ -564,9 +565,27 @@ export async function createUserMfaChallenge(
 
     const { rows } = await repository.createUserMfaChallenge(pgClient, uid, factorId, expiresAt);
 
-    return rows[0];
+    return { ...rows[0], expiresAt };
   } catch (err: any) {
     logger.error(`Failed to create user mfa factor`, { err });
     throw new AuthenticationError(`Failed to create user mfa factor challange`);
+  }
+}
+
+export async function getUserMfaChallengeById(
+  logger: Logger,
+  pgClient: PgClient,
+  id: string,
+  uid: string
+): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+  logger.debug(`Getting user mfa challenge by id`, { uid });
+
+  try {
+    const { rows } = await repository.getUserMfaChallengeById(pgClient, id, uid);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to get user mfa challenge`, { err });
+    throw new AuthenticationError(`Failed to get user mfa challenge`);
   }
 }

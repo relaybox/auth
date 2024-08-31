@@ -1,8 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ForbiddenError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
-import { createUserMfaChallenge, getUserMfaFactorById } from 'src/modules/users/users.service';
+import { verifyUserMfaChallenge } from 'src/modules/users/users.actions';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -11,7 +10,9 @@ import { z } from 'zod';
 const logger = getLogger('post-users-mfa-challenge');
 
 const schema = z.object({
-  factorId: z.string().uuid()
+  factorId: z.string().uuid(),
+  challengeId: z.string().uuid(),
+  code: z.string().length(6)
 });
 
 export const handler: APIGatewayProxyHandler = async (
@@ -24,21 +25,11 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const uid = event.requestContext.authorizer!.principalId;
-    const { factorId } = validateEventSchema(event, schema);
-    const validatedUserMfaFactor = await getUserMfaFactorById(logger, pgClient, factorId, uid);
+    const { factorId, challengeId, code } = validateEventSchema(event, schema);
 
-    if (!validatedUserMfaFactor) {
-      throw new ForbiddenError('Invalid factor id');
-    }
+    await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
-    const { id, expiresAt } = await createUserMfaChallenge(
-      logger,
-      pgClient,
-      uid,
-      validatedUserMfaFactor.id
-    );
-
-    return httpResponse._200({ id, expiresAt });
+    return httpResponse._200();
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

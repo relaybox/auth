@@ -146,3 +146,13 @@ post-users-mfa-challenge:
         method: post
         cors: true
         authorizer: user-authorizer
+
+post-users-mfa-verify:
+  handler: src/handlers/users/mfa/post-users-mfa-verify.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/mfa/verify
+        method: post
+        cors: true
+        authorizer: user-authorizer
