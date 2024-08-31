@@ -363,8 +363,12 @@ export function adminSetUserMfaTotpPreference(
   return cognitoClient.send(adminSetUserMFAPreferenceCommand);
 }
 
-export function generateTotpQrCodeUrl(secretCode: string, email: string): Promise<string> {
-  const totpUri = `otpauth://totp/${email}?secret=${secretCode}&issuer=relayBox`;
+export function generateTotpQrCodeUrl(
+  secretCode: string,
+  email: string,
+  issuer: string
+): Promise<string> {
+  const totpUri = `otpauth://totp/${email}?secret=${secretCode}&issuer=${issuer}`;
   return qrcode.toDataURL(totpUri);
 }
 

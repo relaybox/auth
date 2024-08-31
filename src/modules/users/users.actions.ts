@@ -1,9 +1,20 @@
 import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
-import { generateSalt, strongHash, verifyStrongHash } from 'src/lib/encryption';
+import {
+  encrypt,
+  generateSalt,
+  generateSecret,
+  strongHash,
+  verifyStrongHash
+} from 'src/lib/encryption';
 import { Logger } from 'winston';
 import { AuthenticationError, ValidationError, VerificationError } from 'src/lib/errors';
-import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  AuthMfaFactorType,
+  AuthProvider,
+  AuthUser,
+  AuthVerificationCodeType
+} from 'src/types/auth.types';
 import {
   createAuthVerificationCode,
   createUserIdentity,

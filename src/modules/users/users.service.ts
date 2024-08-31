@@ -8,6 +8,7 @@ import {
   generateAuthToken,
   generateHash,
   generateSalt,
+  generateSecret,
   getKeyVersion,
   strongHash,
   verifyAuthToken
@@ -21,6 +22,7 @@ import {
   ValidationError
 } from 'src/lib/errors';
 import {
+  AuthMfaFactorType,
   AuthProvider,
   AuthSession,
   AuthStorageType,
@@ -499,5 +501,32 @@ export async function validateVerificationCode(
 
   if (validAuthVerifications[0].code !== code) {
     throw new ValidationError(`Invalid verification code`);
+  }
+}
+
+export async function createUserMfaFactor(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string
+): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+  logger.debug(`Creating user mfa factor`, { uid });
+
+  try {
+    const secret = generateSecret();
+    const salt = generateSalt();
+    const encryptedSecret = encrypt(secret, salt);
+
+    const { rows } = await repository.createUserMfaFactor(
+      pgClient,
+      uid,
+      AuthMfaFactorType.TOTP,
+      encryptedSecret,
+      salt
+    );
+
+    return { ...rows[0], secret };
+  } catch (err: any) {
+    logger.error(`Failed to create user mfa factor`, { err });
+    throw new AuthenticationError(`Failed to create user mfa factor`);
   }
 }

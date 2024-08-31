@@ -54,10 +54,10 @@ export interface AuthUser {
   id: string;
   orgId: string;
   clientId: string;
-  username?: string;
-  email?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  username: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
   identities: AuthUserIdentity[];
 }
 
@@ -91,6 +91,10 @@ export enum AuthProvider {
   EMAIL = 'email',
   GITHUB = 'github',
   GOOGLE = 'google'
+}
+
+export enum AuthMfaFactorType {
+  TOTP = 'totp'
 }
 
 export interface GithubAuthCredentials {

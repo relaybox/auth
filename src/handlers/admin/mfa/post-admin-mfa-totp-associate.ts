@@ -34,7 +34,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     // @ts-ignore
     const secretCode = result.SecretCode;
-    const qrCodeUrl = await generateTotpQrCodeUrl(secretCode, email);
+    const qrCodeUrl = await generateTotpQrCodeUrl(secretCode, email, 'RelayBox');
 
     return httpResponse._200({ url: qrCodeUrl });
   } catch (err: any) {

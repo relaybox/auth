@@ -7,6 +7,7 @@ const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
 const AUTH_HMAC_KEY = process.env.AUTH_HMAC_KEY || '';
 const AUTH_ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const SALT_LENGTH = 16;
+const SECRET_LENGTH = 32;
 const ITERATIONS = 100000;
 const KEY_LENGTH = 64;
 const JWT_ISSUER = process.env.JWT_ISSUER || '';
@@ -23,8 +24,9 @@ enum Digest {
   SHA512 = 'sha512'
 }
 
-export function encrypt(value: string): string {
-  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, AUTH_ENCRYPTION_SALT, 32);
+export function encrypt(value: string, salt?: string): string {
+  const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
+  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(AUTH_ENCRYPTION_ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(value), cipher.final()]);
@@ -33,10 +35,11 @@ export function encrypt(value: string): string {
   return Buffer.from(encryptedString).toString(Encoding.BASE64);
 }
 
-export function decrypt(encryptedValue: string): string {
+export function decrypt(encryptedValue: string, salt?: string): string {
+  const decryptionSalt = salt || AUTH_ENCRYPTION_SALT;
   const encryptedString = Buffer.from(encryptedValue, Encoding.BASE64).toString(Encoding.UTF8);
   const [ivHex, encryptedHex] = encryptedString.split(':');
-  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, AUTH_ENCRYPTION_SALT, 32);
+  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, decryptionSalt, 32);
 
   const decipher = crypto.createDecipheriv(
     AUTH_ENCRYPTION_ALGORITHM,
@@ -60,6 +63,10 @@ export function generateHash(value: string): string {
 
 export function generateSalt(): string {
   return crypto.randomBytes(SALT_LENGTH).toString(Encoding.HEX);
+}
+
+export function generateSecret(): string {
+  return crypto.randomBytes(SECRET_LENGTH).toString(Encoding.HEX);
 }
 
 export function strongHash(password: string, salt: string): string {

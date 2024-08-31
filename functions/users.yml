@@ -126,3 +126,13 @@ get-users-session:
         method: get
         cors: true
         authorizer: session-authorizer
+
+post-users-mfa-enroll:
+  handler: src/handlers/users/mfa/post-users-mfa-enroll.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/mfa/enroll
+        method: post
+        cors: true
+        authorizer: user-authorizer

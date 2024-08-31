@@ -1,6 +1,6 @@
 import PgClient from 'serverless-postgres';
 import { QueryResult } from 'pg';
-import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
+import { AuthMfaFactorType, AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
 
 export function createUser(
   pgClient: PgClient,
@@ -46,7 +46,7 @@ export function createUserIdentity(
   const now = new Date().toISOString();
 
   const query = `
-    INSERT INTO authentication_users_identities (
+    INSERT INTO authentication_user_identities (
       "uid", email, "emailHash", password, salt, "keyVersion", "provider", "providerId", "verifiedAt"
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9
@@ -96,7 +96,7 @@ export function getUserIdentityByEmailHash(
       aui.provider,
       aui."providerId"
     FROM authentication_users au
-    INNER JOIN authentication_users_identities aui 
+    INNER JOIN authentication_user_identities aui 
     ON aui."uid" = au."id"
     WHERE au."orgId" = $1 AND aui."emailHash" = $2
   `;
@@ -128,7 +128,7 @@ export function getUserIdentityByProviderId(
       aui.provider,
       aui."providerId"
     FROM authentication_users au
-    INNER JOIN authentication_users_identities aui 
+    INNER JOIN authentication_user_identities aui 
     ON aui."uid" = au."id"
     WHERE au."orgId" = $1 AND aui."providerId" = $2 AND aui."provider" = $3
   `;
@@ -145,8 +145,8 @@ export function getUserIdentityByVerificationCode(
       aui.uid,
       aui.id as "identityId", 
       aui."verifiedAt", 
-    FROM authentication_users_verification auv
-    INNER JOIN authentication_users_identities aui 
+    FROM authentication_user_verification auv
+    INNER JOIN authentication_user_identities aui 
     ON aui."id" = auv."identityId"
     WHERE auv."code" = $1
   `;
@@ -175,7 +175,7 @@ export function createAuthVerificationCode(
   const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
 
   const query = `
-    INSERT INTO authentication_users_verification (
+    INSERT INTO authentication_user_verification (
       "uid", "identityId", "code", "expiresAt", type
     ) VALUES (
       $1, $2, $3, $4, $5
@@ -193,7 +193,7 @@ export function validateVerificationCode(
 ): Promise<QueryResult> {
   const query = `
     SELECT "code", "expiresAt", "verifiedAt", "createdAt"
-    FROM authentication_users_verification
+    FROM authentication_user_verification
     WHERE "identityId" = $1 AND "code" = $2 AND type = $3
     LIMIT 1;
   `;
@@ -209,7 +209,7 @@ export function invalidateVerificationCode(
   const now = new Date().toISOString();
 
   const query = `
-    UPDATE authentication_users_verification 
+    UPDATE authentication_user_verification 
     SET "verifiedAt" = $2
     WHERE "identityId" = $1 AND "code" = $3;
   `;
@@ -233,7 +233,7 @@ export function verifyUserIdentity(pgClient: PgClient, identityId: string): Prom
   const now = new Date().toISOString();
 
   const query = `
-    UPDATE authentication_users_identities
+    UPDATE authentication_user_identities
     SET "verifiedAt" = $2
     WHERE id = $1;
   `;
@@ -271,7 +271,7 @@ export function updateUserIdentityData(
   const params = [...userData.map(({ value }) => value), identityId];
 
   const query = `
-    UPDATE authentication_users_identities 
+    UPDATE authentication_user_identities 
     SET ${setValues.join(', ')}
     WHERE id = $${params.length}; 
   `;
@@ -299,7 +299,7 @@ function getUserDataQueryBy(idFilter: string): string {
         )
       ) AS identities
     FROM authentication_users au
-    LEFT JOIN authentication_users_identities aui ON au.id = aui."uid"
+    LEFT JOIN authentication_user_identities aui ON au.id = aui."uid"
     WHERE au."${idFilter}" = $1
     GROUP BY au.id;
   `;
@@ -318,4 +318,24 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
   const query = getUserDataQueryBy('id');
 
   return pgClient.query(query, [id]);
+}
+
+export function createUserMfaFactor(
+  pgClient: PgClient,
+  uid: string,
+  type: AuthMfaFactorType,
+  secret: string,
+  salt: string
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    INSERT INTO authentication_user_mfa_factors (
+      "uid", "type", "secret", "salt", "createdAt"
+    ) VALUES (
+      $1, $2, $3, $4, $5
+    ) RETURNING id, type;
+  `;
+
+  return pgClient.query(query, [uid, type, secret, salt, now]);
 }
