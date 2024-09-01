@@ -5,7 +5,8 @@ import { verifyUserMfaChallenge } from 'src/modules/users/users.actions';
 import {
   getAuthDataByKeyId,
   getAuthSession,
-  getRequestAuthParams
+  getRequestAuthParams,
+  setUserMfaEnabled
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -33,6 +34,7 @@ export const handler: APIGatewayProxyHandler = async (
     const { factorId, challengeId, code } = validateEventSchema(event, schema);
 
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
+    await setUserMfaEnabled(logger, pgClient, uid);
 
     const { keyName, keyId } = getRequestAuthParams(event);
     const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);

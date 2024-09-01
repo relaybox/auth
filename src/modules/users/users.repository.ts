@@ -477,3 +477,13 @@ export async function invalidateMfaChallenge(pgClient: PgClient, id: string): Pr
 
   return pgClient.query(query, [id, now]);
 }
+
+export async function setUserMfaEnabled(pgClient: PgClient, uid: string): Promise<QueryResult> {
+  const query = `
+    UPDATE authentication_users 
+    SET "authMfaEnabled" = TRUE
+    WHERE id = $1;
+  `;
+
+  return pgClient.query(query, [uid]);
+}

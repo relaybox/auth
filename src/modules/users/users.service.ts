@@ -600,7 +600,7 @@ export async function getUserMfaChallengeById(
   pgClient: PgClient,
   id: string,
   uid: string
-): Promise<{ id: string; factorId: string; expiresAt: string }> {
+): Promise<{ id: string; factorId: string; expiresAt: string; verifiedAt: string }> {
   logger.debug(`Getting user mfa challenge by id`, { uid });
 
   try {
@@ -625,5 +625,20 @@ export async function invalidateMfaChallengeById(
   } catch (err: any) {
     logger.error(`Failed to invalidate user mfa challenge`, { err });
     throw new AuthenticationError(`Failed to invalidate user mfa challenge`);
+  }
+}
+
+export async function setUserMfaEnabled(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string
+): Promise<void> {
+  logger.debug(`Setting user mfa enabled`, { uid });
+
+  try {
+    await repository.setUserMfaEnabled(pgClient, uid);
+  } catch (err: any) {
+    logger.error(`Failed to set user mfa enabled`, { err });
+    throw new AuthenticationError(`Failed to set user mfa enabled`);
   }
 }

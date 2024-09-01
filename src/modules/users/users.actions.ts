@@ -252,7 +252,7 @@ export async function verifyUserMfaChallenge(
   );
 
   if (!validatedUserMfaChallenge) {
-    throw new ForbiddenError('Invalid mfa challenge id');
+    throw new ForbiddenError('Unable to verify mfa code');
   }
 
   const challengeExpiresAt = BigInt(validatedUserMfaChallenge.expiresAt);
