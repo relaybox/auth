@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { generateTotpQrCodeUrl } from 'src/lib/auth';
+import { generateAuthMfaTotpQrCodeUrl } from 'src/lib/auth';
 import { DuplicateKeyError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
@@ -38,7 +38,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { id, type, secret } = await createUserMfaFactor(logger, pgClient, uid);
     const { email } = await getUserDataById(logger, pgClient, uid);
-    const qrCodeUri = await generateTotpQrCodeUrl(secret, email, 'RelayBox'); // GET ORG NAME BASED ON KEY NAME
+    const qrCodeUri = await generateAuthMfaTotpQrCodeUrl(secret, email, 'RelayBox'); // GET ORG NAME BASED ON KEY NAME
 
     return httpResponse._200({ id, type, secret, qrCodeUri });
   } catch (err: any) {

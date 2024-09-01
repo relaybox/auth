@@ -50,6 +50,12 @@ export interface AuthUserIdentity {
   verifiedAt: Date;
 }
 
+export interface AuthUserMfaFactor {
+  id: string;
+  type: AuthMfaFactorType;
+  verifiedAt: Date;
+}
+
 export interface AuthUser {
   id: string;
   orgId: string;
@@ -58,16 +64,18 @@ export interface AuthUser {
   email: string;
   createdAt: string;
   updatedAt: string;
+  authMfaEnabled: boolean;
   identities: AuthUserIdentity[];
+  factors: AuthUserMfaFactor[];
 }
 
 export interface AuthSession {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
-  expiresAt: number;
-  destroyAt: number;
-  authStorageType: AuthStorageType;
+  token?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  expiresAt?: number;
+  destroyAt?: number;
+  authStorageType?: AuthStorageType;
   user: AuthUser;
 }
 

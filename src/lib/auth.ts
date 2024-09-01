@@ -372,6 +372,20 @@ export function generateTotpQrCodeUrl(
   return qrcode.toDataURL(totpUri);
 }
 
+export function generateAuthMfaTotpQrCodeUrl(
+  secret: string,
+  email: string,
+  issuer: string
+): Promise<string> {
+  // const encodedSecret = Buffer.from(secret).toString('base64');
+  const encodedEmail = encodeURIComponent(email);
+  const encodedIssuer = encodeURIComponent(issuer);
+
+  const totpUri = `otpauth://totp/${encodedIssuer}:${encodedEmail}?secret=${secret}&issuer=${encodedIssuer}`;
+
+  return qrcode.toDataURL(totpUri);
+}
+
 export async function getIdpAuthCredentials(
   code: string,
   clientId: string,

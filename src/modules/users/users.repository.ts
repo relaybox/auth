@@ -317,6 +317,7 @@ function getUserDataQueryBy(idFilter: string): string {
       au."createdAt", 
       au."updatedAt", 
       au."verifiedAt",
+      au."authMfaEnabled",
     COALESCE(identities_cte.identities, '[]') AS identities,
     COALESCE(factors_cte.factors, '[]') AS factors
     FROM authentication_users au

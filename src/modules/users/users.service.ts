@@ -16,8 +16,6 @@ import {
 import { Logger } from 'winston';
 import {
   AuthenticationError,
-  DuplicateKeyError,
-  ForbiddenError,
   NotFoundError,
   TokenError,
   UnauthorizedError,
@@ -36,6 +34,7 @@ import { smtpTransport } from 'src/lib/smtp';
 import { TokenType } from 'src/types/jwt.types';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { generateUsername } from 'unique-username-generator';
+import { authenticator } from 'otplib';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
@@ -387,6 +386,7 @@ export async function getAuthSession(
   keyName: string,
   secretKey: string,
   expiresIn: number = 300,
+  authenticateAction: boolean = false,
   authStorageType: AuthStorageType = AuthStorageType.PERSIST
 ): Promise<AuthSession> {
   logger.debug(`Getting auth session for user ${id}`, { id });
@@ -396,6 +396,10 @@ export async function getAuthSession(
 
   if (user.orgId !== orgId) {
     throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+  }
+
+  if (user.authMfaEnabled && authenticateAction) {
+    return { user };
   }
 
   const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
@@ -515,7 +519,7 @@ export async function createUserMfaFactor(
   logger.debug(`Creating user mfa factor`, { uid });
 
   try {
-    const secret = generateSecret();
+    const secret = authenticator.generateSecret(20);
     const salt = generateSalt();
     const encryptedSecret = encrypt(secret, salt);
 
@@ -540,7 +544,7 @@ export async function getMfaFactorTypeForUser(
   uid: string,
   type = AuthMfaFactorType.TOTP
 ): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
-  logger.debug(`Getting mfa factores for user`, { uid });
+  logger.debug(`Getting mfa factors for user`, { uid });
 
   try {
     const { rows } = await repository.getMfaFactorTypeForUser(pgClient, uid, type);
