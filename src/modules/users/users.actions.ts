@@ -18,6 +18,9 @@ import {
   getUserMfaFactorById,
   invalidateMfaChallengeById,
   sendAuthVerificationCode,
+  setUserMfaEnabled,
+  setUserMfaFactorLastUsedAt,
+  setUserMfaFactorVerified,
   updateUserIdentityData,
   validateVerificationCode
 } from './users.service';
@@ -176,9 +179,11 @@ export async function verifyUser(
       AuthVerificationCodeType.REGISTER
     );
 
-    await repository.verifyUser(pgClient, uid);
-    await repository.verifyUserIdentity(pgClient, identityId);
-    await repository.invalidateVerificationCode(pgClient, identityId, code);
+    await Promise.all([
+      repository.verifyUser(pgClient, uid),
+      repository.verifyUserIdentity(pgClient, identityId),
+      repository.invalidateVerificationCode(pgClient, identityId, code)
+    ]);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {
@@ -268,5 +273,32 @@ export async function verifyUserMfaChallenge(
     throw new ForbiddenError('Unable to verify mfa code');
   }
 
-  await invalidateMfaChallengeById(logger, pgClient, challengeId);
+  await Promise.all([
+    invalidateMfaChallengeById(logger, pgClient, challengeId),
+    setUserMfaFactorLastUsedAt(logger, pgClient, factorId)
+  ]);
+}
+
+export async function enableMfaForUser(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  factorId: string
+): Promise<void> {
+  logger.debug(`Enabling mfa for user`, { uid, factorId });
+
+  try {
+    pgClient.query('BEGIN');
+
+    await Promise.all([
+      setUserMfaEnabled(logger, pgClient, uid),
+      setUserMfaFactorVerified(logger, pgClient, factorId)
+    ]);
+
+    await pgClient.query('COMMIT');
+  } catch (err: any) {
+    await pgClient.query('ROLLBACK');
+    logger.error(`Failed to enable mfa for user`, { err });
+    throw new AuthenticationError(`Failed to enable mfa for user`);
+  }
 }

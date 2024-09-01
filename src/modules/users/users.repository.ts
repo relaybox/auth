@@ -487,3 +487,33 @@ export async function setUserMfaEnabled(pgClient: PgClient, uid: string): Promis
 
   return pgClient.query(query, [uid]);
 }
+
+export async function setUserMfaFactorVerified(
+  pgClient: PgClient,
+  factorId: string
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_user_mfa_factors 
+    SET "verifiedAt" = $1
+    WHERE id = $2;
+  `;
+
+  return pgClient.query(query, [now, factorId]);
+}
+
+export async function setUserMfaFactorLastUsedAt(
+  pgClient: PgClient,
+  factorId: string
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_user_mfa_factors 
+    SET "lastUsedAt" = $1
+    WHERE id = $2;
+  `;
+
+  return pgClient.query(query, [now, factorId]);
+}

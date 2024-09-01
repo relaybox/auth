@@ -1,12 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
-import { verifyUserMfaChallenge } from 'src/modules/users/users.actions';
+import { enableMfaForUser, verifyUserMfaChallenge } from 'src/modules/users/users.actions';
 import {
+  createUserMfaChallenge,
   getAuthDataByKeyId,
   getAuthSession,
-  getRequestAuthParams,
-  setUserMfaEnabled
+  getRequestAuthParams
 } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
@@ -17,8 +18,9 @@ const logger = getLogger('post-users-mfa-challenge');
 
 const schema = z.object({
   factorId: z.string().uuid(),
-  challengeId: z.string().uuid(),
-  code: z.string().length(6)
+  code: z.string().length(6),
+  challengeId: z.string().uuid().optional(),
+  autoChallenge: z.boolean().optional()
 });
 
 export const handler: APIGatewayProxyHandler = async (
@@ -31,10 +33,17 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const uid = event.requestContext.authorizer!.principalId;
-    const { factorId, challengeId, code } = validateEventSchema(event, schema);
+    let { factorId, challengeId, code, autoChallenge } = validateEventSchema(event, schema);
+
+    if (!challengeId && !autoChallenge) {
+      throw new ValidationError('"challengeId" or "autoChallenge" required');
+    }
+
+    if (!challengeId) {
+      challengeId = (await createUserMfaChallenge(logger, pgClient, uid, factorId)).id;
+    }
 
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
-    await setUserMfaEnabled(logger, pgClient, uid);
 
     const { keyName, keyId } = getRequestAuthParams(event);
     const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
@@ -48,6 +57,10 @@ export const handler: APIGatewayProxyHandler = async (
       secretKey,
       expiresIn
     );
+
+    if (!authSession.user.authMfaEnabled) {
+      await enableMfaForUser(logger, pgClient, uid, factorId);
+    }
 
     return httpResponse._200(authSession);
   } catch (err: any) {

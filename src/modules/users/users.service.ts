@@ -628,6 +628,21 @@ export async function invalidateMfaChallengeById(
   }
 }
 
+export async function setUserMfaFactorVerified(
+  logger: Logger,
+  pgClient: PgClient,
+  factorId: string
+): Promise<void> {
+  logger.debug(`Setting user mfa factor verified`, { factorId });
+
+  try {
+    await repository.setUserMfaFactorVerified(pgClient, factorId);
+  } catch (err: any) {
+    logger.error(`Failed to set user mfa factor verified`, { err });
+    throw new AuthenticationError(`Failed to set user mfa enabled`);
+  }
+}
+
 export async function setUserMfaEnabled(
   logger: Logger,
   pgClient: PgClient,
@@ -640,5 +655,20 @@ export async function setUserMfaEnabled(
   } catch (err: any) {
     logger.error(`Failed to set user mfa enabled`, { err });
     throw new AuthenticationError(`Failed to set user mfa enabled`);
+  }
+}
+
+export async function setUserMfaFactorLastUsedAt(
+  logger: Logger,
+  pgClient: PgClient,
+  factorId: string
+): Promise<void> {
+  logger.debug(`Setting user mfa factor last used at`, { factorId });
+
+  try {
+    await repository.setUserMfaFactorLastUsedAt(pgClient, factorId);
+  } catch (err: any) {
+    logger.error(`Failed to set user mfa factor last used at`, { err });
+    throw new AuthenticationError(`Failed to set user mfa factor last used at`);
   }
 }
