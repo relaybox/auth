@@ -1,6 +1,6 @@
 import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
-import { generateSalt, strongHash, verifyStrongHash } from 'src/lib/encryption';
+import { decrypt, generateSalt, strongHash, verifyStrongHash } from 'src/lib/encryption';
 import { Logger } from 'winston';
 import {
   AuthenticationError,
@@ -16,10 +16,12 @@ import {
   getUserIdentityByEmail,
   getUserMfaChallengeById,
   getUserMfaFactorById,
+  invalidateMfaChallengeById,
   sendAuthVerificationCode,
   updateUserIdentityData,
   validateVerificationCode
 } from './users.service';
+import { authenticator } from 'otplib';
 
 export const REFRESH_TOKEN_EXPIRES_IN_SECS = 7 * 24 * 60 * 60;
 
@@ -231,14 +233,16 @@ export async function verifyUserMfaChallenge(
   factorId: string,
   challengeId: string,
   code: string
-): Promise<void> {
+): Promise<any> {
   logger.debug(`Verifying user mfa challenge`, { uid });
 
   const validatedUserMfaFactor = await getUserMfaFactorById(logger, pgClient, factorId, uid);
 
   if (!validatedUserMfaFactor) {
-    throw new ForbiddenError('Invalid factor id');
+    throw new ForbiddenError('Invalid mfafactor id');
   }
+
+  const { secret, salt } = validatedUserMfaFactor;
 
   const validatedUserMfaChallenge = await getUserMfaChallengeById(
     logger,
@@ -247,7 +251,22 @@ export async function verifyUserMfaChallenge(
     uid
   );
 
-  if (!validatedUserMfaFactor) {
-    throw new ForbiddenError('Invalid factor id');
+  if (!validatedUserMfaChallenge) {
+    throw new ForbiddenError('Invalid mfa challenge id');
   }
+
+  const challengeExpiresAt = BigInt(validatedUserMfaChallenge.expiresAt);
+
+  if (challengeExpiresAt < Date.now()) {
+    throw new ForbiddenError('Challenge expired');
+  }
+
+  const decryptedSecret = decrypt(secret, salt);
+  const verified = authenticator.verify({ token: code, secret: decryptedSecret });
+
+  if (!verified) {
+    throw new ForbiddenError('Unable to verify mfa code');
+  }
+
+  await invalidateMfaChallengeById(logger, pgClient, challengeId);
 }

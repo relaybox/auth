@@ -2,6 +2,11 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { verifyUserMfaChallenge } from 'src/modules/users/users.actions';
+import {
+  getAuthDataByKeyId,
+  getAuthSession,
+  getRequestAuthParams
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -29,7 +34,20 @@ export const handler: APIGatewayProxyHandler = async (
 
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
-    return httpResponse._200();
+    const { keyName, keyId } = getRequestAuthParams(event);
+    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const expiresIn = 3600;
+    const authSession = await getAuthSession(
+      logger,
+      pgClient,
+      uid,
+      orgId,
+      keyName,
+      secretKey,
+      expiresIn
+    );
+
+    return httpResponse._200(authSession);
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

@@ -337,7 +337,53 @@ export async function getUserDataByClientId(
 }
 
 export async function getUserDataById(pgClient: PgClient, id: string): Promise<QueryResult> {
-  const query = getUserDataQueryBy('id');
+  const query = `
+    WITH identities_cte AS (
+      SELECT 
+      aui."uid" AS user_id,
+      json_agg(
+        json_build_object(
+          'id', aui.id,
+          'provider', aui.provider,
+          'providerId', aui."providerId",
+          'verifiedAt', aui."verifiedAt"
+        )
+      ) AS identities
+      FROM authentication_user_identities aui
+      WHERE aui."uid" = $1
+      GROUP BY aui."uid"
+    ),
+    factors_cte AS (
+      SELECT 
+      aumf."uid" AS user_id,
+      json_agg(
+        json_build_object(
+          'id', aumf.id,
+          'type', aumf.type,
+          'verifiedAt', aumf."verifiedAt"
+        )
+      ) AS factors
+      FROM authentication_user_mfa_factors aumf
+      WHERE aumf."uid" = $1
+      GROUP BY aumf."uid"
+    )
+    SELECT 
+      au.id,
+      au."orgId",
+      au.username, 
+      au."clientId", 
+      au.email, 
+      au."createdAt", 
+      au."updatedAt", 
+      au."verifiedAt",
+      au."authMfaEnabled",
+    COALESCE(identities_cte.identities, '[]') AS identities,
+    COALESCE(factors_cte.factors, '[]') AS factors
+    FROM authentication_users au
+    LEFT JOIN identities_cte ON au.id = identities_cte.user_id
+    LEFT JOIN factors_cte ON au.id = factors_cte.user_id
+    WHERE au.id = $1;
+  `;
 
   return pgClient.query(query, [id]);
 }
@@ -369,7 +415,7 @@ export async function getUserMfaFactorById(
 ): Promise<QueryResult> {
   const query = `
     SELECT * FROM authentication_user_mfa_factors
-    WHERE "id" = $1 AND "uid" = $2;
+    WHERE "id" = $1 AND "uid" = $2 AND "deletedAt" IS NULL;
   `;
 
   return pgClient.query(query, [id, uid]);
@@ -401,7 +447,7 @@ export async function getUserMfaChallengeById(
 ): Promise<QueryResult> {
   const query = `
     SELECT * FROM authentication_user_mfa_challenges
-    WHERE "id" = $1 AND "uid" = $2;
+    WHERE "id" = $1 AND "uid" = $2 AND "verifiedAt" IS NULL;
   `;
 
   return pgClient.query(query, [id, uid]);
@@ -418,4 +464,16 @@ export async function getMfaFactorTypeForUser(
   `;
 
   return pgClient.query(query, [uid, type]);
+}
+
+export async function invalidateMfaChallenge(pgClient: PgClient, id: string): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_user_mfa_challenges 
+    SET "verifiedAt" = $2
+    WHERE "id" = $1;
+  `;
+
+  return pgClient.query(query, [id, now]);
 }

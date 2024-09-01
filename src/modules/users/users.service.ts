@@ -561,7 +561,7 @@ export async function getUserMfaFactorById(
   pgClient: PgClient,
   id: string,
   uid: string
-): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+): Promise<{ id: string; type: AuthMfaFactorType; secret: string; salt: string }> {
   logger.debug(`Getting user mfa factor by id`, { uid });
 
   try {
@@ -600,7 +600,7 @@ export async function getUserMfaChallengeById(
   pgClient: PgClient,
   id: string,
   uid: string
-): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+): Promise<{ id: string; factorId: string; expiresAt: string }> {
   logger.debug(`Getting user mfa challenge by id`, { uid });
 
   try {
@@ -610,5 +610,20 @@ export async function getUserMfaChallengeById(
   } catch (err: any) {
     logger.error(`Failed to get user mfa challenge`, { err });
     throw new AuthenticationError(`Failed to get user mfa challenge`);
+  }
+}
+
+export async function invalidateMfaChallengeById(
+  logger: Logger,
+  pgClient: PgClient,
+  id: string
+): Promise<void> {
+  logger.debug(`Invalidating user mfa challenge`, { id });
+
+  try {
+    await repository.invalidateMfaChallenge(pgClient, id);
+  } catch (err: any) {
+    logger.error(`Failed to invalidate user mfa challenge`, { err });
+    throw new AuthenticationError(`Failed to invalidate user mfa challenge`);
   }
 }
