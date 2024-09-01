@@ -351,6 +351,8 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
       ) AS identities
       FROM authentication_user_identities aui
       WHERE aui."uid" = $1
+        AND aui."verifiedAt" IS NOT NULL
+        AND aui."deletedAt" IS NULL
       GROUP BY aui."uid"
     ),
     factors_cte AS (
@@ -364,7 +366,9 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
         )
       ) AS factors
       FROM authentication_user_mfa_factors aumf
-      WHERE aumf."uid" = $1
+      WHERE aumf."uid" = $1 
+        AND aumf."verifiedAt" IS NOT NULL 
+        AND aumf."deletedAt" IS NULL
       GROUP BY aumf."uid"
     )
     SELECT 

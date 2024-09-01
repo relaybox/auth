@@ -59,14 +59,14 @@ export interface AuthUserMfaFactor {
 export interface AuthUser {
   id: string;
   orgId: string;
-  clientId: string;
-  username: string;
   email: string;
+  username: string;
+  authMfaEnabled: boolean;
+  factors: AuthUserMfaFactor[];
+  clientId: string;
   createdAt: string;
   updatedAt: string;
-  authMfaEnabled: boolean;
   identities: AuthUserIdentity[];
-  factors: AuthUserMfaFactor[];
 }
 
 export interface AuthSession {
@@ -76,7 +76,12 @@ export interface AuthSession {
   expiresAt?: number;
   destroyAt?: number;
   authStorageType?: AuthStorageType;
+}
+
+export interface AuthUserSession {
+  session: AuthSession | null;
   user: AuthUser;
+  tmpToken?: string;
 }
 
 export interface RequestAuthParams {

@@ -9,6 +9,7 @@ import {
   generateHash,
   generateSalt,
   generateSecret,
+  generateTmpToken,
   getKeyVersion,
   strongHash,
   verifyAuthToken
@@ -27,6 +28,7 @@ import {
   AuthSession,
   AuthStorageType,
   AuthUser,
+  AuthUserSession,
   AuthVerificationCodeType,
   RequestAuthParams
 } from 'src/types/auth.types';
@@ -224,7 +226,7 @@ export async function getAuthToken(
   keyName: string,
   secretKey: string,
   clientId: string,
-  expiresIn: number = 2
+  expiresIn: number = 300
 ): Promise<any> {
   logger.debug(`Generating auth token`);
 
@@ -264,6 +266,29 @@ export async function getAuthRefreshToken(
 
   try {
     return generateAuthToken(payload, secretKey, expiresIn);
+  } catch (err: any) {
+    logger.error(`Failed to generate token`, { err });
+    throw new TokenError(`Failed to generate token, ${err.message}`);
+  }
+}
+
+export async function getTmpToken(
+  logger: Logger,
+  id: string,
+  keyName: string,
+  secretKey: string,
+  expiresIn: number = 60
+): Promise<any> {
+  logger.debug(`Generating tmp token for mfa challenge`);
+
+  const payload = {
+    sub: id,
+    keyName,
+    tokenType: TokenType.TMP_TOKEN
+  };
+
+  try {
+    return generateTmpToken(payload, secretKey, expiresIn);
   } catch (err: any) {
     logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);
@@ -388,7 +413,7 @@ export async function getAuthSession(
   expiresIn: number = 300,
   authenticateAction: boolean = false,
   authStorageType: AuthStorageType = AuthStorageType.PERSIST
-): Promise<AuthSession> {
+): Promise<AuthUserSession> {
   logger.debug(`Getting auth session for user ${id}`, { id });
 
   const now = Date.now();
@@ -399,21 +424,36 @@ export async function getAuthSession(
   }
 
   if (user.authMfaEnabled && authenticateAction) {
-    return { user };
+    const { username, authMfaEnabled, factors } = user;
+    const tmpToken = await getTmpToken(logger, id, keyName, secretKey);
+
+    return <AuthUserSession>{
+      user: {
+        username,
+        authMfaEnabled,
+        factors
+      },
+      session: null,
+      tmpToken
+    };
   }
 
-  const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId, expiresIn);
-  const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId);
+  const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId!, expiresIn);
+  const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId!);
   const expiresAt = now + expiresIn * 1000;
   const destroyAt = now + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
 
-  return {
+  const session = {
     token: authToken,
     refreshToken,
     expiresIn,
     expiresAt,
     destroyAt,
-    authStorageType,
+    authStorageType
+  };
+
+  return {
+    session,
     user
   };
 }

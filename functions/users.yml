@@ -145,7 +145,7 @@ post-users-mfa-challenge:
         path: /users/mfa/challenge
         method: post
         cors: true
-        authorizer: user-authorizer
+        authorizer: tmp-authorizer
 
 post-users-mfa-verify:
   handler: src/handlers/users/mfa/post-users-mfa-verify.handler
@@ -155,4 +155,4 @@ post-users-mfa-verify:
         path: /users/mfa/verify
         method: post
         cors: true
-        authorizer: user-authorizer
+        authorizer: tmp-authorizer

@@ -9,3 +9,7 @@ user-authorizer:
 session-authorizer:
   handler: src/handlers/authorizers/session-authorizer.handler
   type: TOKEN
+
+tmp-authorizer:
+  handler: src/handlers/authorizers/tmp-authorizer.handler
+  type: TOKEN
