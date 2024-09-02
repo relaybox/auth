@@ -185,7 +185,7 @@ export function createAuthVerificationCode(
   return pgClient.query(query, [uid, identityId, code, expiresAt, type]);
 }
 
-export function validateVerificationCode(
+export function validateAuthVerificationCode(
   pgClient: PgClient,
   identityId: string,
   code: string,
@@ -201,7 +201,7 @@ export function validateVerificationCode(
   return pgClient.query(query, [identityId, code, type]);
 }
 
-export function invalidateVerificationCode(
+export function invalidateAuthVerificationCode(
   pgClient: PgClient,
   identityId: string,
   code: string

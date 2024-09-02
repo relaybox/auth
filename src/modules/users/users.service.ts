@@ -518,7 +518,7 @@ export async function createAuthVerificationCode(
   }
 }
 
-export async function validateVerificationCode(
+export async function validateAuthVerificationCode(
   logger: Logger,
   pgClient: PgClient,
   identityId: string,
@@ -527,7 +527,7 @@ export async function validateVerificationCode(
 ): Promise<void> {
   logger.debug(`Validating verification code`);
 
-  const { rows: validAuthVerifications } = await repository.validateVerificationCode(
+  const { rows: validAuthVerifications } = await repository.validateAuthVerificationCode(
     pgClient,
     identityId,
     code,

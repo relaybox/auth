@@ -22,11 +22,9 @@ import {
   setUserMfaFactorLastUsedAt,
   setUserMfaFactorVerified,
   updateUserIdentityData,
-  validateVerificationCode
+  validateAuthVerificationCode
 } from './users.service';
 import { authenticator } from 'otplib';
-
-export const REFRESH_TOKEN_EXPIRES_IN_SECS = 7 * 24 * 60 * 60;
 
 export async function registerUser(
   logger: Logger,
@@ -171,7 +169,7 @@ export async function verifyUser(
 
     logger.info(`Verifying user`, { orgId, identityId });
 
-    await validateVerificationCode(
+    await validateAuthVerificationCode(
       logger,
       pgClient,
       identityId,
@@ -182,7 +180,7 @@ export async function verifyUser(
     await Promise.all([
       repository.verifyUser(pgClient, uid),
       repository.verifyUserIdentity(pgClient, identityId),
-      repository.invalidateVerificationCode(pgClient, identityId, code)
+      repository.invalidateAuthVerificationCode(pgClient, identityId, code)
     ]);
 
     await pgClient.query('COMMIT');
@@ -205,7 +203,7 @@ export async function resetUserPassword(
   try {
     await pgClient.query('BEGIN');
 
-    await validateVerificationCode(
+    await validateAuthVerificationCode(
       logger,
       pgClient,
       identityId,
@@ -221,7 +219,7 @@ export async function resetUserPassword(
       { key: 'salt', value: salt }
     ]);
 
-    await repository.invalidateVerificationCode(pgClient, identityId, code);
+    await repository.invalidateAuthVerificationCode(pgClient, identityId, code);
 
     await pgClient.query('COMMIT');
   } catch (err: any) {

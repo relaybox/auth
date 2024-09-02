@@ -83,6 +83,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const expiresIn = 300;
+    const authenticateAction = true;
     const authSession = await getAuthSession(
       logger,
       pgClient,
@@ -90,7 +91,8 @@ export const handler: APIGatewayProxyHandler = async (
       orgId,
       keyName,
       secretKey,
-      expiresIn
+      expiresIn,
+      authenticateAction
     );
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 

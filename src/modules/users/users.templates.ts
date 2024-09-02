@@ -1,6 +1,6 @@
-import { AuthSession } from 'src/types/auth.types';
+import { AuthUserSession } from 'src/types/auth.types';
 
-export function getUsersIdpCallbackHtml(authSession: AuthSession): string {
+export function getUsersIdpCallbackHtml(authSession: AuthUserSession): string {
   return `
     <!DOCTYPE html>
     <html>
