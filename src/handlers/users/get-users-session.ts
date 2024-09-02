@@ -22,6 +22,8 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const id = event.requestContext.authorizer!.principalId;
 
+    logger.info(`Getting session data for user`, { id });
+
     const { keyName, keyId } = getRequestAuthParams(event);
     const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const expiresIn = 3600;
