@@ -103,3 +103,7 @@ export function getNspId(appPid: string, id: string): string {
 export function getAnonymousNspId(appPid: string, id: string): string {
   return `${appPid}:${NSP_ANONYMOUS_ID}${id}`;
 }
+
+export function getUserClientId(clientId: string): string {
+  return clientId.split(':')[1];
+}

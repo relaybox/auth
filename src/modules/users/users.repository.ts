@@ -284,7 +284,7 @@ export async function getUserDataByClientId(
   clientId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT id, "clientId", "createdAt", "updatedAt", email, username FROM authentication_users
+    SELECT id, "clientId", "createdAt", "updatedAt", username FROM authentication_users
     WHERE "clientId" = $1;
   `;
 

@@ -6,7 +6,7 @@ import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
-import { getKeyParts } from 'src/modules/users/users.service';
+import { getKeyParts, getUserDataByClientId } from 'src/modules/users/users.service';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
 
 const logger = getLogger('get-validation-token');
@@ -45,6 +45,7 @@ async function lambdaProxyEventHandler(
 
     const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
     const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
+    const user = await getUserDataByClientId(logger, pgClient, clientId);
 
     const sessionData = {
       appPid,
@@ -52,6 +53,7 @@ async function lambdaProxyEventHandler(
       exp,
       timestamp,
       permissions: sessionPermissions,
+      ...(user && { user }),
       ...credentials
     };
 

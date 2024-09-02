@@ -265,23 +265,12 @@ export async function getUserDataByClientId(
   logger: Logger,
   pgClient: PgClient,
   clientId: string
-): Promise<AuthUser> {
+): Promise<AuthUser | undefined> {
   logger.debug(`Getting user data for client id`, { clientId });
 
   const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
 
-  if (!rows.length) {
-    throw new NotFoundError(`User data not found`);
-  }
-
-  const { email } = rows[0];
-
-  const userData = {
-    ...rows[0],
-    email: decrypt(email)
-  };
-
-  return userData;
+  return rows[0];
 }
 
 export async function getUserDataById(
