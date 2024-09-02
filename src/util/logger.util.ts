@@ -19,23 +19,6 @@ const easyLogFormat = winston.format.printf((info) => {
   return baseLog;
 });
 
-const customLogFormat = winston.format.printf((info) => {
-  const { level, ...rest } = info;
-
-  const logDetails = JSON.stringify(rest, null, 4);
-
-  return `[${level}]: ${logDetails}`;
-});
-
-const prettyPrint = new winston.transports.Console({
-  level: process.env.LOG_LEVEL || LogLevel.INFO,
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.colorize(),
-    customLogFormat
-  )
-});
-
 const easyPrint = new winston.transports.Console({
   level: process.env.LOG_LEVEL || LogLevel.INFO,
   format: winston.format.combine(

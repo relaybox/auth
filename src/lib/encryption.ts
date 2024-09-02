@@ -1,6 +1,4 @@
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import { ExtendedClientJwtPayload } from 'src/types/jwt.types';
 
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
@@ -10,8 +8,6 @@ const SALT_LENGTH = 16;
 const SECRET_LENGTH = 32;
 const ITERATIONS = 100000;
 const KEY_LENGTH = 64;
-const JWT_ISSUER = process.env.JWT_ISSUER || '';
-const JWT_HASHING_ALGORITHM = 'HS256';
 
 enum Encoding {
   BASE64 = 'base64',
