@@ -582,14 +582,27 @@ export async function getMfaFactorTypeForUser(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
-  type = AuthMfaFactorType.TOTP
-): Promise<{ id: string; type: AuthMfaFactorType; secret: string }> {
+  factorType = AuthMfaFactorType.TOTP
+): Promise<
+  { id: string; type: AuthMfaFactorType; secret: string; verifiedAt: string } | undefined
+> {
   logger.debug(`Getting mfa factors for user`, { uid });
 
   try {
-    const { rows } = await repository.getMfaFactorTypeForUser(pgClient, uid, type);
+    const { rows } = await repository.getMfaFactorTypeForUser(pgClient, uid, factorType);
 
-    return rows[0];
+    if (!rows.length) {
+      return undefined;
+    }
+
+    const { id, type, secret, salt, verifiedAt } = rows[0];
+
+    return {
+      id,
+      type,
+      secret: decrypt(secret, salt),
+      verifiedAt
+    };
   } catch (err: any) {
     logger.error(`Failed to get user mfa factor`, { err });
     throw new AuthenticationError(`Failed to get user mfa factor`);

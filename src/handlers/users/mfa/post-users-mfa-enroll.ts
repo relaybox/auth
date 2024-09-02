@@ -35,11 +35,12 @@ export const handler: APIGatewayProxyHandler = async (
       AuthMfaFactorType.TOTP
     );
 
-    if (existingFactor) {
-      throw new DuplicateKeyError(`MFA type "${AuthMfaFactorType.TOTP}" already created for user`);
+    if (existingFactor?.verifiedAt) {
+      throw new DuplicateKeyError(`MFA type "${AuthMfaFactorType.TOTP}" already verified for user`);
     }
 
-    const { id, type, secret } = await createUserMfaFactor(logger, pgClient, uid);
+    const { id, type, secret } =
+      existingFactor || (await createUserMfaFactor(logger, pgClient, uid));
     const email = await getUserEmailAddress(logger, pgClient, uid);
     const qrCodeUri = await generateAuthMfaTotpQrCodeUrl(secret, email, 'RelayBox');
     const { keyName, keyId } = getRequestAuthParams(event);

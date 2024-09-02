@@ -279,59 +279,14 @@ export function updateUserIdentityData(
   return pgClient.query(query, params);
 }
 
-function getUserDataQueryBy(idFilter: string): string {
-  return `
-    WITH identities_cte AS (
-      SELECT 
-      aui."uid" AS user_id,
-      json_agg(
-        json_build_object(
-          'id', aui.id,
-          'provider', aui.provider,
-          'providerId', aui."providerId",
-          'verifiedAt', aui."verifiedAt"
-        )
-      ) AS identities
-      FROM authentication_user_identities aui
-      GROUP BY aui."uid"
-    ),
-    factors_cte AS (
-      SELECT 
-      aumf."uid" AS user_id,
-      json_agg(
-        json_build_object(
-          'id', aumf.id,
-          'type', aumf.type,
-          'verifiedAt', aumf."verifiedAt"
-        )
-      ) AS factors
-      FROM authentication_user_mfa_factors aumf
-      GROUP BY aumf."uid"
-    )
-    SELECT 
-      au.id,
-      au."orgId",
-      au.username, 
-      au."clientId", 
-      au.email, 
-      au."createdAt", 
-      au."updatedAt", 
-      au."verifiedAt",
-      au."authMfaEnabled",
-    COALESCE(identities_cte.identities, '[]') AS identities,
-    COALESCE(factors_cte.factors, '[]') AS factors
-    FROM authentication_users au
-    LEFT JOIN identities_cte ON au.id = identities_cte.user_id
-    LEFT JOIN factors_cte ON au.id = factors_cte.user_id
-    WHERE au."${idFilter}" = $1;
-  `;
-}
-
 export async function getUserDataByClientId(
   pgClient: PgClient,
   clientId: string
 ): Promise<QueryResult> {
-  const query = getUserDataQueryBy('clientId');
+  const query = `
+    SELECT id, "clientId", "createdAt", "updatedAt", email, username FROM authentication_users
+    WHERE "clientId" = $1;
+  `;
 
   return pgClient.query(query, [clientId]);
 }
