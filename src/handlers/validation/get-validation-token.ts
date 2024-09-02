@@ -4,10 +4,10 @@ import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { decodeAuthToken, verifyAuthToken } from 'src/lib/encryption';
 import { ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
 import { getKeyParts } from 'src/modules/users/users.service';
+import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
 
 const logger = getLogger('get-validation-token');
 

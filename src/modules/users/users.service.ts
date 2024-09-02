@@ -2,21 +2,17 @@ import { nanoid } from 'nanoid';
 import * as repository from './users.repository';
 import PgClient from 'serverless-postgres';
 import {
-  decodeAuthToken,
   decrypt,
   encrypt,
-  generateAuthToken,
   generateHash,
   generateSalt,
   getKeyVersion,
-  strongHash,
-  verifyAuthToken
+  strongHash
 } from 'src/lib/encryption';
 import { Logger } from 'winston';
 import {
   AuthenticationError,
   NotFoundError,
-  TokenError,
   UnauthorizedError,
   ValidationError
 } from 'src/lib/errors';
@@ -30,16 +26,19 @@ import {
   RequestAuthParams
 } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
-import { TokenType } from 'src/types/jwt.types';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { generateUsername } from 'unique-username-generator';
 import { authenticator } from 'otplib';
+import {
+  decodeAuthToken,
+  DEFAULT_REFRESH_TOKEN_EXPIRY_SECS,
+  getAuthRefreshToken,
+  getAuthToken,
+  getTmpToken,
+  verifyAuthToken
+} from 'src/lib/token';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
-
-export const DEFAULT_ID_TOKEN_EXPIRY_SECS = 300;
-export const DEFAULT_REFRESH_TOKEN_EXPIRY_SECS = 7 * 24 * 60 * 60;
-export const DEFAULT_TMP_TOKEN_EXPIRY_SECS = 120;
 
 export async function createUser(
   logger: Logger,
@@ -217,82 +216,6 @@ export async function getAuthDataByKeyId(
   }
 
   return rows[0];
-}
-
-export async function getAuthToken(
-  logger: Logger,
-  uid: string,
-  keyName: string,
-  secretKey: string,
-  clientId: string,
-  expiresIn: number = DEFAULT_ID_TOKEN_EXPIRY_SECS
-): Promise<any> {
-  logger.debug(`Generating auth token`);
-
-  const payload = {
-    sub: uid,
-    keyName,
-    clientId,
-    tokenType: TokenType.ID_TOKEN,
-    timestamp: new Date().toISOString()
-  };
-
-  try {
-    return generateAuthToken(payload, secretKey, expiresIn);
-  } catch (err: any) {
-    logger.error(`Failed to generate token`, { err });
-    throw new TokenError(`Failed to generate token, ${err.message}`);
-  }
-}
-
-export async function getAuthRefreshToken(
-  logger: Logger,
-  uid: string,
-  keyName: string,
-  secretKey: string,
-  clientId: string,
-  expiresIn: number = DEFAULT_REFRESH_TOKEN_EXPIRY_SECS
-): Promise<any> {
-  logger.debug(`Generating refresh token`);
-
-  const payload = {
-    sub: uid,
-    keyName,
-    clientId,
-    tokenType: TokenType.REFRESH_TOKEN,
-    timestamp: new Date().toISOString()
-  };
-
-  try {
-    return generateAuthToken(payload, secretKey, expiresIn);
-  } catch (err: any) {
-    logger.error(`Failed to generate token`, { err });
-    throw new TokenError(`Failed to generate token, ${err.message}`);
-  }
-}
-
-export async function getTmpToken(
-  logger: Logger,
-  uid: string,
-  keyName: string,
-  secretKey: string,
-  expiresIn: number = DEFAULT_TMP_TOKEN_EXPIRY_SECS
-): Promise<any> {
-  logger.debug(`Generating tmp token for mfa challenge`);
-
-  const payload = {
-    sub: uid,
-    keyName,
-    tokenType: TokenType.TMP_TOKEN,
-    timestamp: new Date().toISOString()
-  };
-
-  try {
-    return generateAuthToken(payload, secretKey, expiresIn);
-  } catch (err: any) {
-    logger.error(`Failed to generate token`, { err });
-    throw new TokenError(`Failed to generate token, ${err.message}`);
-  }
 }
 
 export async function sendAuthVerificationCode(
@@ -477,18 +400,6 @@ export async function getOrCreateUser(
   const newUser = await createUser(logger, pgClient, orgId, email, username, autoVerify);
 
   return newUser;
-}
-
-export function verifyRefreshToken(token: string, secretKey: string, tokenType: string): void {
-  try {
-    verifyAuthToken(token, secretKey);
-  } catch (err: any) {
-    throw new TokenError(`Refresh token invalid`);
-  }
-
-  if (tokenType !== 'refresh_token') {
-    throw new ValidationError(`Invalid token type`);
-  }
 }
 
 export async function createAuthVerificationCode(

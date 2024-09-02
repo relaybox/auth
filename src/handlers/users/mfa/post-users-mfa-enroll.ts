@@ -2,12 +2,12 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { generateAuthMfaTotpQrCodeUrl } from 'src/lib/auth';
 import { DuplicateKeyError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
+import { getTmpToken } from 'src/lib/token';
 import {
   createUserMfaFactor,
   getAuthDataByKeyId,
   getMfaFactorTypeForUser,
   getRequestAuthParams,
-  getTmpToken,
   getUserEmailAddress
 } from 'src/modules/users/users.service';
 import { AuthMfaFactorType } from 'src/types/auth.types';

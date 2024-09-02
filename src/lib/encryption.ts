@@ -91,28 +91,3 @@ export function verifyStrongHash(password: string, storedHash: string, salt: str
 export function getKeyVersion() {
   return 1;
 }
-
-export function generateAuthToken(
-  payload: ExtendedClientJwtPayload,
-  secretKey: string,
-  expiresIn: number
-): string {
-  return jwt.sign(payload, secretKey, {
-    expiresIn,
-    algorithm: JWT_HASHING_ALGORITHM,
-    issuer: JWT_ISSUER
-  });
-}
-
-export function decodeAuthToken(token: string): any {
-  return jwt.decode(token);
-}
-
-export function verifyAuthToken(token: string, secretKey: string) {
-  const payload = jwt.verify(token, secretKey, {
-    algorithms: [JWT_HASHING_ALGORITHM],
-    issuer: JWT_ISSUER
-  });
-
-  return payload;
-}
