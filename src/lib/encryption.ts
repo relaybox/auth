@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { ExtendedClientJwtPayload, TmpSessionJwtPayload } from 'src/types/jwt.types';
+import { ExtendedClientJwtPayload } from 'src/types/jwt.types';
 
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
@@ -94,18 +94,6 @@ export function getKeyVersion() {
 
 export function generateAuthToken(
   payload: ExtendedClientJwtPayload,
-  secretKey: string,
-  expiresIn: number
-): string {
-  return jwt.sign(payload, secretKey, {
-    expiresIn,
-    algorithm: JWT_HASHING_ALGORITHM,
-    issuer: JWT_ISSUER
-  });
-}
-
-export function generateTmpToken(
-  payload: TmpSessionJwtPayload,
   secretKey: string,
   expiresIn: number
 ): string {

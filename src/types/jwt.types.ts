@@ -23,7 +23,3 @@ export interface ClientJwtPayload extends JwtPayload {
   tokenType: string;
   timestamp: string;
 }
-
-export interface TmpSessionJwtPayload extends JwtPayload {
-  tokenType: string;
-}

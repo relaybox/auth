@@ -8,8 +8,6 @@ import {
   generateAuthToken,
   generateHash,
   generateSalt,
-  generateSecret,
-  generateTmpToken,
   getKeyVersion,
   strongHash,
   verifyAuthToken
@@ -25,7 +23,6 @@ import {
 import {
   AuthMfaFactorType,
   AuthProvider,
-  AuthSession,
   AuthStorageType,
   AuthUser,
   AuthUserSession,
@@ -40,7 +37,9 @@ import { authenticator } from 'otplib';
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
-export const REFRESH_TOKEN_EXPIRES_IN_SECS = 7 * 24 * 60 * 60;
+export const DEFAULT_ID_TOKEN_EXPIRY_SECS = 300;
+export const DEFAULT_REFRESH_TOKEN_EXPIRY_SECS = 7 * 24 * 60 * 60;
+export const DEFAULT_TMP_TOKEN_EXPIRY_SECS = 120;
 
 export async function createUser(
   logger: Logger,
@@ -222,16 +221,16 @@ export async function getAuthDataByKeyId(
 
 export async function getAuthToken(
   logger: Logger,
-  id: string,
+  uid: string,
   keyName: string,
   secretKey: string,
   clientId: string,
-  expiresIn: number = 300
+  expiresIn: number = DEFAULT_ID_TOKEN_EXPIRY_SECS
 ): Promise<any> {
   logger.debug(`Generating auth token`);
 
   const payload = {
-    sub: id,
+    sub: uid,
     keyName,
     clientId,
     tokenType: TokenType.ID_TOKEN,
@@ -248,16 +247,16 @@ export async function getAuthToken(
 
 export async function getAuthRefreshToken(
   logger: Logger,
-  id: string,
+  uid: string,
   keyName: string,
   secretKey: string,
   clientId: string,
-  expiresIn: number = REFRESH_TOKEN_EXPIRES_IN_SECS
+  expiresIn: number = DEFAULT_REFRESH_TOKEN_EXPIRY_SECS
 ): Promise<any> {
   logger.debug(`Generating refresh token`);
 
   const payload = {
-    sub: id,
+    sub: uid,
     keyName,
     clientId,
     tokenType: TokenType.REFRESH_TOKEN,
@@ -274,21 +273,22 @@ export async function getAuthRefreshToken(
 
 export async function getTmpToken(
   logger: Logger,
-  id: string,
+  uid: string,
   keyName: string,
   secretKey: string,
-  expiresIn: number = 60
+  expiresIn: number = DEFAULT_TMP_TOKEN_EXPIRY_SECS
 ): Promise<any> {
   logger.debug(`Generating tmp token for mfa challenge`);
 
   const payload = {
-    sub: id,
+    sub: uid,
     keyName,
-    tokenType: TokenType.TMP_TOKEN
+    tokenType: TokenType.TMP_TOKEN,
+    timestamp: new Date().toISOString()
   };
 
   try {
-    return generateTmpToken(payload, secretKey, expiresIn);
+    return generateAuthToken(payload, secretKey, expiresIn);
   } catch (err: any) {
     logger.error(`Failed to generate token`, { err });
     throw new TokenError(`Failed to generate token, ${err.message}`);
@@ -406,7 +406,7 @@ export async function authorizeClientRequest(
 export async function getAuthSession(
   logger: Logger,
   pgClient: PgClient,
-  id: string,
+  uid: string,
   orgId: string,
   keyName: string,
   secretKey: string,
@@ -414,10 +414,10 @@ export async function getAuthSession(
   authenticateAction: boolean = false,
   authStorageType: AuthStorageType = AuthStorageType.PERSIST
 ): Promise<AuthUserSession> {
-  logger.debug(`Getting auth session for user ${id}`, { id });
+  logger.debug(`Getting auth session for user ${uid}`, { uid });
 
   const now = Date.now();
-  const user = await getUserDataById(logger, pgClient, id);
+  const user = await getUserDataById(logger, pgClient, uid);
 
   if (user.orgId !== orgId) {
     throw new UnauthorizedError(`Cross organsiation authentication not supported`);
@@ -425,7 +425,7 @@ export async function getAuthSession(
 
   if (user.authMfaEnabled && authenticateAction) {
     const { username, authMfaEnabled, factors } = user;
-    const tmpToken = await getTmpToken(logger, id, keyName, secretKey);
+    const tmpToken = await getTmpToken(logger, uid, keyName, secretKey);
 
     return <AuthUserSession>{
       user: {
@@ -438,10 +438,10 @@ export async function getAuthSession(
     };
   }
 
-  const authToken = await getAuthToken(logger, id, keyName, secretKey, user.clientId!, expiresIn);
-  const refreshToken = await getAuthRefreshToken(logger, id, keyName, secretKey, user.clientId!);
+  const authToken = await getAuthToken(logger, uid, keyName, secretKey, user.clientId!, expiresIn);
+  const refreshToken = await getAuthRefreshToken(logger, uid, keyName, secretKey, user.clientId!);
   const expiresAt = now + expiresIn * 1000;
-  const destroyAt = now + REFRESH_TOKEN_EXPIRES_IN_SECS * 1000;
+  const destroyAt = now + DEFAULT_REFRESH_TOKEN_EXPIRY_SECS * 1000;
 
   const session = {
     token: authToken,
@@ -711,4 +711,25 @@ export async function setUserMfaFactorLastUsedAt(
     logger.error(`Failed to set user mfa factor last used at`, { err });
     throw new AuthenticationError(`Failed to set user mfa factor last used at`);
   }
+}
+
+export async function getUserEmailAddress(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string
+): Promise<string> {
+  logger.debug(`Getting user email address`);
+
+  const { rows } = await repository.getUserEmailAddress(pgClient, uid);
+
+  if (!rows.length) {
+    logger.error(`Failed to get user email address`);
+    throw new NotFoundError(`User email address not found`);
+  }
+
+  const { email } = rows[0];
+
+  const decryptedEmail = decrypt(email);
+
+  return decryptedEmail;
 }

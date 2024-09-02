@@ -35,7 +35,7 @@ export const handler: APIGatewayProxyHandler = async (
     logger.info(`Authenticating user`, { keyName });
 
     const id = await authenticateUser(logger, pgClient, orgId, email, password);
-    const expiresIn = 300;
+    const expiresIn = 3600;
     const authenticateAction = true;
     const authSession = await getAuthSession(
       logger,

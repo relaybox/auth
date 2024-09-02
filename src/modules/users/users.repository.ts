@@ -521,3 +521,12 @@ export async function setUserMfaFactorLastUsedAt(
 
   return pgClient.query(query, [now, factorId]);
 }
+
+export function getUserEmailAddress(pgClient: PgClient, uid: string): Promise<QueryResult> {
+  const query = `
+    SELECT "email" FROM authentication_users
+    WHERE id = $1;
+  `;
+
+  return pgClient.query(query, [uid]);
+}

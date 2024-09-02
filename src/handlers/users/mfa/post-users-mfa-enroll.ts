@@ -4,8 +4,11 @@ import { DuplicateKeyError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   createUserMfaFactor,
+  getAuthDataByKeyId,
   getMfaFactorTypeForUser,
-  getUserDataById
+  getRequestAuthParams,
+  getTmpToken,
+  getUserEmailAddress
 } from 'src/modules/users/users.service';
 import { AuthMfaFactorType } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
@@ -37,10 +40,13 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { id, type, secret } = await createUserMfaFactor(logger, pgClient, uid);
-    const { email } = await getUserDataById(logger, pgClient, uid);
-    const qrCodeUri = await generateAuthMfaTotpQrCodeUrl(secret, email, 'RelayBox'); // GET ORG NAME BASED ON KEY NAME
+    const email = await getUserEmailAddress(logger, pgClient, uid);
+    const qrCodeUri = await generateAuthMfaTotpQrCodeUrl(secret, email, 'RelayBox');
+    const { keyName, keyId } = getRequestAuthParams(event);
+    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const tmpToken = await getTmpToken(logger, uid, keyName, secretKey);
 
-    return httpResponse._200({ id, type, secret, qrCodeUri });
+    return httpResponse._200({ id, type, secret, qrCodeUri, tmpToken });
   } catch (err: any) {
     return handleErrorResponse(logger, err);
   } finally {

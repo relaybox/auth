@@ -33,6 +33,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const uid = event.requestContext.authorizer!.principalId;
+
     let { factorId, challengeId, code, autoChallenge } = validateEventSchema(event, schema);
 
     if (!challengeId && !autoChallenge) {
