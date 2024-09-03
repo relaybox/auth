@@ -58,7 +58,8 @@ export const handler: APIGatewayProxyHandler = async (
     if (userData) {
       await updateUserIdentityData(logger, pgClient, userData.identityId, [
         { key: 'email', value: encrypt(email) },
-        { key: 'emailHash', value: generateHash(email) }
+        { key: 'emailHash', value: generateHash(email) },
+        { key: 'lastLoginAt', value: new Date().toISOString() }
       ]);
     } else {
       const tmpPassword = Math.random().toString(36);

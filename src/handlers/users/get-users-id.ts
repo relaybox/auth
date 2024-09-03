@@ -1,7 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
-import { getUserDataByClientId } from 'src/modules/users/users.service';
+import {
+  getAuthDataByKeyId,
+  getRequestAuthParams,
+  getUserDataByClientId
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -25,7 +29,9 @@ export const handler: APIGatewayProxyHandler = async (
 
     logger.info(`Getting session data for user`, { clientId });
 
-    const sessionData = await getUserDataByClientId(logger, pgClient, clientId);
+    const { keyId } = getRequestAuthParams(event);
+    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const sessionData = await getUserDataByClientId(logger, pgClient, orgId, clientId);
 
     return httpResponse._200(sessionData);
   } catch (err: any) {

@@ -1,5 +1,4 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { getUserDataById } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
@@ -18,10 +17,6 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const id = event.requestContext.authorizer!.principalId;
-
-    if (!id) {
-      throw new ValidationError('Missing client id');
-    }
 
     logger.info(`Getting session data for user`, { id });
 

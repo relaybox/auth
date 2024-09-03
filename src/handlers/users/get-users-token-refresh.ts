@@ -15,12 +15,12 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
+  logger.info(`Refreshing auth token`);
+
   const pgClient = await getPgClient();
 
   try {
     const refreshToken = event.headers.Authorization!.substring(7);
-
-    logger.info(`Refreshing auth token`);
 
     if (!refreshToken) {
       throw new ValidationError('Missing refresh token header');

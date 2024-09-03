@@ -1,5 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getClientCredentials, getPermissions, getSecretKey } from 'src/modules/validation/service';
+import {
+  getClientCredentials,
+  getPermissions,
+  getTokenValidationCredentials
+} from 'src/modules/validation/validation.service';
 import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -23,8 +27,7 @@ async function lambdaProxyEventHandler(
 
     const [keyName, providedSecret] = apiKey.split(':');
     const { appPid, keyId } = getKeyParts(keyName);
-
-    const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
+    const { secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
 
     if (providedSecret !== secretKey) {
       throw new Error(`Invalid api key`);

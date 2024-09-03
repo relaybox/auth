@@ -1,12 +1,20 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getClientCredentials, getPermissions, getSecretKey } from 'src/modules/validation/service';
+import {
+  getClientCredentials,
+  getPermissions,
+  getTokenValidationCredentials
+} from 'src/modules/validation/validation.service';
 import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 import { ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
-import { getKeyParts, getUserDataByClientId } from 'src/modules/users/users.service';
+import {
+  getAuthDataByKeyId,
+  getKeyParts,
+  getUserDataByClientId
+} from 'src/modules/users/users.service';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
 
 const logger = getLogger('get-validation-token');
@@ -39,13 +47,13 @@ async function lambdaProxyEventHandler(
     logger.info(`Validating auth token`, { keyName, clientId });
 
     const { appPid, keyId } = getKeyParts(keyName);
-    const secretKey = await getSecretKey(logger, pgClient, appPid, keyId);
+    const { orgId, secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
 
     verifyAuthToken(token, secretKey);
 
     const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
     const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
-    const user = await getUserDataByClientId(logger, pgClient, clientId);
+    const user = await getUserDataByClientId(logger, pgClient, orgId, clientId);
 
     const sessionData = {
       appPid,

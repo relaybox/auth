@@ -284,7 +284,8 @@ export async function getUserDataByClientId(
   clientId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT id, "clientId", "createdAt", "updatedAt", username FROM authentication_users
+    SELECT id, "clientId", "createdAt", "updatedAt", username, "orgId", "isOnline", "lastOnline"
+    FROM authentication_users
     WHERE "clientId" = $1;
   `;
 
@@ -484,4 +485,20 @@ export function getUserEmailAddress(pgClient: PgClient, uid: string): Promise<Qu
   `;
 
   return pgClient.query(query, [uid]);
+}
+
+export function updateUserIdentityLastLogin(
+  pgClient: PgClient,
+  uid: string,
+  provider: AuthProvider
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    UPDATE authentication_user_identities
+    SET "lastLoginAt" = $1
+    WHERE uid = $2 AND provider = $3;
+  `;
+
+  return pgClient.query(query, [now, uid, provider]);
 }

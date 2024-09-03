@@ -7,7 +7,8 @@ import {
   getAuthSession,
   getKeyParts,
   getUserIdentityByProviderId,
-  updateUserData
+  updateUserData,
+  updateUserIdentityData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
 import { AuthProvider } from 'src/types/auth.types';
@@ -61,9 +62,10 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     if (userData) {
-      await updateUserData(logger, pgClient, userData.identityId, [
+      await updateUserIdentityData(logger, pgClient, userData.identityId, [
         { key: 'email', value: encrypt(email) },
-        { key: 'emailHash', value: generateHash(email) }
+        { key: 'emailHash', value: generateHash(email) },
+        { key: 'lastLoginAt', value: new Date().toISOString() }
       ]);
     } else {
       const tmpPassword = Math.random().toString(36);

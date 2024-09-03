@@ -1,27 +1,27 @@
 import PgClient from 'serverless-postgres';
 import { Logger } from 'winston';
-import { getPermissionsByKeyId, getSecretKeybyKeyId } from './repository';
+import {
+  getPermissionsByKeyId,
+  getTokenValidationCredentialsByKeyId
+} from './validation.repository';
 import { nanoid } from 'nanoid';
 
 const NSP_ANONYMOUS_ID = '__a__';
 
-export async function getSecretKey(
+export async function getTokenValidationCredentials(
   logger: Logger,
   pgClient: PgClient,
-  appPid: string,
   keyId: string
-): Promise<string> {
-  logger.debug(`Getting secret key`, { appPid, keyId });
+): Promise<{ secretKey: string; orgId: string }> {
+  logger.debug(`Getting token validation credentials`, { keyId });
 
-  const { rows } = await getSecretKeybyKeyId(pgClient, appPid, keyId);
+  const { rows } = await getTokenValidationCredentialsByKeyId(pgClient, keyId);
 
   if (!rows.length) {
-    throw new Error('Secret key not found');
+    throw new Error('Validation credentials not found');
   }
 
-  const secretKey = rows[0].secretKey;
-
-  return secretKey;
+  return rows[0];
 }
 
 export async function getPermissions(

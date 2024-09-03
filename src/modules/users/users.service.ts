@@ -264,11 +264,20 @@ export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthPa
 export async function getUserDataByClientId(
   logger: Logger,
   pgClient: PgClient,
+  orgId: string,
   clientId: string
 ): Promise<AuthUser | undefined> {
   logger.debug(`Getting user data for client id`, { clientId });
 
   const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
+
+  if (!rows.length) {
+    throw new NotFoundError(`User not found`);
+  }
+
+  if (rows[0].orgId !== orgId) {
+    throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+  }
 
   return rows[0];
 }
@@ -645,4 +654,20 @@ export async function getUserEmailAddress(
   const decryptedEmail = decrypt(email);
 
   return decryptedEmail;
+}
+
+export async function updateUserIdentityLastLogin(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  provider: AuthProvider = AuthProvider.EMAIL
+): Promise<void> {
+  logger.debug(`Updating user identity last login`);
+
+  try {
+    await repository.updateUserIdentityLastLogin(pgClient, uid, provider);
+  } catch (err: any) {
+    logger.error(`Failed to update user identity last login`, { err });
+    throw new AuthenticationError(`Failed to update user identity last login`);
+  }
 }

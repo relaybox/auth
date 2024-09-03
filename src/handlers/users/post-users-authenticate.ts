@@ -5,8 +5,10 @@ import { authenticateUser } from 'src/modules/users/users.actions';
 import {
   getAuthDataByKeyId,
   getAuthSession,
-  getRequestAuthParams
+  getRequestAuthParams,
+  updateUserIdentityLastLogin
 } from 'src/modules/users/users.service';
+import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -37,6 +39,8 @@ export const handler: APIGatewayProxyHandler = async (
     const id = await authenticateUser(logger, pgClient, orgId, email, password);
 
     logger.info(`Authenticated user found by id`, { id });
+
+    await updateUserIdentityLastLogin(logger, pgClient, id, AuthProvider.EMAIL);
 
     const expiresIn = 3600;
     const authenticateAction = true;
