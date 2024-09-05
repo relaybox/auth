@@ -671,3 +671,19 @@ export async function updateUserIdentityLastLogin(
     throw new AuthenticationError(`Failed to update user identity last login`);
   }
 }
+
+export async function updateUserStatusById(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  status: string
+): Promise<void> {
+  logger.debug(`Updating user status`, { uid, status });
+
+  try {
+    await repository.updateUserStatus(pgClient, uid, status);
+  } catch (err: any) {
+    logger.error(`Failed to update user status`, { err });
+    throw new AuthenticationError(`Failed to update user status`);
+  }
+}

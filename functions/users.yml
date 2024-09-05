@@ -156,3 +156,13 @@ post-users-mfa-verify:
         method: post
         cors: true
         authorizer: tmp-authorizer
+
+put-users-status:
+  handler: src/handlers/users/put-users-status.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/status
+        method: put
+        cors: true
+        authorizer: user-authorizer

@@ -44,3 +44,10 @@ export interface SystemEvent {
   room: string;
   data: any;
 }
+
+export enum ClientEvent {
+  AUTH_USER_SUBSCRIBE = 'ds:client:auth:user:subscribe',
+  AUTH_USER_UNSUBSCRIBE = 'ds:client:auth:user:unsubscribe',
+  AUTH_USER_UNSUBSCRIBE_ALL = 'ds:client:auth:user:unsubscribe:all',
+  AUTH_USER_STATUS_UPDATE = 'ds:client:auth:user:status:update'
+}

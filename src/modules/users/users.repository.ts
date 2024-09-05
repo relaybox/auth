@@ -502,3 +502,17 @@ export function updateUserIdentityLastLogin(
 
   return pgClient.query(query, [now, uid, provider]);
 }
+
+export function updateUserStatus(
+  pgClient: PgClient,
+  uid: string,
+  status: string
+): Promise<QueryResult> {
+  const query = `
+    UPDATE authentication_users
+    SET "status" = $1
+    WHERE id = $2;
+  `;
+
+  return pgClient.query(query, [status, uid]);
+}
