@@ -44,6 +44,7 @@ export async function createUser(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   email: string,
   username?: string,
   autoVerify: boolean = false
@@ -59,6 +60,7 @@ export async function createUser(
     const { rows } = await repository.createUser(
       pgClient,
       orgId,
+      appId,
       clientId,
       encryptedEmail,
       emailHash,
@@ -151,13 +153,14 @@ export async function getUserByEmail(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   email: string
 ): Promise<any> {
   logger.debug(`Getting user by email`);
 
   const emailHash = generateHash(email);
 
-  const { rows } = await repository.getUserByEmailHash(pgClient, orgId, emailHash);
+  const { rows } = await repository.getUserByEmailHash(pgClient, appId, emailHash);
 
   return rows[0];
 }
@@ -165,7 +168,7 @@ export async function getUserByEmail(
 export async function getUserIdentityByEmail(
   logger: Logger,
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   email: string,
   provider?: AuthProvider
 ): Promise<any> {
@@ -175,7 +178,7 @@ export async function getUserIdentityByEmail(
 
   const { rows } = await repository.getUserIdentityByEmailHash(
     pgClient,
-    orgId,
+    appId,
     emailHash,
     provider
   );
@@ -186,7 +189,7 @@ export async function getUserIdentityByEmail(
 export async function getUserIdentityByProviderId(
   logger: Logger,
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   providerId: string,
   provider: AuthProvider
 ): Promise<any> {
@@ -194,7 +197,7 @@ export async function getUserIdentityByProviderId(
 
   const { rows } = await repository.getUserIdentityByProviderId(
     pgClient,
-    orgId,
+    appId,
     providerId,
     provider
   );
@@ -206,7 +209,7 @@ export async function getAuthDataByKeyId(
   logger: Logger,
   pgClient: PgClient,
   keyId: string
-): Promise<{ orgId: string; secretKey: string }> {
+): Promise<{ orgId: string; appId: string; appPid: string; secretKey: string }> {
   logger.debug(`Getting secure auth data by key id`);
 
   const { rows } = await repository.getAuthDataByKeyId(pgClient, keyId);
@@ -264,7 +267,7 @@ export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthPa
 export async function getUserDataByClientId(
   logger: Logger,
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   clientId: string
 ): Promise<AuthUser | undefined> {
   logger.debug(`Getting user data for client id`, { clientId });
@@ -275,7 +278,7 @@ export async function getUserDataByClientId(
     throw new NotFoundError(`User not found`);
   }
 
-  if (rows[0].orgId !== orgId) {
+  if (rows[0].appId !== appId) {
     throw new UnauthorizedError(`Cross organsiation authentication not supported`);
   }
 
@@ -313,7 +316,7 @@ export async function authorizeClientRequest(
 ): Promise<any> {
   const { sub: id, keyName, tokenType } = decodeAuthToken(token);
   const { keyId } = getKeyParts(keyName);
-  const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+  const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
   verifyAuthToken(token, secretKey);
 
@@ -321,14 +324,14 @@ export async function authorizeClientRequest(
     throw new ValidationError(`Invalid token type`);
   }
 
-  return { orgId, id };
+  return { orgId, appId, id };
 }
 
 export async function getAuthSession(
   logger: Logger,
   pgClient: PgClient,
   uid: string,
-  orgId: string,
+  appId: string,
   keyName: string,
   secretKey: string,
   expiresIn: number = 300,
@@ -340,7 +343,7 @@ export async function getAuthSession(
   const now = Date.now();
   const user = await getUserDataById(logger, pgClient, uid);
 
-  if (user.orgId !== orgId) {
+  if (user.appId !== appId) {
     throw new UnauthorizedError(`Cross organsiation authentication not supported`);
   }
 
@@ -383,19 +386,20 @@ export async function getOrCreateUser(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   email: string,
   username?: string,
   autoVerify: boolean = false
 ): Promise<AuthUser> {
   logger.debug(`Getting existing or creating new user`, { orgId });
 
-  const existingUser = await getUserByEmail(logger, pgClient, orgId, email);
+  const existingUser = await getUserByEmail(logger, pgClient, orgId, appId, email);
 
   if (existingUser) {
     return existingUser;
   }
 
-  const newUser = await createUser(logger, pgClient, orgId, email, username, autoVerify);
+  const newUser = await createUser(logger, pgClient, orgId, appId, email, username, autoVerify);
 
   return newUser;
 }
@@ -685,5 +689,47 @@ export async function updateUserStatusById(
   } catch (err: any) {
     logger.error(`Failed to update user status`, { err });
     throw new AuthenticationError(`Failed to update user status`);
+  }
+}
+
+export async function addUserToApplication(
+  logger: Logger,
+  pgClient: PgClient,
+  orgId: string,
+  appId: string,
+  uid: string
+): Promise<void> {
+  logger.debug(`Adding user to application`, { uid, appId });
+
+  try {
+    const { rows } = await repository.getUserByAppId(pgClient, appId, uid);
+
+    if (rows.length) {
+      logger.info(`User already in application`, { uid, appId });
+      return;
+    }
+
+    await repository.addUserToApplication(pgClient, orgId, appId, uid);
+  } catch (err: any) {
+    logger.error(`Failed to add user to application`, { err });
+    throw new AuthenticationError(`Failed to add user to application`);
+  }
+}
+
+export async function getUserByAppId(
+  logger: Logger,
+  pgClient: PgClient,
+  appId: string,
+  uid: string
+): Promise<any> {
+  logger.debug(`Getting user by application id`, { uid, appId });
+
+  try {
+    const { rows } = await repository.getUserByAppId(pgClient, appId, uid);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to get user by application id`, { err });
+    throw new AuthenticationError(`Failed to get user by application id`);
   }
 }

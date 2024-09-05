@@ -47,13 +47,13 @@ export const handler: APIGatewayProxyHandler = async (
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const expiresIn = 3600;
     const authSession = await getAuthSession(
       logger,
       pgClient,
       uid,
-      orgId,
+      appId,
       keyName,
       secretKey,
       expiresIn

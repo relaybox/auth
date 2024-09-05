@@ -35,11 +35,11 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, code, password } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const userIdentity = await getUserIdentityByEmail(
       logger,
       pgClient,
-      orgId,
+      appId,
       email,
       AuthProvider.EMAIL
     );

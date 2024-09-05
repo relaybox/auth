@@ -59,6 +59,7 @@ export interface AuthUserMfaFactor {
 export interface AuthUser {
   id: string;
   orgId: string;
+  appId: string;
   email: string;
   username: string;
   authMfaEnabled: boolean;

@@ -5,6 +5,7 @@ import { AuthMfaFactorType, AuthProvider, AuthVerificationCodeType } from 'src/t
 export function createUser(
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   clientid: string,
   email: string,
   emailHash: string,
@@ -15,14 +16,15 @@ export function createUser(
 
   const query = `
     INSERT INTO authentication_users (
-      "orgId", "clientId", "email", "emailHash", username, "verifiedAt"
+      "orgId", "appId", "clientId", "email", "emailHash", username, "verifiedAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6
+      $1, $2, $3, $4, $5, $6, $7
     ) RETURNING id, "clientId";
   `;
 
   return pgClient.query(query, [
     orgId,
+    appId,
     clientid,
     email,
     emailHash,
@@ -68,20 +70,20 @@ export function createUserIdentity(
 
 export function getUserByEmailHash(
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   emailHash: string
 ): Promise<QueryResult> {
   let query = `
     SELECT * FROM authentication_users
-    WHERE "orgId" = $1 AND "emailHash" = $2;
+    WHERE "appId" = $1 AND "emailHash" = $2;
   `;
 
-  return pgClient.query(query, [orgId, emailHash]);
+  return pgClient.query(query, [appId, emailHash]);
 }
 
 export function getUserIdentityByEmailHash(
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   emailHash: string,
   provider?: AuthProvider
 ): Promise<QueryResult> {
@@ -98,7 +100,7 @@ export function getUserIdentityByEmailHash(
     FROM authentication_users au
     INNER JOIN authentication_user_identities aui 
     ON aui."uid" = au."id"
-    WHERE au."orgId" = $1 AND aui."emailHash" = $2
+    WHERE au."appId" = $1 AND aui."emailHash" = $2
   `;
 
   if (provider) {
@@ -107,12 +109,12 @@ export function getUserIdentityByEmailHash(
     `;
   }
 
-  return pgClient.query(query, [orgId, emailHash, provider]);
+  return pgClient.query(query, [appId, emailHash, provider]);
 }
 
 export function getUserIdentityByProviderId(
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   providerId: string,
   provider: AuthProvider
 ): Promise<QueryResult> {
@@ -130,10 +132,10 @@ export function getUserIdentityByProviderId(
     FROM authentication_users au
     INNER JOIN authentication_user_identities aui 
     ON aui."uid" = au."id"
-    WHERE au."orgId" = $1 AND aui."providerId" = $2 AND aui."provider" = $3
+    WHERE au."appId" = $1 AND aui."providerId" = $2 AND aui."provider" = $3
   `;
 
-  return pgClient.query(query, [orgId, providerId, provider]);
+  return pgClient.query(query, [appId, providerId, provider]);
 }
 
 export function getUserIdentityByVerificationCode(
@@ -156,7 +158,7 @@ export function getUserIdentityByVerificationCode(
 
 export function getAuthDataByKeyId(pgClient: PgClient, keyId: string): Promise<QueryResult> {
   const query = `
-    SELECT "orgId", "secretKey" 
+    SELECT "orgId", "secretKey", "appId", "appPid"
     FROM credentials
     WHERE "keyId" = $1;
   `;
@@ -284,7 +286,7 @@ export async function getUserDataByClientId(
   clientId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT id, "clientId", "createdAt", "updatedAt", username, "orgId", "isOnline", "lastOnline"
+    SELECT id, "clientId", "createdAt", "updatedAt", username, "orgId", "appId", "appId", "isOnline", "lastOnline"
     FROM authentication_users
     WHERE "clientId" = $1;
   `;
@@ -330,6 +332,7 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
     SELECT 
       au.id,
       au."orgId",
+      au."appId",
       au.username, 
       au."clientId", 
       au.email, 
@@ -515,4 +518,36 @@ export function updateUserStatus(
   `;
 
   return pgClient.query(query, [status, uid]);
+}
+
+export function addUserToApplication(
+  pgClient: PgClient,
+  orgId: string,
+  appId: string,
+  uid: string
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const query = `
+    INSERT INTO authentication_users_applications (
+      "orgId", "appId", "uid", "createdAt"
+    ) VALUES (
+      $1, $2, $3, $4
+    );
+  `;
+
+  return pgClient.query(query, [orgId, appId, uid, now]);
+}
+
+export function getUserByAppId(
+  pgClient: PgClient,
+  appId: string,
+  uid: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT id FROM authentication_users_applications
+    WHERE "appId" = $1 AND "uid" = $2;
+  `;
+
+  return pgClient.query(query, [appId, uid]);
 }

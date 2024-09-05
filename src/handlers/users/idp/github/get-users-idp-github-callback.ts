@@ -39,7 +39,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { keyId } = getKeyParts(keyName);
-    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId, appPid, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { providerId, username, email } = await getGitHubPrimaryData(
       GITHUB_CLIENT_ID,
@@ -68,6 +68,7 @@ export const handler: APIGatewayProxyHandler = async (
         logger,
         pgClient,
         orgId,
+        appId,
         keyId,
         email,
         tmpPassword,
@@ -89,7 +90,7 @@ export const handler: APIGatewayProxyHandler = async (
       logger,
       pgClient,
       id,
-      orgId,
+      appId,
       keyName,
       secretKey,
       expiresIn,

@@ -32,11 +32,11 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, password } = validateEventSchema(event, schema);
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     logger.info(`Authenticating user with public key`, { keyName });
 
-    const id = await authenticateUser(logger, pgClient, orgId, email, password);
+    const id = await authenticateUser(logger, pgClient, appId, email, password);
 
     logger.info(`Authenticated user found by id`, { id });
 
@@ -48,7 +48,7 @@ export const handler: APIGatewayProxyHandler = async (
       logger,
       pgClient,
       id,
-      orgId,
+      appId,
       keyName,
       secretKey,
       expiresIn,

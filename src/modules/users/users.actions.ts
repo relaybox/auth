@@ -10,6 +10,7 @@ import {
 } from 'src/lib/errors';
 import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
 import {
+  addUserToApplication,
   createAuthVerificationCode,
   createUserIdentity,
   getOrCreateUser,
@@ -30,6 +31,7 @@ export async function registerUser(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   email: string,
   password: string,
   provider: AuthProvider = AuthProvider.EMAIL
@@ -39,7 +41,9 @@ export async function registerUser(
   try {
     await pgClient.query('BEGIN');
 
-    const { id } = await getOrCreateUser(logger, pgClient, orgId, email);
+    const { id } = await getOrCreateUser(logger, pgClient, orgId, appId, email);
+
+    await addUserToApplication(logger, pgClient, orgId, appId, id);
 
     const { id: identityId } = await createUserIdentity(
       logger,
@@ -74,6 +78,7 @@ export async function registerIdpUser(
   logger: Logger,
   pgClient: PgClient,
   orgId: string,
+  appId: string,
   keyId: string,
   email: string,
   password: string,
@@ -85,7 +90,17 @@ export async function registerIdpUser(
 
   const autoVerify = true;
 
-  const userData = await getOrCreateUser(logger, pgClient, orgId, email, username, autoVerify);
+  const userData = await getOrCreateUser(
+    logger,
+    pgClient,
+    orgId,
+    appId,
+    email,
+    username,
+    autoVerify
+  );
+
+  await addUserToApplication(logger, pgClient, orgId, appId, userData.id);
 
   await createUserIdentity(
     logger,
@@ -104,7 +119,7 @@ export async function registerIdpUser(
 export async function authenticateUser(
   logger: Logger,
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   email: string,
   password: string
 ): Promise<string> {
@@ -113,7 +128,7 @@ export async function authenticateUser(
   const userIdentity = await getUserIdentityByEmail(
     logger,
     pgClient,
-    orgId,
+    appId,
     email,
     AuthProvider.EMAIL
   );
@@ -148,7 +163,7 @@ export async function authenticateUser(
 export async function verifyUser(
   logger: Logger,
   pgClient: PgClient,
-  orgId: string,
+  appId: string,
   email: string,
   code: string
 ): Promise<void> {
@@ -158,7 +173,7 @@ export async function verifyUser(
     const { uid, identityId, verifiedAt } = await getUserIdentityByEmail(
       logger,
       pgClient,
-      orgId,
+      appId,
       email,
       AuthProvider.EMAIL
     );
@@ -167,7 +182,7 @@ export async function verifyUser(
       throw new ValidationError(`User already verified`);
     }
 
-    logger.info(`Verifying user`, { orgId, identityId });
+    logger.info(`Verifying user`, { appId, identityId });
 
     await validateAuthVerificationCode(
       logger,

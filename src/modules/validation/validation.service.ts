@@ -12,7 +12,7 @@ export async function getTokenValidationCredentials(
   logger: Logger,
   pgClient: PgClient,
   keyId: string
-): Promise<{ secretKey: string; orgId: string }> {
+): Promise<{ secretKey: string; orgId: string; appId: string }> {
   logger.debug(`Getting token validation credentials`, { keyId });
 
   const { rows } = await getTokenValidationCredentialsByKeyId(pgClient, keyId);

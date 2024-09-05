@@ -20,7 +20,7 @@ export async function getTokenValidationCredentialsByKeyId(
   keyId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT "secretKey", "deletedAt", "orgId"
+    SELECT "secretKey", "deletedAt", "orgId", "appId"
     FROM credentials
     WHERE "keyId" = $1 AND "deletedAt" IS NULL;
   `;

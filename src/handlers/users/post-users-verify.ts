@@ -28,9 +28,9 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, code } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    await verifyUser(logger, pgClient, orgId, email, code);
+    await verifyUser(logger, pgClient, appId, email, code);
 
     return httpResponse._200({ message: 'User verification successful' });
   } catch (err: any) {

@@ -43,13 +43,17 @@ async function lambdaProxyEventHandler(
     logger.info(`Validating auth token`, { keyName, clientId });
 
     const { appPid, keyId } = getKeyParts(keyName);
-    const { orgId, secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
+    const { orgId, appId, secretKey } = await getTokenValidationCredentials(
+      logger,
+      pgClient,
+      keyId
+    );
 
     verifyAuthToken(token, secretKey);
 
     const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
     const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
-    const user = await getUserDataByClientId(logger, pgClient, orgId, clientId);
+    const user = await getUserDataByClientId(logger, pgClient, appId, clientId);
 
     const sessionData = {
       appPid,

@@ -28,8 +28,8 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, password } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const id = await registerUser(logger, pgClient, orgId, email, password);
+    const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const id = await registerUser(logger, pgClient, orgId, appId, email, password);
 
     return httpResponse._200({ message: 'Registration successful', id });
   } catch (err: any) {
