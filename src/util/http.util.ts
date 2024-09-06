@@ -7,6 +7,7 @@ import {
   NotFoundError,
   SchemaValidationError,
   TokenError,
+  TokenExpiredError,
   UnauthorizedError,
   ValidationError,
   VerificationError
@@ -134,7 +135,7 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
     return _403(errorResponse);
   }
 
-  if (err instanceof TokenError) {
+  if (err instanceof TokenError || err instanceof TokenExpiredError) {
     return _403(errorResponse);
   }
 

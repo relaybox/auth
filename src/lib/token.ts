@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { ExtendedClientJwtPayload, TokenType } from 'src/types/jwt.types';
 import { Logger } from 'winston';
-import { TokenError, ValidationError } from './errors';
+import { TokenError, TokenExpiredError, ValidationError } from './errors';
 
 const JWT_ISSUER = process.env.JWT_ISSUER || '';
 const JWT_HASHING_ALGORITHM = 'HS256';
@@ -115,7 +115,11 @@ export function verifyRefreshToken(token: string, secretKey: string, tokenType: 
   try {
     verifyAuthToken(token, secretKey);
   } catch (err: any) {
-    throw new TokenError(`Refresh token invalid`);
+    if (err.message.includes('expired')) {
+      throw new TokenExpiredError(err.message);
+    }
+
+    throw new TokenError('Refresh token verification failed');
   }
 
   if (tokenType !== 'refresh_token') {

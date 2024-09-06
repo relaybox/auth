@@ -42,7 +42,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200({
       token: authToken,
-      tokenExpiry,
+      expiresIn: tokenExpiry,
       expiresAt
     });
   } catch (err: any) {
