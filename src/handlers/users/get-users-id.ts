@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ValidationError } from 'src/lib/errors';
+import { NotFoundError, UnauthorizedError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
   getAuthDataByKeyId,
@@ -30,8 +30,16 @@ export const handler: APIGatewayProxyHandler = async (
     logger.info(`Getting session data for user`, { clientId });
 
     const { keyId } = getRequestAuthParams(event);
-    const { orgId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const sessionData = await getUserDataByClientId(logger, pgClient, orgId, clientId);
+
+    if (!sessionData) {
+      throw new NotFoundError(`User not found`);
+    }
+
+    if (sessionData.appId !== appId) {
+      throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+    }
 
     return httpResponse._200(sessionData);
   } catch (err: any) {

@@ -274,13 +274,13 @@ export async function getUserDataByClientId(
 
   const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
 
-  if (!rows.length) {
-    throw new NotFoundError(`User not found`);
-  }
+  // if (!rows.length) {
+  //   throw new NotFoundError(`User not found`);
+  // }
 
-  if (rows[0].appId !== appId) {
-    throw new UnauthorizedError(`Cross organsiation authentication not supported`);
-  }
+  // if (rows[0].appId !== appId) {
+  //   throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+  // }
 
   return rows[0];
 }
@@ -334,7 +334,8 @@ export async function getAuthSession(
   appId: string,
   keyName: string,
   secretKey: string,
-  expiresIn: number = 300,
+  expiresIn: number,
+  sessionExpiresIn: number,
   authenticateAction: boolean = false,
   authStorageType: AuthStorageType = AuthStorageType.PERSIST
 ): Promise<AuthUserSession> {
@@ -344,7 +345,7 @@ export async function getAuthSession(
   const user = await getUserDataById(logger, pgClient, uid);
 
   if (user.appId !== appId) {
-    throw new UnauthorizedError(`Cross organsiation authentication not supported`);
+    throw new UnauthorizedError(`Cross application authentication not supported`);
   }
 
   if (user.authMfaEnabled && authenticateAction) {
@@ -363,9 +364,16 @@ export async function getAuthSession(
   }
 
   const authToken = await getAuthToken(logger, uid, keyName, secretKey, user.clientId!, expiresIn);
-  const refreshToken = await getAuthRefreshToken(logger, uid, keyName, secretKey, user.clientId!);
+  const refreshToken = await getAuthRefreshToken(
+    logger,
+    uid,
+    keyName,
+    secretKey,
+    user.clientId!,
+    sessionExpiresIn
+  );
   const expiresAt = now + expiresIn * 1000;
-  const destroyAt = now + DEFAULT_REFRESH_TOKEN_EXPIRY_SECS * 1000;
+  const destroyAt = now + sessionExpiresIn * 1000;
 
   const session = {
     token: authToken,
@@ -731,5 +739,53 @@ export async function getUserByAppId(
   } catch (err: any) {
     logger.error(`Failed to get user by application id`, { err });
     throw new AuthenticationError(`Failed to get user by application id`);
+  }
+}
+
+export async function getAuthProviderDataByProviderName(
+  logger: Logger,
+  pgClient: PgClient,
+  appId: string,
+  providerName: string
+): Promise<{ clientId: string; clientSecret: string }> {
+  logger.debug(`Getting auth provider data by provider name`, { providerName });
+
+  try {
+    const { rows } = await repository.getAuthProviderDataByProviderName(
+      pgClient,
+      appId,
+      providerName
+    );
+
+    const { clientId, clientSecret, salt } = rows[0];
+
+    console.log(rows[0]);
+
+    const decryptedClientSecret = decrypt(clientSecret, salt);
+
+    return {
+      clientId,
+      clientSecret: decryptedClientSecret
+    };
+  } catch (err: any) {
+    logger.error(`Failed to get auth provider data by provider name`, { err });
+    throw new AuthenticationError(`Failed to get auth provider data by provider name`);
+  }
+}
+
+export async function getApplicationAuthenticationPreferences(
+  logger: Logger,
+  pgClient: PgClient,
+  appId: string
+): Promise<{ tokenExpiry: number; sessionExpiry: number; authStorageType: AuthStorageType }> {
+  logger.debug(`Getting application authentication preferences`, { appId });
+
+  try {
+    const { rows } = await repository.getApplicationAuthenticationPreferences(pgClient, appId);
+
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to get application authentication preferences`, { err });
+    throw new AuthenticationError(`Failed to get application authentication preferences`);
   }
 }

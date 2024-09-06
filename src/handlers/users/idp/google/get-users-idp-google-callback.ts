@@ -3,11 +3,12 @@ import { getPgClient } from 'src/lib/postgres';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import {
+  getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
+  getAuthProviderDataByProviderName,
   getAuthSession,
   getKeyParts,
   getUserIdentityByProviderId,
-  updateUserData,
   updateUserIdentityData
 } from 'src/modules/users/users.service';
 import { ValidationError } from 'src/lib/errors';
@@ -19,9 +20,9 @@ import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-google-callback');
 
-const GOOGLE_CLIENT_ID = '716987004698-2903nfndh2v79ldg6ltm7bu8b38dttuk.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
 const API_SERVICE_URL = process.env.API_SERVICE_URL || '';
+const PROVIDER_NAME = 'google';
+const REDIRECT_URI = `${API_SERVICE_URL}/users/idp/google/callback`;
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -41,22 +42,23 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { keyId } = getKeyParts(keyName);
-    const { orgId, appId, appPid, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
+    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    const authorization = await getGoogleAuthToken(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      code,
-      redirectUri
+    const { clientId, clientSecret } = await getAuthProviderDataByProviderName(
+      logger,
+      pgClient,
+      appId,
+      PROVIDER_NAME
     );
+
+    const authorization = await getGoogleAuthToken(clientId, clientSecret, code, REDIRECT_URI);
 
     const { providerId, email, username } = await getGoogleUserData(authorization);
 
     let userData = await getUserIdentityByProviderId(
       logger,
       pgClient,
-      orgId,
+      appId,
       providerId,
       AuthProvider.GOOGLE
     );
@@ -90,7 +92,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Failed to register user');
     }
 
-    const expiresIn = 300;
+    const { tokenExpiry, sessionExpiry, authStorageType } =
+      await getApplicationAuthenticationPreferences(logger, pgClient, appId);
+
     const authenticateAction = true;
     const authSession = await getAuthSession(
       logger,
@@ -99,8 +103,10 @@ export const handler: APIGatewayProxyHandler = async (
       appId,
       keyName,
       secretKey,
-      expiresIn,
-      authenticateAction
+      tokenExpiry,
+      sessionExpiry,
+      authenticateAction,
+      authStorageType
     );
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 

@@ -18,6 +18,8 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
+  logger.info(`Running authentication...`);
+
   try {
     const { email, password } = JSON.parse(event.body!);
     const response = await processAuthentication(logger, cognitoClient, email, password);

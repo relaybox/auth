@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import {
+  getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
   getAuthSession,
   getRequestAuthParams
@@ -20,21 +21,28 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const id = event.requestContext.authorizer!.principalId;
+    const uid = event.requestContext.authorizer!.principalId;
 
-    logger.info(`Getting session data for user`, { id });
+    logger.info(`Getting session data for user`, { uid });
 
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const expiresIn = 300;
+    const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+    const { tokenExpiry, sessionExpiry, authStorageType } =
+      await getApplicationAuthenticationPreferences(logger, pgClient, appId);
+
+    const authenticateAction = false;
     const authSession = await getAuthSession(
       logger,
       pgClient,
-      id,
+      uid,
       appId,
       keyName,
       secretKey,
-      expiresIn
+      tokenExpiry,
+      sessionExpiry,
+      authenticateAction,
+      authStorageType
     );
 
     return httpResponse._200(authSession);

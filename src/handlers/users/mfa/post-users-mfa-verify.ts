@@ -5,6 +5,7 @@ import { validateEventSchema } from 'src/lib/validation';
 import { enableMfaForUser, verifyUserMfaChallenge } from 'src/modules/users/users.actions';
 import {
   createUserMfaChallenge,
+  getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
   getAuthSession,
   getRequestAuthParams
@@ -47,8 +48,11 @@ export const handler: APIGatewayProxyHandler = async (
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const expiresIn = 3600;
+    const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { tokenExpiry, sessionExpiry, authStorageType } =
+      await getApplicationAuthenticationPreferences(logger, pgClient, appId);
+
+    const authenticateAction = false;
     const authSession = await getAuthSession(
       logger,
       pgClient,
@@ -56,7 +60,10 @@ export const handler: APIGatewayProxyHandler = async (
       appId,
       keyName,
       secretKey,
-      expiresIn
+      tokenExpiry,
+      sessionExpiry,
+      authenticateAction,
+      authStorageType
     );
 
     if (!authSession.user.authMfaEnabled) {

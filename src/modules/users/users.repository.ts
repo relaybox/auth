@@ -551,3 +551,32 @@ export function getUserByAppId(
 
   return pgClient.query(query, [appId, uid]);
 }
+
+export function getAuthProviderDataByProviderName(
+  pgClient: PgClient,
+  appId: string,
+  providerName: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT aap."clientId", aap."clientSecret", aap.salt
+    FROM authentication_providers ap
+    LEFT JOIN application_authentication_providers aap 
+    ON ap."id" = aap."providerId" AND aap."deletedAt" IS NULL
+    WHERE ap."name" = $1 AND aap."appId"  = $2;
+  `;
+
+  return pgClient.query(query, [providerName, appId]);
+}
+
+export function getApplicationAuthenticationPreferences(
+  pgClient: PgClient,
+  appId: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT "tokenExpiry"::int, "sessionExpiry"::int, "authStorageType"
+    FROM application_authentication_preferences
+    WHERE "appId" = $1;
+  `;
+
+  return pgClient.query(query, [appId]);
+}

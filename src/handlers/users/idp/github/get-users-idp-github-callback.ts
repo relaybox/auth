@@ -4,7 +4,9 @@ import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { getGitHubPrimaryData } from 'src/lib/github';
 import {
+  getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
+  getAuthProviderDataByProviderName,
   getAuthSession,
   getKeyParts,
   getUserIdentityByProviderId,
@@ -18,8 +20,9 @@ import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-github');
 
-const GITHUB_CLIENT_ID = 'Ov23liE7QYs1UQ9axuJr';
-const GITHUB_CLIENT_SECRET = 'f1899c077d17dde34413a3e15e0939cd4aa20e57';
+// const GITHUB_CLIENT_ID = 'Ov23liE7QYs1UQ9axuJr';
+// const GITHUB_CLIENT_SECRET = 'f1899c077d17dde34413a3e15e0939cd4aa20e57';
+const PROVIDER_NAME = 'github';
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -39,18 +42,25 @@ export const handler: APIGatewayProxyHandler = async (
     }
 
     const { keyId } = getKeyParts(keyName);
-    const { orgId, appId, appPid, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+    const { clientId, clientSecret } = await getAuthProviderDataByProviderName(
+      logger,
+      pgClient,
+      appId,
+      PROVIDER_NAME
+    );
 
     const { providerId, username, email } = await getGitHubPrimaryData(
-      GITHUB_CLIENT_ID,
-      GITHUB_CLIENT_SECRET,
+      clientId,
+      clientSecret,
       code
     );
 
     let userData = await getUserIdentityByProviderId(
       logger,
       pgClient,
-      orgId,
+      appId,
       providerId,
       AuthProvider.GITHUB
     );
@@ -84,7 +94,9 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Failed to register user');
     }
 
-    const expiresIn = 300;
+    const { tokenExpiry, sessionExpiry, authStorageType } =
+      await getApplicationAuthenticationPreferences(logger, pgClient, appId);
+
     const authenticateAction = true;
     const authSession = await getAuthSession(
       logger,
@@ -93,8 +105,10 @@ export const handler: APIGatewayProxyHandler = async (
       appId,
       keyName,
       secretKey,
-      expiresIn,
-      authenticateAction
+      tokenExpiry,
+      sessionExpiry,
+      authenticateAction,
+      authStorageType
     );
     const htmlContent = getUsersIdpCallbackHtml(authSession);
 

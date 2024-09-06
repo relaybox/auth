@@ -1,11 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
-import {
-  getAuthDataByKeyId,
-  getRequestAuthParams,
-  updateUserStatusById
-} from 'src/modules/users/users.service';
+import { updateUserStatusById } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -30,8 +26,6 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const uid = event.requestContext.authorizer!.principalId;
     const { status } = validateEventSchema(event, schema);
-    const { appPid, keyId } = getRequestAuthParams(event);
-    const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     await updateUserStatusById(logger, pgClient, uid, status);
 

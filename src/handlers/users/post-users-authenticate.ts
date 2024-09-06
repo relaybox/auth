@@ -3,6 +3,7 @@ import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { authenticateUser } from 'src/modules/users/users.actions';
 import {
+  getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
   getAuthSession,
   getRequestAuthParams,
@@ -29,12 +30,16 @@ export const handler: APIGatewayProxyHandler = async (
 
   const pgClient = await getPgClient();
 
+  logger.info(`Authenticating user with public key`);
+
   try {
     const { email, password } = validateEventSchema(event, schema);
     const { keyName, keyId } = getRequestAuthParams(event);
-    const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { tokenExpiry, sessionExpiry, authStorageType } =
+      await getApplicationAuthenticationPreferences(logger, pgClient, appId);
 
-    logger.info(`Authenticating user with public key`, { keyName });
+    logger.info(`Auth data retreived`, { appId, keyName });
 
     const id = await authenticateUser(logger, pgClient, appId, email, password);
 
@@ -42,7 +47,6 @@ export const handler: APIGatewayProxyHandler = async (
 
     await updateUserIdentityLastLogin(logger, pgClient, id, AuthProvider.EMAIL);
 
-    const expiresIn = 3600;
     const authenticateAction = true;
     const authSession = await getAuthSession(
       logger,
@@ -51,8 +55,10 @@ export const handler: APIGatewayProxyHandler = async (
       appId,
       keyName,
       secretKey,
-      expiresIn,
-      authenticateAction
+      tokenExpiry,
+      sessionExpiry,
+      authenticateAction,
+      authStorageType
     );
 
     return httpResponse._200(authSession);
