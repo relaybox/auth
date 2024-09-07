@@ -759,8 +759,6 @@ export async function getAuthProviderDataByProviderName(
 
     const { clientId, clientSecret, salt } = rows[0];
 
-    console.log(rows[0]);
-
     const decryptedClientSecret = decrypt(clientSecret, salt);
 
     return {

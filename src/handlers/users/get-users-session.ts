@@ -9,13 +9,14 @@ import {
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
+import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 
 const logger = getLogger('get-users-session');
 
-export const handler: APIGatewayProxyHandler = async (
+async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   const pgClient = await getPgClient();
@@ -51,4 +52,6 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);
