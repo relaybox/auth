@@ -296,7 +296,8 @@ export async function getUserDataByClientId(
       "appId", 
       "appId", 
       "isOnline", 
-      "lastOnline"
+      "lastOnline",
+      "blockedAt"
     FROM authentication_users
     WHERE "clientId" = $1;
   `;

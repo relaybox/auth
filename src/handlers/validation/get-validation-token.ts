@@ -8,7 +8,7 @@ import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { ValidationError } from 'src/lib/errors';
+import { ForbiddenError, ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
 import { getKeyParts, getUserDataByClientId } from 'src/modules/users/users.service';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
@@ -50,6 +50,10 @@ async function lambdaProxyEventHandler(
     const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
     const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
     const user = await getUserDataByClientId(logger, pgClient, appId, clientId);
+
+    if (user && user.blockedAt) {
+      throw new ForbiddenError(`User ${user.clientId} blocked`);
+    }
 
     const sessionData = {
       appPid,

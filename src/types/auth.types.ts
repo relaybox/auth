@@ -68,6 +68,7 @@ export interface AuthUser {
   createdAt: string;
   updatedAt: string;
   identities: AuthUserIdentity[];
+  blockedAt: string | null;
 }
 
 export interface AuthSession {
