@@ -286,7 +286,17 @@ export async function getUserDataByClientId(
   clientId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT id, "clientId", "createdAt", "updatedAt", username, "orgId", "appId", "appId", "isOnline", "lastOnline"
+    SELECT 
+      id, 
+      "clientId", 
+      "createdAt", 
+      "updatedAt", 
+      username, 
+      "orgId", 
+      "appId", 
+      "appId", 
+      "isOnline", 
+      "lastOnline"
     FROM authentication_users
     WHERE "clientId" = $1;
   `;
@@ -562,7 +572,7 @@ export function getAuthProviderDataByProviderName(
     FROM authentication_providers ap
     LEFT JOIN application_authentication_providers aap 
     ON ap."id" = aap."providerId" AND aap."deletedAt" IS NULL
-    WHERE ap."name" = $1 AND aap."appId"  = $2;
+    WHERE ap."name" = $1 AND aap."appId" = $2 AND aap.enabled = TRUE AND aap."deletedAt" IS NULL;
   `;
 
   return pgClient.query(query, [providerName, appId]);
