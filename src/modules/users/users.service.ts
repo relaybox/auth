@@ -47,8 +47,10 @@ export async function createUser(
   orgId: string,
   appId: string,
   email: string,
+  autoVerify: boolean = false,
   username?: string,
-  autoVerify: boolean = false
+  firstName?: string,
+  lastName?: string
 ): Promise<AuthUser> {
   logger.debug(`Creating user`, { orgId });
 
@@ -65,8 +67,10 @@ export async function createUser(
       clientId,
       encryptedEmail,
       emailHash,
+      autoVerify,
       username,
-      autoVerify
+      firstName,
+      lastName
     );
 
     logger.info(`User created`, { orgId, clientId, id: rows[0].id });
@@ -401,8 +405,10 @@ export async function getOrCreateUser(
   orgId: string,
   appId: string,
   email: string,
+  autoVerify: boolean = false,
   username?: string,
-  autoVerify: boolean = false
+  firstName?: string,
+  lastName?: string
 ): Promise<AuthUser> {
   logger.debug(`Getting existing or creating new user`, { orgId });
 
@@ -412,7 +418,17 @@ export async function getOrCreateUser(
     return existingUser;
   }
 
-  const newUser = await createUser(logger, pgClient, orgId, appId, email, username, autoVerify);
+  const newUser = await createUser(
+    logger,
+    pgClient,
+    orgId,
+    appId,
+    email,
+    autoVerify,
+    username,
+    firstName,
+    lastName
+  );
 
   return newUser;
 }

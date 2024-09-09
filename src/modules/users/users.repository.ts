@@ -9,16 +9,26 @@ export function createUser(
   clientid: string,
   email: string,
   emailHash: string,
+  autoVerify: boolean = false,
   username: string,
-  autoVerify: boolean = false
+  firstName?: string,
+  lastName?: string
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     INSERT INTO authentication_users (
-      "orgId", "appId", "clientId", "email", "emailHash", username, "verifiedAt"
+      "orgId", 
+      "appId", 
+      "clientId", 
+      "email", 
+      "emailHash", 
+      username, 
+      "verifiedAt", 
+      "firstName", 
+      "lastName"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7
+      $1, $2, $3, $4, $5, $6, $7, $8, $9
     ) RETURNING id, "clientId";
   `;
 
@@ -29,7 +39,9 @@ export function createUser(
     email,
     emailHash,
     username,
-    autoVerify ? now : null
+    autoVerify ? now : null,
+    firstName || null,
+    lastName || null
   ]);
 }
 

@@ -12,7 +12,10 @@ const logger = getLogger('post-users-create');
 
 const schema = z.object({
   email: z.string().email(),
-  password: z.string().min(5)
+  password: z.string().min(5),
+  username: z.string().min(3).optional(),
+  firstName: z.string().min(3).optional(),
+  lastName: z.string().min(3).optional()
 });
 
 export const handler: APIGatewayProxyHandler = async (
@@ -26,10 +29,20 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { email, password } = validateEventSchema(event, schema);
+    const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const id = await registerUser(logger, pgClient, orgId, appId, email, password);
+    const id = await registerUser(
+      logger,
+      pgClient,
+      orgId,
+      appId,
+      email,
+      password,
+      username,
+      firstName,
+      lastName
+    );
 
     return httpResponse._200({ message: 'Registration successful', id });
   } catch (err: any) {

@@ -34,6 +34,9 @@ export async function registerUser(
   appId: string,
   email: string,
   password: string,
+  username?: string,
+  firstName?: string,
+  lastName?: string,
   provider: AuthProvider = AuthProvider.EMAIL
 ): Promise<string> {
   logger.info(`Registering user`, { orgId, provider });
@@ -41,7 +44,19 @@ export async function registerUser(
   try {
     await pgClient.query('BEGIN');
 
-    const { id } = await getOrCreateUser(logger, pgClient, orgId, appId, email);
+    const autoVerify = false;
+
+    const { id } = await getOrCreateUser(
+      logger,
+      pgClient,
+      orgId,
+      appId,
+      email,
+      autoVerify,
+      username,
+      firstName,
+      lastName
+    );
 
     await addUserToApplication(logger, pgClient, orgId, appId, id);
 
@@ -96,8 +111,8 @@ export async function registerIdpUser(
     orgId,
     appId,
     email,
-    username,
-    autoVerify
+    autoVerify,
+    username
   );
 
   await addUserToApplication(logger, pgClient, orgId, appId, userData.id);
