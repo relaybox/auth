@@ -12,6 +12,7 @@ import {
 import { Logger } from 'winston';
 import {
   AuthenticationError,
+  ForbiddenError,
   NotFoundError,
   UnauthorizedError,
   ValidationError
@@ -343,6 +344,10 @@ export async function getAuthSession(
 
   const now = Date.now();
   const user = await getUserDataById(logger, pgClient, uid);
+
+  if (user.blockedAt) {
+    throw new ForbiddenError(`User blocked`);
+  }
 
   if (user.appId !== appId) {
     throw new UnauthorizedError(`Cross application authentication not supported`);

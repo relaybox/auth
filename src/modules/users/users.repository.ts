@@ -351,8 +351,9 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
       au."updatedAt", 
       au."verifiedAt",
       au."authMfaEnabled",
-    COALESCE(identities_cte.identities, '[]') AS identities,
-    COALESCE(factors_cte.factors, '[]') AS factors
+      au."blockedAt",
+      COALESCE(identities_cte.identities, '[]') AS identities,
+      COALESCE(factors_cte.factors, '[]') AS factors
     FROM authentication_users au
     LEFT JOIN identities_cte ON au.id = identities_cte.user_id
     LEFT JOIN factors_cte ON au.id = factors_cte.user_id
