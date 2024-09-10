@@ -604,3 +604,16 @@ export function getApplicationAuthenticationPreferences(
 
   return pgClient.query(query, [appId]);
 }
+
+export function validateUsername(
+  pgClient: PgClient,
+  appId: string,
+  username: string
+): Promise<QueryResult> {
+  const query = `
+    SELECT id FROM authentication_users
+    WHERE "appId" = $1 AND username = $2;
+  `;
+
+  return pgClient.query(query, [appId, username]);
+}

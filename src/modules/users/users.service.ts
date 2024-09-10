@@ -808,3 +808,23 @@ export async function getApplicationAuthenticationPreferences(
     throw new AuthenticationError(`Failed to get application authentication preferences`);
   }
 }
+
+export async function validateUsername(
+  logger: Logger,
+  pgClient: PgClient,
+  appId: string,
+  username: string
+): Promise<void> {
+  logger.debug(`Validating username`, { username });
+
+  try {
+    const { rows } = await repository.validateUsername(pgClient, appId, username);
+
+    if (rows.length) {
+      throw new ValidationError(`Username already exists`);
+    }
+  } catch (err: any) {
+    logger.error(`Failed to validate username`, { err });
+    throw err;
+  }
+}

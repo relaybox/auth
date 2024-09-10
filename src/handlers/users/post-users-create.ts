@@ -2,7 +2,11 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { registerUser } from 'src/modules/users/users.actions';
-import { getAuthDataByKeyId, getRequestAuthParams } from 'src/modules/users/users.service';
+import {
+  getAuthDataByKeyId,
+  getRequestAuthParams,
+  validateUsername
+} from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -32,6 +36,7 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    await validateUsername(logger, pgClient, appId, username);
     const id = await registerUser(
       logger,
       pgClient,

@@ -81,8 +81,8 @@ export const handler: APIGatewayProxyHandler = async (
         email,
         tmpPassword,
         AuthProvider.GOOGLE,
-        providerId,
-        username
+        providerId
+        // username
       );
     }
 

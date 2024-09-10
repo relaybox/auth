@@ -83,8 +83,8 @@ export const handler: APIGatewayProxyHandler = async (
         email,
         tmpPassword,
         AuthProvider.GITHUB,
-        providerId,
-        username
+        providerId
+        // username
       );
     }
 
