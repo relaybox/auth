@@ -5,7 +5,7 @@ post-users-create:
     - http:
         path: /users/create
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 post-users-authenticate:
   handler: src/handlers/users/post-users-authenticate.handler
@@ -14,7 +14,7 @@ post-users-authenticate:
     - http:
         path: /users/authenticate
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 post-users-verify:
   handler: src/handlers/users/post-users-verify.handler
@@ -23,7 +23,7 @@ post-users-verify:
     - http:
         path: /users/verify
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 post-users-generate-verification-code:
   handler: src/handlers/users/post-users-generate-verification-code.handler
@@ -32,7 +32,7 @@ post-users-generate-verification-code:
     - http:
         path: /users/generate-verification-code
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-token-refresh:
   handler: src/handlers/users/get-users-token-refresh.handler
@@ -41,7 +41,7 @@ get-users-token-refresh:
     - http:
         path: /users/token/refresh
         method: get
-        cors: true
+        cors: ${self:custom.cors}
 
 post-users-password-reset:
   handler: src/handlers/users/post-users-password-reset.handler
@@ -50,7 +50,7 @@ post-users-password-reset:
     - http:
         path: /users/password-reset
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 post-users-password-confirm:
   handler: src/handlers/users/post-users-password-confirm.handler
@@ -59,7 +59,7 @@ post-users-password-confirm:
     - http:
         path: /users/password-confirm
         method: post
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-idp-github-authorize:
   handler: src/handlers/users/idp/github/get-users-idp-github-authorize.handler
@@ -68,7 +68,7 @@ get-users-idp-github-authorize:
     - http:
         path: /users/idp/github/authorize
         method: get
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-idp-github-callback:
   handler: src/handlers/users/idp/github/get-users-idp-github-callback.handler
@@ -77,7 +77,7 @@ get-users-idp-github-callback:
     - http:
         path: /users/idp/github/callback
         method: get
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-idp-google-authorize:
   handler: src/handlers/users/idp/google/get-users-idp-google-authorize.handler
@@ -86,7 +86,7 @@ get-users-idp-google-authorize:
     - http:
         path: /users/idp/google/authorize
         method: get
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-idp-google-callback:
   handler: src/handlers/users/idp/google/get-users-idp-google-callback.handler
@@ -95,7 +95,7 @@ get-users-idp-google-callback:
     - http:
         path: /users/idp/google/callback
         method: get
-        cors: true
+        cors: ${self:custom.cors}
 
 get-users-id:
   handler: src/handlers/users/get-users-id.handler
@@ -104,7 +104,7 @@ get-users-id:
     - http:
         path: /users/{id}
         method: get
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: user-authorizer
 
 get-users-me:
@@ -114,7 +114,7 @@ get-users-me:
     - http:
         path: /users/me
         method: get
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: user-authorizer
 
 get-users-session:
@@ -124,7 +124,7 @@ get-users-session:
     - http:
         path: /users/session
         method: get
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: session-authorizer
 
 post-users-mfa-enroll:
@@ -134,7 +134,7 @@ post-users-mfa-enroll:
     - http:
         path: /users/mfa/enroll
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: user-authorizer
 
 post-users-mfa-challenge:
@@ -144,7 +144,7 @@ post-users-mfa-challenge:
     - http:
         path: /users/mfa/challenge
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: tmp-authorizer
 
 post-users-mfa-verify:
@@ -154,7 +154,7 @@ post-users-mfa-verify:
     - http:
         path: /users/mfa/verify
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: tmp-authorizer
 
 put-users-status:
@@ -164,5 +164,5 @@ put-users-status:
     - http:
         path: /users/status
         method: put
-        cors: true
+        cors: ${self:custom.cors}
         authorizer: user-authorizer
