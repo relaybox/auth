@@ -38,6 +38,7 @@ get-users-token-refresh:
   handler: src/handlers/users/get-users-token-refresh.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/token/refresh
         method: get
@@ -65,6 +66,7 @@ get-users-idp-github-authorize:
   handler: src/handlers/users/idp/github/get-users-idp-github-authorize.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/idp/github/authorize
         method: get
@@ -74,6 +76,7 @@ get-users-idp-github-callback:
   handler: src/handlers/users/idp/github/get-users-idp-github-callback.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/idp/github/callback
         method: get
@@ -83,6 +86,7 @@ get-users-idp-google-authorize:
   handler: src/handlers/users/idp/google/get-users-idp-google-authorize.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/idp/google/authorize
         method: get
@@ -92,6 +96,7 @@ get-users-idp-google-callback:
   handler: src/handlers/users/idp/google/get-users-idp-google-callback.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/idp/google/callback
         method: get
@@ -101,6 +106,7 @@ get-users-id:
   handler: src/handlers/users/get-users-id.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/{id}
         method: get
@@ -111,6 +117,7 @@ get-users-me:
   handler: src/handlers/users/get-users-me.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/me
         method: get
@@ -121,6 +128,7 @@ get-users-session:
   handler: src/handlers/users/get-users-session.handler
   timeout: 30
   events:
+    - ${self:custom.keepAlive}
     - http:
         path: /users/session
         method: get
