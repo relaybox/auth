@@ -51,6 +51,7 @@ custom:
       - Authorization
       - X-Ds-Client-Id
       - X-Ds-Connection-Id
+      - X-Ds-Key-Name
     allowCredentials: true
 
   vars:
