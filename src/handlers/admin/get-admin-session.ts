@@ -18,7 +18,7 @@ async function lambdaProxyEventHandler(
   try {
     const id = event.requestContext.authorizer!.principalId;
 
-    logger.info(`Getting admin session for user ${id}`);
+    logger.info(`Getting admin session for user ${id}`, { id });
 
     const sessionData = await getSessionData(logger, pgClient, id);
 
