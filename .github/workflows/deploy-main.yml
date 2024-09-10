@@ -54,6 +54,7 @@ jobs:
           echo AUTH_ENCRYPTION_KEY=${{ secrets.AUTH_ENCRYPTION_KEY }} >> .env
           echo AUTH_ENCRYPTION_SALT=${{ secrets.AUTH_ENCRYPTION_SALT }} >> .env
           echo AUTH_HMAC_KEY=${{ secrets.AUTH_HMAC_KEY }} >> .env
+          echo AUTH_HASH_ID_SECRET=${{ secrets.AUTH_HASH_ID_SECRET }} >> .env
           echo JWT_ISSUER=${{ vars.JWT_ISSUER }} >> .env
           echo SMTP_HOST=${{ vars.SMTP_HOST }} >> .env
           echo SMTP_USERNAME=${{ vars.SMTP_USERNAME }} >> .env
