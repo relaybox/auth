@@ -258,7 +258,7 @@ export function getKeyParts(keyName: string): { appPid: string; keyId: string } 
 
 export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthParams {
   const headers = event.headers;
-  const keyName = headers['X-Ds-Key-Name'];
+  const keyName = headers['X-Ds-Key-Name'] || headers['x-ds-key-name'];
 
   if (!keyName) {
     throw new ValidationError('Missing X-Ds-Key-Name header');
