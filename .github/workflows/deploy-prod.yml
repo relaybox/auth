@@ -51,6 +51,15 @@ jobs:
           echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
           echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
           echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
+          echo AUTH_ENCRYPTION_KEY=${{ secrets.AUTH_ENCRYPTION_KEY }} >> .env
+          echo AUTH_ENCRYPTION_SALT=${{ secrets.AUTH_ENCRYPTION_SALT }} >> .env
+          echo AUTH_HMAC_KEY=${{ secrets.AUTH_HMAC_KEY }} >> .env
+          echo JWT_ISSUER=${{ vars.JWT_ISSUER }} >> .env
+          echo SMTP_HOST=${{ vars.SMTP_HOST }} >> .env
+          echo SMTP_USERNAME=${{ vars.SMTP_USERNAME }} >> .env
+          echo SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} >> .env
+          echo SMTP_AUTH_EMAIL=${{ vars.SMTP_AUTH_EMAIL }} >> .env
+          echo API_SERVICE_URL=${{ vars.API_SERVICE_URL }} >> .env
           cat .env
 
       - name: npm ci
