@@ -1,13 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { AuthenticationError, PasswordRegexError, SchemaValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { registerUser } from 'src/modules/users/users.actions';
 import {
+  createAuthenticationActionLogEntry,
   getAuthDataByKeyId,
+  getAuthenticationActionLog,
   getRequestAuthParams,
   validatePassword,
   validateUsername
 } from 'src/modules/users/users.service';
+import { AuthenticationAction, AuthenticationActionResult } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -33,13 +37,23 @@ export const handler: APIGatewayProxyHandler = async (
 
   const pgClient = await getPgClient();
 
+  const authenticationActionLog = getAuthenticationActionLog();
+
   try {
+    const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { orgId, appId } = await getAuthDataByKeyId(
+      logger,
+      pgClient,
+      keyId,
+      authenticationActionLog
+    );
+
     const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
-    const { keyId } = getRequestAuthParams(event);
-    const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
     await validateUsername(logger, pgClient, appId, username);
     await validatePassword(logger, pgClient, appId, password);
-    const id = await registerUser(
+
+    const { uid, identityId } = await registerUser(
       logger,
       pgClient,
       orgId,
@@ -51,9 +65,37 @@ export const handler: APIGatewayProxyHandler = async (
       lastName
     );
 
-    return httpResponse._200({ message: 'Registration successful', id });
+    authenticationActionLog.uid = uid;
+    authenticationActionLog.identityId = identityId;
+
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.REGISTER,
+      AuthenticationActionResult.SUCCESS,
+      authenticationActionLog
+    );
+
+    return httpResponse._200({ message: 'Registration successful', id: uid });
   } catch (err: any) {
-    return handleErrorResponse(logger, err);
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.REGISTER,
+      AuthenticationActionResult.FAIL,
+      authenticationActionLog,
+      err
+    );
+
+    if (err instanceof SchemaValidationError || err instanceof PasswordRegexError) {
+      return handleErrorResponse(logger, err);
+    }
+
+    const genericError = new AuthenticationError('Registration failed');
+
+    return handleErrorResponse(logger, genericError);
   } finally {
     pgClient.clean();
   }

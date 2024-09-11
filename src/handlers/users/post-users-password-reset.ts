@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { AuthenticationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
@@ -54,18 +55,7 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     if (!userIdentity) {
-      logger.warn(`User not found`, { email });
-      authenticationActionLog.errorMessage = 'User not found';
-      await createAuthenticationActionLogEntry(
-        logger,
-        pgClient,
-        event,
-        AuthenticationAction.PASSWORD_RESET,
-        AuthenticationActionResult.FAIL,
-        authenticationActionLog
-      );
-
-      return httpResponse._200({ message: 'Password reset request initialized' });
+      throw new AuthenticationError('User not found');
     }
 
     const { uid, identityId } = userIdentity;
@@ -88,8 +78,6 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     await sendAuthVerificationCode(logger, email, code);
-
-    return httpResponse._200({ message: 'Password reset request initialized' });
   } catch (err: any) {
     await createAuthenticationActionLogEntry(
       logger,
@@ -100,9 +88,8 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog,
       err
     );
-
-    return handleErrorResponse(logger, err);
   } finally {
     pgClient.clean();
+    return httpResponse._200({ message: 'Password reset request initialized' });
   }
 };

@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { AuthenticationError } from 'src/lib/errors';
+import { AuthenticationError, PasswordRegexError, SchemaValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { resetUserPassword } from 'src/modules/users/users.actions';
@@ -84,6 +84,10 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog,
       err
     );
+
+    if (err instanceof SchemaValidationError || err instanceof PasswordRegexError) {
+      return handleErrorResponse(logger, err);
+    }
 
     const genericError = new AuthenticationError('Password reset failed');
 

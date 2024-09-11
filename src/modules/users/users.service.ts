@@ -14,6 +14,7 @@ import {
   AuthenticationError,
   ForbiddenError,
   NotFoundError,
+  PasswordRegexError,
   UnauthorizedError,
   ValidationError
 } from 'src/lib/errors';
@@ -128,7 +129,7 @@ export async function createUserIdentity(
     return rows[0];
   } catch (err: any) {
     logger.error(`Failed to create user`, { err });
-    throw new AuthenticationError(`Failed to create user`);
+    throw err;
   }
 }
 
@@ -764,7 +765,7 @@ export async function addUserToApplication(
     await repository.addUserToApplication(pgClient, orgId, appId, uid);
   } catch (err: any) {
     logger.error(`Failed to add user to application`, { err });
-    throw new AuthenticationError(`Failed to add user to application`);
+    throw err;
   }
 }
 
@@ -876,7 +877,7 @@ export async function validatePassword(
   }
 
   if (!password.match(passwordPattern)) {
-    throw new ValidationError(`Password does not match required pattern`);
+    throw new PasswordRegexError(`Password does not match required pattern`);
   }
 }
 

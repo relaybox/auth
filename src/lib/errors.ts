@@ -47,6 +47,13 @@ export class PricingPlanQuotaError extends Error {
   }
 }
 
+export class PasswordRegexError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PasswordRegexError';
+  }
+}
+
 export class NetworkError extends Error {
   public status: number;
 

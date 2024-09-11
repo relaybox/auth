@@ -1,8 +1,20 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { AuthenticationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { verifyUser } from 'src/modules/users/users.actions';
-import { getAuthDataByKeyId, getRequestAuthParams } from 'src/modules/users/users.service';
+import {
+  createAuthenticationActionLogEntry,
+  getAuthDataByKeyId,
+  getAuthenticationActionLog,
+  getRequestAuthParams,
+  getUserIdentityByEmail
+} from 'src/modules/users/users.service';
+import {
+  AuthenticationAction,
+  AuthenticationActionResult,
+  AuthProvider
+} from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -25,16 +37,48 @@ export const handler: APIGatewayProxyHandler = async (
 
   logger.info(`Verifying user`);
 
+  const authenticationActionLog = getAuthenticationActionLog();
+
   try {
     const { email, code } = validateEventSchema(event, schema);
-    const { keyId } = getRequestAuthParams(event);
-    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId, authenticationActionLog);
 
-    await verifyUser(logger, pgClient, appId, email, code);
+    const userIdentity = await getUserIdentityByEmail(
+      logger,
+      pgClient,
+      appId,
+      email,
+      AuthProvider.EMAIL,
+      authenticationActionLog
+    );
+
+    await verifyUser(logger, pgClient, appId, email, code, userIdentity);
+
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.VERIFY,
+      AuthenticationActionResult.SUCCESS,
+      authenticationActionLog
+    );
 
     return httpResponse._200({ message: 'User verification successful' });
   } catch (err: any) {
-    return handleErrorResponse(logger, err);
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.VERIFY,
+      AuthenticationActionResult.FAIL,
+      authenticationActionLog,
+      err
+    );
+
+    const genericError = new AuthenticationError('User verification failed');
+
+    return handleErrorResponse(logger, genericError);
   } finally {
     pgClient.clean();
   }

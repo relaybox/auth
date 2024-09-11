@@ -5,6 +5,7 @@ import {
   DuplicateKeyError,
   ForbiddenError,
   NotFoundError,
+  PasswordRegexError,
   SchemaValidationError,
   TokenError,
   TokenExpiredError,
@@ -137,6 +138,10 @@ export function handleErrorResponse(logger: Logger, err: any): APIGatewayProxyRe
 
   if (err instanceof TokenError || err instanceof TokenExpiredError) {
     return _403(errorResponse);
+  }
+
+  if (err instanceof PasswordRegexError) {
+    return _400(errorResponse);
   }
 
   logger.error(`Unknown internal error`, { err });

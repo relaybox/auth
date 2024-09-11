@@ -1,14 +1,22 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { NotFoundError, UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
+  createAuthenticationActionLogEntry,
   createAuthVerificationCode,
   getAuthDataByKeyId,
+  getAuthenticationActionLog,
   getRequestAuthParams,
   getUserIdentityByEmail,
   sendAuthVerificationCode
 } from 'src/modules/users/users.service';
-import { AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  AuthenticationAction,
+  AuthenticationActionResult,
+  AuthProvider,
+  AuthVerificationCodeType
+} from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -30,30 +38,31 @@ export const handler: APIGatewayProxyHandler = async (
 
   const pgClient = await getPgClient();
 
+  const authenticationActionLog = getAuthenticationActionLog();
+
   try {
     const { email } = validateEventSchema(event, schema);
-    const { keyId } = getRequestAuthParams(event);
-    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId, authenticationActionLog);
     const userData = await getUserIdentityByEmail(
       logger,
       pgClient,
       appId,
       email,
-      AuthProvider.EMAIL
+      AuthProvider.EMAIL,
+      authenticationActionLog
     );
 
-    console.log(userData);
-
     if (!userData) {
-      logger.warn(`Enumeration: User not found`, { id: userData.uid });
-      return httpResponse._200({ message: `Verification code sent to ${email}` });
+      logger.error(`Enumeration: User not found`);
+      throw new NotFoundError('User not found');
     }
 
     const { uid, identityId, verifiedAt } = userData;
 
     if (verifiedAt) {
-      logger.warn(`Enumeration: User already verified`, { id: userData.uid, verifiedAt });
-      return httpResponse._200({ message: `Verification code sent to ${email}` });
+      logger.error(`Enumeration: User already verified`, { id: userData.uid, verifiedAt });
+      throw new UnauthorizedError('User already verified');
     }
 
     const code = await createAuthVerificationCode(
@@ -64,10 +73,34 @@ export const handler: APIGatewayProxyHandler = async (
       AuthVerificationCodeType.REGISTER
     );
 
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.SEND_VERIFICATION_CODE,
+      AuthenticationActionResult.SUCCESS,
+      authenticationActionLog
+    );
+
     await sendAuthVerificationCode(logger, email, code);
 
-    return httpResponse._200({ message: `Verification code sent to ${email}` });
+    return httpResponse._200({ message: `Verification code sent` });
   } catch (err: any) {
+    logger.error(`Failed to send verification code`, { err });
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.SEND_VERIFICATION_CODE,
+      AuthenticationActionResult.FAIL,
+      authenticationActionLog,
+      err
+    );
+
+    if (err.name === 'UnauthorizedError' || err.name === 'NotFoundError') {
+      return httpResponse._200({ message: `Verification code sent` });
+    }
+
     return handleErrorResponse(logger, err);
   } finally {
     pgClient.clean();

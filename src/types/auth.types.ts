@@ -153,5 +153,8 @@ export enum AuthenticationAction {
   AUTHENTICATE = 'authenticate',
   GET_SESSION = 'getSession',
   PASSWORD_RESET = 'passwordReset',
-  PASSWORD_RESET_CONFIRM = 'passwordResetConfirm'
+  PASSWORD_RESET_CONFIRM = 'passwordResetConfirm',
+  VERIFY = 'verify',
+  SEND_VERIFICATION_CODE = 'sendVerificationCode',
+  REGISTER = 'register'
 }

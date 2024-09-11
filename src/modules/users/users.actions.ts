@@ -5,6 +5,7 @@ import { Logger } from 'winston';
 import {
   AuthenticationError,
   ForbiddenError,
+  NotFoundError,
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
@@ -43,7 +44,7 @@ export async function registerUser(
   firstName?: string,
   lastName?: string,
   provider: AuthProvider = AuthProvider.EMAIL
-): Promise<string> {
+): Promise<{ uid: string; identityId: string }> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
@@ -51,7 +52,7 @@ export async function registerUser(
 
     const autoVerify = false;
 
-    const { id } = await getOrCreateUser(
+    const { id: uid } = await getOrCreateUser(
       logger,
       pgClient,
       orgId,
@@ -63,12 +64,12 @@ export async function registerUser(
       lastName
     );
 
-    await addUserToApplication(logger, pgClient, orgId, appId, id);
+    await addUserToApplication(logger, pgClient, orgId, appId, uid);
 
     const { id: identityId } = await createUserIdentity(
       logger,
       pgClient,
-      id,
+      uid,
       email,
       password,
       provider
@@ -77,7 +78,7 @@ export async function registerUser(
     const code = await createAuthVerificationCode(
       logger,
       pgClient,
-      id,
+      uid,
       identityId,
       AuthVerificationCodeType.REGISTER
     );
@@ -86,7 +87,7 @@ export async function registerUser(
 
     await pgClient.query('COMMIT');
 
-    return id;
+    return { uid, identityId };
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to register user`, { err });
@@ -177,18 +178,17 @@ export async function verifyUser(
   pgClient: PgClient,
   appId: string,
   email: string,
-  code: string
+  code: string,
+  userIdentity?: AuthUserIdentityCredentials
 ): Promise<void> {
   try {
     await pgClient.query('BEGIN');
 
-    const { uid, identityId, verifiedAt } = await getUserIdentityByEmail(
-      logger,
-      pgClient,
-      appId,
-      email,
-      AuthProvider.EMAIL
-    );
+    if (!userIdentity) {
+      throw new NotFoundError(`User identity not found`);
+    }
+
+    const { uid, identityId, verifiedAt } = userIdentity;
 
     if (verifiedAt) {
       throw new ValidationError(`User already verified`);
@@ -214,7 +214,7 @@ export async function verifyUser(
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to verify user`, { err });
-    throw new VerificationError(`Failed to verify user`);
+    throw err;
   }
 }
 
