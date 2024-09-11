@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { authenticateUser } from 'src/modules/users/users.actions';
@@ -96,6 +97,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200(authSession);
   } catch (err: any) {
+    authenticationActionLog.errorMessage = err.message;
     await createAuthenticationActionLogEntry(
       logger,
       pgClient,
@@ -105,7 +107,9 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    return handleErrorResponse(logger, err);
+    const genericError = new UnauthorizedError('Login failed');
+
+    return handleErrorResponse(logger, genericError);
   } finally {
     pgClient.clean();
   }

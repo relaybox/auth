@@ -1,11 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import {
+  createAuthenticationActionLogEntry,
   getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
+  getAuthenticationActionLog,
   getAuthSession,
   getRequestAuthParams
 } from 'src/modules/users/users.service';
+import { AuthenticationAction, AuthenticationActionResult } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
@@ -21,6 +24,8 @@ async function lambdaProxyEventHandler(
 
   const pgClient = await getPgClient();
 
+  const authenticationActionLog = getAuthenticationActionLog();
+
   try {
     const uid = event.requestContext.authorizer!.principalId;
 
@@ -28,6 +33,9 @@ async function lambdaProxyEventHandler(
 
     const { keyName, keyId } = getRequestAuthParams(event);
     const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+
+    authenticationActionLog.keyId = keyId;
+    authenticationActionLog.uid = uid;
 
     const { tokenExpiry, sessionExpiry, authStorageType } =
       await getApplicationAuthenticationPreferences(logger, pgClient, appId);
@@ -46,8 +54,26 @@ async function lambdaProxyEventHandler(
       authStorageType
     );
 
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.GET_SESSION,
+      AuthenticationActionResult.SUCCESS,
+      authenticationActionLog
+    );
+
     return httpResponse._200(authSession);
   } catch (err: any) {
+    authenticationActionLog.errorMessage = err.message;
+    await createAuthenticationActionLogEntry(
+      logger,
+      pgClient,
+      event,
+      AuthenticationAction.GET_SESSION,
+      AuthenticationActionResult.FAIL,
+      authenticationActionLog
+    );
     return handleErrorResponse(logger, err);
   } finally {
     pgClient.clean();

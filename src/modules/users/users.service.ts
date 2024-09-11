@@ -872,24 +872,28 @@ export async function createAuthenticationActionLogEntry(
 ): Promise<void> {
   logger.debug(`Creating auth action log entry`, { authenticationActionLog });
 
-  const ipAddress = event.requestContext.identity.sourceIp;
-  console.log(ipAddress);
+  try {
+    const ipAddress = event.requestContext.identity.sourceIp;
 
-  const { rows } = await repository.createAuthenticationActionLogEntry(
-    pgClient,
-    action,
-    actionResult,
-    ipAddress,
-    authenticationActionLog
-  );
+    const { rows } = await repository.createAuthenticationActionLogEntry(
+      pgClient,
+      action,
+      actionResult,
+      ipAddress,
+      authenticationActionLog
+    );
 
-  return rows[0];
+    return rows[0];
+  } catch (err: any) {
+    logger.error(`Failed to create authentication action log entry`, { err });
+  }
 }
 
 export function getAuthenticationActionLog(): AuthenticationActionLog {
   return {
     uid: null,
     identityId: null,
-    keyId: null
+    keyId: null,
+    errorMessage: null
   };
 }

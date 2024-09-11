@@ -145,36 +145,28 @@ export async function authenticateUser(
 ): Promise<string> {
   logger.debug(`Authenticating user`);
 
-  // const userIdentity = await getUserIdentityByEmail(
-  //   logger,
-  //   pgClient,
-  //   appId,
-  //   email,
-  //   AuthProvider.EMAIL
-  // );
-
   if (!userIdentity) {
     logger.warn(`User auth credenials not found`);
-    throw new AuthenticationError('Login failed');
+    throw new AuthenticationError('User auth credenials not found');
   }
 
   if (!userIdentity.verifiedAt || !userIdentity.password) {
     logger.warn(`User not verified`);
-    throw new AuthenticationError('Login failed');
+    throw new AuthenticationError('User not verified');
   }
 
   const passwordHash = strongHash(password, userIdentity.salt);
 
   if (!passwordHash) {
     logger.warn(`Password hash failed`);
-    throw new AuthenticationError('Login failed');
+    throw new AuthenticationError('Password hash failed');
   }
 
   const verifiedPassword = verifyStrongHash(password, userIdentity.password, userIdentity.salt);
 
   if (!verifiedPassword) {
     logger.warn(`Invalid password`);
-    throw new AuthenticationError('Login failed');
+    throw new AuthenticationError('Invalid password');
   }
 
   return userIdentity.uid;

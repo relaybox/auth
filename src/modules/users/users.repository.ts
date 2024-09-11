@@ -635,15 +635,24 @@ export function createAuthenticationActionLogEntry(
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
-  const { uid, identityId, keyId } = authenticationActionLog;
+  const { uid, identityId, keyId, errorMessage } = authenticationActionLog;
 
   const query = `
     INSERT INTO authentication_action_logs (
-      "uid", "identityId", "action", "actionResult", "ipAddress", "keyId", "createdAt"
+      "uid", "identityId", "action", "actionResult", "ipAddress", "keyId", "errorMessage", "createdAt"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7
+      $1, $2, $3, $4, $5, $6, $7, $8
     );
   `;
 
-  return pgClient.query(query, [uid, identityId, action, actionResult, ipAddress, keyId, now]);
+  return pgClient.query(query, [
+    uid,
+    identityId,
+    action,
+    actionResult,
+    ipAddress,
+    keyId,
+    errorMessage,
+    now
+  ]);
 }
