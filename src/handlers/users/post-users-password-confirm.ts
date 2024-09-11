@@ -45,7 +45,6 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, code, password } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event, authenticationActionLog);
     const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId, authenticationActionLog);
-    await validatePassword(logger, pgClient, appId, password);
     const userIdentity = await getUserIdentityByEmail(
       logger,
       pgClient,
@@ -59,6 +58,8 @@ export const handler: APIGatewayProxyHandler = async (
       logger.warn(`User not found`, { email });
       throw new AuthenticationError('User not found');
     }
+
+    await validatePassword(logger, pgClient, appId, password);
 
     const { identityId } = userIdentity;
 

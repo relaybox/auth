@@ -641,7 +641,7 @@ export function createAuthenticationActionLogEntry(
     INSERT INTO authentication_action_logs (
       "uid", 
       "identityId", 
-      "appid", 
+      "appId", 
       "action", 
       "actionResult", 
       "ipAddress", 

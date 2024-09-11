@@ -895,6 +895,8 @@ export async function createAuthenticationActionLogEntry(
   try {
     const ipAddress = event.requestContext.identity.sourceIp;
 
+    const encryptedIpAddress = encrypt(ipAddress);
+
     if (err) {
       authenticationActionLog.errorMessage = err.message;
     }
@@ -903,7 +905,7 @@ export async function createAuthenticationActionLogEntry(
       pgClient,
       action,
       actionResult,
-      ipAddress,
+      encryptedIpAddress,
       authenticationActionLog
     );
 
