@@ -54,14 +54,14 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     if (!userData) {
-      logger.error(`Enumeration: User not found`);
+      logger.error(`User not found`);
       throw new NotFoundError('User not found');
     }
 
     const { uid, identityId, verifiedAt } = userData;
 
     if (verifiedAt) {
-      logger.error(`Enumeration: User already verified`, { id: userData.uid, verifiedAt });
+      logger.error(`User already verified`, { id: userData.uid, verifiedAt });
       throw new UnauthorizedError('User already verified');
     }
 
@@ -97,7 +97,7 @@ export const handler: APIGatewayProxyHandler = async (
       err
     );
 
-    if (err.name === 'UnauthorizedError' || err.name === 'NotFoundError') {
+    if (err instanceof UnauthorizedError || err instanceof NotFoundError) {
       return httpResponse._200({ message: `Verification code sent` });
     }
 
