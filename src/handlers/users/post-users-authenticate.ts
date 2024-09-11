@@ -44,11 +44,13 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { email, password } = validateEventSchema(event, schema);
-    const { keyName, keyId } = getRequestAuthParams(event);
-
-    authenticationActionLog.keyId = keyId;
-
-    const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { keyName, keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appId, secretKey } = await getAuthDataByKeyId(
+      logger,
+      pgClient,
+      keyId,
+      authenticationActionLog
+    );
 
     logger.info(`Auth data retreived`, { appId, keyName });
 
@@ -57,11 +59,9 @@ export const handler: APIGatewayProxyHandler = async (
       pgClient,
       appId,
       email,
-      AuthProvider.EMAIL
+      AuthProvider.EMAIL,
+      authenticationActionLog
     );
-
-    authenticationActionLog.uid = userIdentity?.uid;
-    authenticationActionLog.identityId = userIdentity?.identityId;
 
     const id = await authenticateUser(logger, pgClient, appId, password, userIdentity);
 
@@ -97,14 +97,14 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200(authSession);
   } catch (err: any) {
-    authenticationActionLog.errorMessage = err.message;
     await createAuthenticationActionLogEntry(
       logger,
       pgClient,
       event,
       AuthenticationAction.AUTHENTICATE,
       AuthenticationActionResult.FAIL,
-      authenticationActionLog
+      authenticationActionLog,
+      err
     );
 
     const genericError = new UnauthorizedError('Login failed');

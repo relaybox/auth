@@ -29,13 +29,17 @@ async function lambdaProxyEventHandler(
   try {
     const uid = event.requestContext.authorizer!.principalId;
 
+    authenticationActionLog.uid = uid;
+
     logger.info(`Getting session data for user`, { uid });
 
-    const { keyName, keyId } = getRequestAuthParams(event);
-    const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-
-    authenticationActionLog.keyId = keyId;
-    authenticationActionLog.uid = uid;
+    const { keyName, keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appId, secretKey } = await getAuthDataByKeyId(
+      logger,
+      pgClient,
+      keyId,
+      authenticationActionLog
+    );
 
     const { tokenExpiry, sessionExpiry, authStorageType } =
       await getApplicationAuthenticationPreferences(logger, pgClient, appId);
@@ -65,14 +69,14 @@ async function lambdaProxyEventHandler(
 
     return httpResponse._200(authSession);
   } catch (err: any) {
-    authenticationActionLog.errorMessage = err.message;
     await createAuthenticationActionLogEntry(
       logger,
       pgClient,
       event,
       AuthenticationAction.GET_SESSION,
       AuthenticationActionResult.FAIL,
-      authenticationActionLog
+      authenticationActionLog,
+      err
     );
     return handleErrorResponse(logger, err);
   } finally {

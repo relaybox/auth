@@ -139,6 +139,7 @@ export interface GithubUserData {
 export interface AuthenticationActionLog {
   uid: string | null;
   identityId: string | null;
+  appId: string | null;
   keyId: string | null;
   errorMessage: string | null;
 }
@@ -150,5 +151,7 @@ export enum AuthenticationActionResult {
 
 export enum AuthenticationAction {
   AUTHENTICATE = 'authenticate',
-  GET_SESSION = 'getSession'
+  GET_SESSION = 'getSession',
+  PASSWORD_RESET = 'passwordReset',
+  PASSWORD_RESET_CONFIRM = 'passwordResetConfirm'
 }

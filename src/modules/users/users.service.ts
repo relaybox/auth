@@ -179,7 +179,8 @@ export async function getUserIdentityByEmail(
   pgClient: PgClient,
   appId: string,
   email: string,
-  provider?: AuthProvider
+  provider?: AuthProvider,
+  authenticationActionLog?: AuthenticationActionLog
 ): Promise<AuthUserIdentityCredentials> {
   logger.debug(`Getting user by email identity`);
 
@@ -191,6 +192,11 @@ export async function getUserIdentityByEmail(
     emailHash,
     provider
   );
+
+  if (rows.length && authenticationActionLog) {
+    authenticationActionLog.identityId = rows[0].identityId;
+    authenticationActionLog.uid = rows[0].uid;
+  }
 
   return rows[0];
 }
@@ -217,7 +223,8 @@ export async function getUserIdentityByProviderId(
 export async function getAuthDataByKeyId(
   logger: Logger,
   pgClient: PgClient,
-  keyId: string
+  keyId: string,
+  authenticationActionLog?: AuthenticationActionLog
 ): Promise<{ orgId: string; appId: string; appPid: string; secretKey: string }> {
   logger.debug(`Getting secure auth data by key id`);
 
@@ -225,6 +232,10 @@ export async function getAuthDataByKeyId(
 
   if (!rows.length) {
     throw new NotFoundError(`Secure auth data not found`);
+  }
+
+  if (authenticationActionLog) {
+    authenticationActionLog.appId = rows[0].appId;
   }
 
   return rows[0];
@@ -260,7 +271,10 @@ export function getKeyParts(keyName: string): { appPid: string; keyId: string } 
   return { appPid, keyId };
 }
 
-export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthParams {
+export function getRequestAuthParams(
+  event: APIGatewayProxyEvent,
+  authenticationActionLog?: AuthenticationActionLog
+): RequestAuthParams {
   const headers = event.headers;
   const keyName = headers['X-Ds-Key-Name'] || headers['x-ds-key-name'];
 
@@ -269,6 +283,10 @@ export function getRequestAuthParams(event: APIGatewayProxyEvent): RequestAuthPa
   }
 
   const { appPid, keyId } = getKeyParts(keyName);
+
+  if (authenticationActionLog) {
+    authenticationActionLog.keyId = keyId;
+  }
 
   return { keyName, appPid, keyId };
 }
@@ -868,12 +886,17 @@ export async function createAuthenticationActionLogEntry(
   event: APIGatewayProxyEvent,
   action: AuthenticationAction,
   actionResult: AuthenticationActionResult,
-  authenticationActionLog: AuthenticationActionLog
+  authenticationActionLog: AuthenticationActionLog,
+  err?: any
 ): Promise<void> {
   logger.debug(`Creating auth action log entry`, { authenticationActionLog });
 
   try {
     const ipAddress = event.requestContext.identity.sourceIp;
+
+    if (err) {
+      authenticationActionLog.errorMessage = err.message;
+    }
 
     const { rows } = await repository.createAuthenticationActionLogEntry(
       pgClient,
@@ -893,6 +916,7 @@ export function getAuthenticationActionLog(): AuthenticationActionLog {
   return {
     uid: null,
     identityId: null,
+    appId: null,
     keyId: null,
     errorMessage: null
   };
