@@ -6,7 +6,8 @@ import { resetUserPassword } from 'src/modules/users/users.actions';
 import {
   getAuthDataByKeyId,
   getRequestAuthParams,
-  getUserIdentityByEmail
+  getUserIdentityByEmail,
+  validatePassword
 } from 'src/modules/users/users.service';
 import { AuthProvider } from 'src/types/auth.types';
 import * as httpResponse from 'src/util/http.util';
@@ -36,6 +37,7 @@ export const handler: APIGatewayProxyHandler = async (
     const { email, code, password } = validateEventSchema(event, schema);
     const { keyId } = getRequestAuthParams(event);
     const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    await validatePassword(logger, pgClient, appId, password);
     const userIdentity = await getUserIdentityByEmail(
       logger,
       pgClient,

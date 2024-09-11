@@ -796,7 +796,12 @@ export async function getApplicationAuthenticationPreferences(
   logger: Logger,
   pgClient: PgClient,
   appId: string
-): Promise<{ tokenExpiry: number; sessionExpiry: number; authStorageType: AuthStorageType }> {
+): Promise<{
+  tokenExpiry: number;
+  sessionExpiry: number;
+  authStorageType: AuthStorageType;
+  passwordPattern: string | null;
+}> {
   logger.debug(`Getting application authentication preferences`, { appId });
 
   try {
@@ -826,5 +831,28 @@ export async function validateUsername(
   } catch (err: any) {
     logger.error(`Failed to validate username`, { err });
     throw err;
+  }
+}
+
+export async function validatePassword(
+  logger: Logger,
+  pgClient: PgClient,
+  appId: string,
+  password: string
+): Promise<void> {
+  logger.debug(`Validating password`, { password });
+
+  const { passwordPattern } = await getApplicationAuthenticationPreferences(
+    logger,
+    pgClient,
+    appId
+  );
+
+  if (!passwordPattern) {
+    return;
+  }
+
+  if (!password.match(passwordPattern)) {
+    throw new ValidationError(`Password does not match required pattern`);
   }
 }

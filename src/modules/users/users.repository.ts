@@ -597,7 +597,7 @@ export function getApplicationAuthenticationPreferences(
   appId: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT "tokenExpiry"::int, "sessionExpiry"::int, "authStorageType"
+    SELECT "tokenExpiry"::int, "sessionExpiry"::int, "authStorageType", "passwordPattern"
     FROM application_authentication_preferences
     WHERE "appId" = $1;
   `;

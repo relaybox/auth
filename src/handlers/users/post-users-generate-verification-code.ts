@@ -42,6 +42,8 @@ export const handler: APIGatewayProxyHandler = async (
       AuthProvider.EMAIL
     );
 
+    console.log(userData);
+
     if (!userData) {
       logger.warn(`Enumeration: User not found`, { id: userData.uid });
       return httpResponse._200({ message: `Verification code sent to ${email}` });
