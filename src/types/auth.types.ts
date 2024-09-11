@@ -50,6 +50,18 @@ export interface AuthUserIdentity {
   verifiedAt: Date;
 }
 
+export interface AuthUserIdentityCredentials {
+  uid: string;
+  identityId: string;
+  provider: AuthProvider;
+  providerId: string | null;
+  email: string;
+  password: string;
+  salt: string;
+  keyVersion: number;
+  verifiedAt: Date;
+}
+
 export interface AuthUserMfaFactor {
   id: string;
   type: AuthMfaFactorType;
@@ -122,4 +134,49 @@ export interface GithubUserData {
   providerId: string;
   username: string;
   email: string;
+}
+
+export interface AuthenticationActionLog {
+  uid: string | null;
+  identityId: string | null;
+  keyId: string | null;
+}
+
+export enum AuthenticationActionResult {
+  SUCCESS = 'SUCCESS',
+  FAIL = 'FAIL'
+}
+
+export enum AuthenticationAction {
+  LOGIN = 'login',
+  REGISTER = 'register',
+  RESET_PASSWORD = 'reset_password',
+  VERIFY = 'verify',
+  FORGOT_PASSWORD = 'forgot_password',
+  CONFIRM_PASSWORD = 'confirm_password',
+  UPDATE_PASSWORD = 'update_password',
+  UPDATE_PROFILE = 'update_profile',
+  DELETE_ACCOUNT = 'delete_account',
+  AUTHENTICATE = 'authenticate',
+  REFRESH = 'refresh',
+  MFA_ENROLL = 'mfa_enroll',
+  MFA_CHALLENGE = 'mfa_challenge',
+  MFA_VERIFY = 'mfa_verify',
+  BLOCK = 'block',
+  UNBLOCK = 'unblock',
+  STATUS_UPDATE = 'status_update',
+  USER_STATUS_UPDATE = 'user_status_update',
+  USER_SUBSCRIBE = 'user_subscribe',
+  USER_UNSUBSCRIBE = 'user_unsubscribe',
+  USER_UNSUBSCRIBE_ALL = 'user_unsubscribe_all',
+  CLIENT_AUTH = 'client_auth',
+  CLIENT_AUTH_STATUS_UPDATE = 'client_auth_status_update',
+  CLIENT_AUTH_SUBSCRIBE = 'client_auth_subscribe',
+  CLIENT_AUTH_UNSUBSCRIBE = 'client_auth_unsubscribe',
+  CLIENT_AUTH_UNSUBSCRIBE_ALL = 'client_auth_unsubscribe_all',
+  IDP_AUTH = 'idp_auth',
+  IDP_AUTH_STATUS_UPDATE = 'idp_auth_status_update',
+  IDP_AUTH_SUBSCRIBE = 'idp_auth_subscribe',
+  IDP_AUTH_UNSUBSCRIBE = 'idp_auth_unsubscribe',
+  IDP_AUTH_UNSUBSCRIBE_ALL = 'idp_auth_unsubscribe_all'
 }

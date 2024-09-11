@@ -1,6 +1,13 @@
 import PgClient from 'serverless-postgres';
 import { QueryResult } from 'pg';
-import { AuthMfaFactorType, AuthProvider, AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  AuthenticationAction,
+  AuthenticationActionLog,
+  AuthenticationActionResult,
+  AuthMfaFactorType,
+  AuthProvider,
+  AuthVerificationCodeType
+} from 'src/types/auth.types';
 
 export function createUser(
   pgClient: PgClient,
@@ -524,7 +531,8 @@ export function updateUserIdentityLastLogin(
   const query = `
     UPDATE authentication_user_identities
     SET "lastLoginAt" = $1
-    WHERE uid = $2 AND provider = $3;
+    WHERE uid = $2 AND provider = $3
+    RETURNING id;
   `;
 
   return pgClient.query(query, [now, uid, provider]);
@@ -616,4 +624,26 @@ export function validateUsername(
   `;
 
   return pgClient.query(query, [appId, username]);
+}
+
+export function createAuthenticationActionLogEntry(
+  pgClient: PgClient,
+  action: AuthenticationAction,
+  actionResult: AuthenticationActionResult,
+  ipAddress: string,
+  authenticationActionLog: AuthenticationActionLog
+): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
+  const { uid, identityId, keyId } = authenticationActionLog;
+
+  const query = `
+    INSERT INTO authentication_action_logs (
+      "uid", "identityId", "action", "actionResult", "ipAddress", "keyId", "createdAt"
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7
+    );
+  `;
+
+  return pgClient.query(query, [uid, identityId, action, actionResult, ipAddress, keyId, now]);
 }

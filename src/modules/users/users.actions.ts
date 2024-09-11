@@ -8,7 +8,12 @@ import {
   ValidationError,
   VerificationError
 } from 'src/lib/errors';
-import { AuthProvider, AuthUser, AuthVerificationCodeType } from 'src/types/auth.types';
+import {
+  AuthProvider,
+  AuthUser,
+  AuthUserIdentityCredentials,
+  AuthVerificationCodeType
+} from 'src/types/auth.types';
 import {
   addUserToApplication,
   createAuthVerificationCode,
@@ -135,18 +140,18 @@ export async function authenticateUser(
   logger: Logger,
   pgClient: PgClient,
   appId: string,
-  email: string,
-  password: string
+  password: string,
+  userIdentity?: AuthUserIdentityCredentials
 ): Promise<string> {
   logger.debug(`Authenticating user`);
 
-  const userIdentity = await getUserIdentityByEmail(
-    logger,
-    pgClient,
-    appId,
-    email,
-    AuthProvider.EMAIL
-  );
+  // const userIdentity = await getUserIdentityByEmail(
+  //   logger,
+  //   pgClient,
+  //   appId,
+  //   email,
+  //   AuthProvider.EMAIL
+  // );
 
   if (!userIdentity) {
     logger.warn(`User auth credenials not found`);

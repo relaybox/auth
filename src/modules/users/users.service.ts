@@ -18,10 +18,14 @@ import {
   ValidationError
 } from 'src/lib/errors';
 import {
+  AuthenticationAction,
+  AuthenticationActionLog,
+  AuthenticationActionResult,
   AuthMfaFactorType,
   AuthProvider,
   AuthStorageType,
   AuthUser,
+  AuthUserIdentityCredentials,
   AuthUserSession,
   AuthVerificationCodeType,
   RequestAuthParams
@@ -176,7 +180,7 @@ export async function getUserIdentityByEmail(
   appId: string,
   email: string,
   provider?: AuthProvider
-): Promise<any> {
+): Promise<AuthUserIdentityCredentials> {
   logger.debug(`Getting user by email identity`);
 
   const emailHash = generateHash(email);
@@ -694,11 +698,12 @@ export async function updateUserIdentityLastLogin(
   pgClient: PgClient,
   uid: string,
   provider: AuthProvider = AuthProvider.EMAIL
-): Promise<void> {
+): Promise<{ id: string }> {
   logger.debug(`Updating user identity last login`);
 
   try {
-    await repository.updateUserIdentityLastLogin(pgClient, uid, provider);
+    const { rows } = await repository.updateUserIdentityLastLogin(pgClient, uid, provider);
+    return rows[0];
   } catch (err: any) {
     logger.error(`Failed to update user identity last login`, { err });
     throw new AuthenticationError(`Failed to update user identity last login`);
@@ -855,4 +860,36 @@ export async function validatePassword(
   if (!password.match(passwordPattern)) {
     throw new ValidationError(`Password does not match required pattern`);
   }
+}
+
+export async function createAuthenticationActionLogEntry(
+  logger: Logger,
+  pgClient: PgClient,
+  event: APIGatewayProxyEvent,
+  action: AuthenticationAction,
+  actionResult: AuthenticationActionResult,
+  authenticationActionLog: AuthenticationActionLog
+): Promise<void> {
+  logger.debug(`Creating auth action log entry`, { authenticationActionLog });
+
+  const ipAddress = event.requestContext.identity.sourceIp;
+  console.log(ipAddress);
+
+  const { rows } = await repository.createAuthenticationActionLogEntry(
+    pgClient,
+    action,
+    actionResult,
+    ipAddress,
+    authenticationActionLog
+  );
+
+  return rows[0];
+}
+
+export function getAuthenticationActionLog(): AuthenticationActionLog {
+  return {
+    uid: null,
+    identityId: null,
+    keyId: null
+  };
 }
