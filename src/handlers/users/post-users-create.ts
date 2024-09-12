@@ -4,7 +4,7 @@ import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { registerUser } from 'src/modules/users/users.actions';
 import {
-  createAuthenticationActionLogEntry,
+  createAuthenticationActivityLogEntry,
   getAuthDataByKeyId,
   getAuthenticationActionLog,
   getRequestAuthParams,
@@ -68,7 +68,7 @@ export const handler: APIGatewayProxyHandler = async (
     authenticationActionLog.uid = uid;
     authenticationActionLog.identityId = identityId;
 
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
@@ -79,7 +79,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200({ message: 'Registration successful', id: uid });
   } catch (err: any) {
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,

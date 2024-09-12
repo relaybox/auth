@@ -3,7 +3,7 @@ import { NotFoundError, UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
-  createAuthenticationActionLogEntry,
+  createAuthenticationActivityLogEntry,
   createAuthVerificationCode,
   getAuthDataByKeyId,
   getAuthenticationActionLog,
@@ -73,7 +73,7 @@ export const handler: APIGatewayProxyHandler = async (
       AuthVerificationCodeType.REGISTER
     );
 
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
@@ -87,7 +87,7 @@ export const handler: APIGatewayProxyHandler = async (
     return httpResponse._200({ message: `Verification code sent` });
   } catch (err: any) {
     logger.error(`Failed to send verification code`, { err });
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,

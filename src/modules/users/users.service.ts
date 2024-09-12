@@ -881,7 +881,7 @@ export async function validatePassword(
   }
 }
 
-export async function createAuthenticationActionLogEntry(
+export async function createAuthenticationActivityLogEntry(
   logger: Logger,
   pgClient: PgClient,
   event: APIGatewayProxyEvent,
@@ -901,7 +901,7 @@ export async function createAuthenticationActionLogEntry(
       authenticationActionLog.errorMessage = err.message;
     }
 
-    const { rows } = await repository.createAuthenticationActionLogEntry(
+    const { rows } = await repository.createAuthenticationActivityLogEntry(
       pgClient,
       action,
       actionResult,

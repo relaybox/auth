@@ -626,7 +626,7 @@ export function validateUsername(
   return pgClient.query(query, [appId, username]);
 }
 
-export function createAuthenticationActionLogEntry(
+export function createAuthenticationActivityLogEntry(
   pgClient: PgClient,
   action: AuthenticationAction,
   actionResult: AuthenticationActionResult,
@@ -638,7 +638,7 @@ export function createAuthenticationActionLogEntry(
   const { uid, identityId, appId, keyId, errorMessage } = authenticationActionLog;
 
   const query = `
-    INSERT INTO authentication_action_logs (
+    INSERT INTO authentication_activity_logs (
       "uid", 
       "identityId", 
       "appId", 

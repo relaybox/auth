@@ -3,7 +3,7 @@ import { AuthenticationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import {
-  createAuthenticationActionLogEntry,
+  createAuthenticationActivityLogEntry,
   createAuthVerificationCode,
   getAuthDataByKeyId,
   getAuthenticationActionLog,
@@ -67,7 +67,7 @@ export const handler: APIGatewayProxyHandler = async (
       AuthVerificationCodeType.PASSWORD_RESET
     );
 
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
@@ -78,7 +78,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     await sendAuthVerificationCode(logger, email, code);
   } catch (err: any) {
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,

@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import {
-  createAuthenticationActionLogEntry,
+  createAuthenticationActivityLogEntry,
   getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
   getAuthenticationActionLog,
@@ -58,7 +58,7 @@ async function lambdaProxyEventHandler(
       authStorageType
     );
 
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
@@ -69,7 +69,7 @@ async function lambdaProxyEventHandler(
 
     return httpResponse._200(authSession);
   } catch (err: any) {
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,

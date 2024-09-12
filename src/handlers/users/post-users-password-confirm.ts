@@ -4,7 +4,7 @@ import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { resetUserPassword } from 'src/modules/users/users.actions';
 import {
-  createAuthenticationActionLogEntry,
+  createAuthenticationActivityLogEntry,
   getAuthDataByKeyId,
   getAuthenticationActionLog,
   getRequestAuthParams,
@@ -63,7 +63,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const { identityId } = userIdentity;
 
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
@@ -76,7 +76,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     return httpResponse._200({ message: 'Password reset successful' });
   } catch (err: any) {
-    await createAuthenticationActionLogEntry(
+    await createAuthenticationActivityLogEntry(
       logger,
       pgClient,
       event,
