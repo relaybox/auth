@@ -44,7 +44,7 @@ export async function registerUser(
   firstName?: string,
   lastName?: string,
   provider: AuthProvider = AuthProvider.EMAIL
-): Promise<{ uid: string; identityId: string }> {
+): Promise<{ uid: string; identityId: string; clientId: string }> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
@@ -52,7 +52,7 @@ export async function registerUser(
 
     const autoVerify = false;
 
-    const { id: uid } = await getOrCreateUser(
+    const { id: uid, clientId } = await getOrCreateUser(
       logger,
       pgClient,
       orgId,
@@ -87,7 +87,7 @@ export async function registerUser(
 
     await pgClient.query('COMMIT');
 
-    return { uid, identityId };
+    return { uid, identityId, clientId };
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to register user`, { err });
@@ -269,7 +269,7 @@ export async function verifyUserMfaChallenge(
   const validatedUserMfaFactor = await getUserMfaFactorById(logger, pgClient, factorId, uid);
 
   if (!validatedUserMfaFactor) {
-    throw new ForbiddenError('Invalid mfafactor id');
+    throw new ForbiddenError('Invalid mfa factor id');
   }
 
   const { secret, salt } = validatedUserMfaFactor;

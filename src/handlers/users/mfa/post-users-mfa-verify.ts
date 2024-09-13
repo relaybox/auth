@@ -15,7 +15,7 @@ import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { z } from 'zod';
 
-const logger = getLogger('post-users-mfa-challenge');
+const logger = getLogger('post-users-mfa-verify');
 
 const schema = z.object({
   factorId: z.string().uuid(),

@@ -53,7 +53,7 @@ export const handler: APIGatewayProxyHandler = async (
     await validateUsername(logger, pgClient, appId, username);
     await validatePassword(logger, pgClient, appId, password);
 
-    const { uid, identityId } = await registerUser(
+    const { uid, identityId, clientId } = await registerUser(
       logger,
       pgClient,
       orgId,
@@ -77,7 +77,7 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    return httpResponse._200({ message: 'Registration successful', id: uid });
+    return httpResponse._200({ message: 'Registration successful', id: uid, clientId });
   } catch (err: any) {
     await createAuthenticationActivityLogEntry(
       logger,
