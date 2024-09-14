@@ -47,7 +47,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
-    const { keyName, keyId } = getRequestAuthParams(event);
+    const { publicKey, keyId } = getRequestAuthParams(event);
     const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { tokenExpiry, sessionExpiry, authStorageType } =
       await getApplicationAuthenticationPreferences(logger, pgClient, appId);
@@ -58,7 +58,7 @@ export const handler: APIGatewayProxyHandler = async (
       pgClient,
       uid,
       appId,
-      keyName,
+      publicKey,
       secretKey,
       tokenExpiry,
       sessionExpiry,

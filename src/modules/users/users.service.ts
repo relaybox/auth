@@ -266,8 +266,8 @@ export async function sendAuthVerificationCode(
   }
 }
 
-export function getKeyParts(keyName: string): { appPid: string; keyId: string } {
-  const [appPid, keyId] = keyName.split('.');
+export function getKeyParts(publicKey: string): { appPid: string; keyId: string } {
+  const [appPid, keyId] = publicKey.split('.');
 
   return { appPid, keyId };
 }
@@ -277,19 +277,19 @@ export function getRequestAuthParams(
   authenticationActionLog?: AuthenticationActionLog
 ): RequestAuthParams {
   const headers = event.headers;
-  const keyName = headers['X-Ds-Key-Name'] || headers['x-ds-key-name'];
+  const publicKey = headers['X-Ds-Public-Key'] || headers['x-ds-public-key'];
 
-  if (!keyName) {
-    throw new ValidationError('Missing X-Ds-Key-Name header');
+  if (!publicKey) {
+    throw new ValidationError('Missing X-Ds-Public-Key header');
   }
 
-  const { appPid, keyId } = getKeyParts(keyName);
+  const { appPid, keyId } = getKeyParts(publicKey);
 
   if (authenticationActionLog) {
     authenticationActionLog.keyId = keyId;
   }
 
-  return { keyName, appPid, keyId };
+  return { publicKey, appPid, keyId };
 }
 
 export async function getUserDataByClientId(
@@ -342,8 +342,8 @@ export async function authorizeClientRequest(
   token: string,
   matchTokenType?: string
 ): Promise<any> {
-  const { sub: id, keyName, tokenType } = decodeAuthToken(token);
-  const { keyId } = getKeyParts(keyName);
+  const { sub: id, publicKey, tokenType } = decodeAuthToken(token);
+  const { keyId } = getKeyParts(publicKey);
   const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
   verifyAuthToken(token, secretKey);
@@ -360,7 +360,7 @@ export async function getAuthSession(
   pgClient: PgClient,
   uid: string,
   appId: string,
-  keyName: string,
+  publicKey: string,
   secretKey: string,
   expiresIn: number,
   sessionExpiresIn: number,
@@ -382,7 +382,7 @@ export async function getAuthSession(
 
   if (user.authMfaEnabled && authenticateAction) {
     const { username, authMfaEnabled, factors } = user;
-    const tmpToken = await getTmpToken(logger, uid, keyName, secretKey);
+    const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
 
     return <AuthUserSession>{
       user: {
@@ -395,11 +395,18 @@ export async function getAuthSession(
     };
   }
 
-  const authToken = await getAuthToken(logger, uid, keyName, secretKey, user.clientId!, expiresIn);
+  const authToken = await getAuthToken(
+    logger,
+    uid,
+    publicKey,
+    secretKey,
+    user.clientId!,
+    expiresIn
+  );
   const refreshToken = await getAuthRefreshToken(
     logger,
     uid,
-    keyName,
+    publicKey,
     secretKey,
     user.clientId!,
     sessionExpiresIn

@@ -6,7 +6,7 @@ export interface ExtendedJwtPayload extends JwtPayload {
 }
 
 export interface ExtendedClientJwtPayload extends JwtPayload {
-  keyName: string;
+  publicKey: string;
   clientId?: string | string[];
   timestamp: string;
 }
@@ -18,7 +18,7 @@ export enum TokenType {
 }
 
 export interface ClientJwtPayload extends JwtPayload {
-  keyName: string;
+  publicKey: string;
   clientId?: string | string[];
   tokenType: string;
   timestamp: string;

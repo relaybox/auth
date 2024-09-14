@@ -38,7 +38,7 @@ export function verifyAuthToken(token: string, secretKey: string) {
 export async function getAuthToken(
   logger: Logger,
   uid: string,
-  keyName: string,
+  publicKey: string,
   secretKey: string,
   clientId: string,
   expiresIn: number = DEFAULT_ID_TOKEN_EXPIRY_SECS
@@ -47,7 +47,7 @@ export async function getAuthToken(
 
   const payload = {
     sub: uid,
-    keyName,
+    publicKey,
     clientId,
     tokenType: TokenType.ID_TOKEN,
     timestamp: new Date().toISOString()
@@ -64,7 +64,7 @@ export async function getAuthToken(
 export async function getAuthRefreshToken(
   logger: Logger,
   uid: string,
-  keyName: string,
+  publicKey: string,
   secretKey: string,
   clientId: string,
   expiresIn: number = DEFAULT_REFRESH_TOKEN_EXPIRY_SECS
@@ -73,7 +73,7 @@ export async function getAuthRefreshToken(
 
   const payload = {
     sub: uid,
-    keyName,
+    publicKey,
     clientId,
     tokenType: TokenType.REFRESH_TOKEN,
     timestamp: new Date().toISOString()
@@ -90,7 +90,7 @@ export async function getAuthRefreshToken(
 export async function getTmpToken(
   logger: Logger,
   uid: string,
-  keyName: string,
+  publicKey: string,
   secretKey: string,
   expiresIn: number = DEFAULT_TMP_TOKEN_EXPIRY_SECS
 ): Promise<any> {
@@ -98,7 +98,7 @@ export async function getTmpToken(
 
   const payload = {
     sub: uid,
-    keyName,
+    publicKey,
     tokenType: TokenType.TMP_TOKEN,
     timestamp: new Date().toISOString()
   };

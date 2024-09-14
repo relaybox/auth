@@ -44,7 +44,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { email, password } = validateEventSchema(event, schema);
-    const { keyName, keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { publicKey, keyId } = getRequestAuthParams(event, authenticationActionLog);
     const { appId, secretKey } = await getAuthDataByKeyId(
       logger,
       pgClient,
@@ -52,7 +52,7 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    logger.info(`Auth data retreived`, { appId, keyName });
+    logger.info(`Auth data retreived`, { appId, publicKey });
 
     const userIdentity = await getUserIdentityByEmail(
       logger,
@@ -78,7 +78,7 @@ export const handler: APIGatewayProxyHandler = async (
       pgClient,
       id,
       appId,
-      keyName,
+      publicKey,
       secretKey,
       tokenExpiry,
       sessionExpiry,

@@ -20,16 +20,16 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { keyName } = event.queryStringParameters!;
+    const { publicKey } = event.queryStringParameters!;
 
-    if (!keyName) {
-      throw new ValidationError('Missing keyName query param');
+    if (!publicKey) {
+      throw new ValidationError('Missing publicKey query param');
     }
 
     const clientId = GITHUB_CLIENT_ID;
     const redirectUri = `${API_SERVICE_URL}/users/idp/github/callback`;
     const scope = 'user:email';
-    const state = keyName;
+    const state = publicKey;
     const rawQueryparams = true;
 
     return redirect(

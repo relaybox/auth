@@ -33,7 +33,7 @@ async function lambdaProxyEventHandler(
 
     logger.info(`Getting session data for user`, { uid });
 
-    const { keyName, keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { publicKey, keyId } = getRequestAuthParams(event, authenticationActionLog);
     const { appId, secretKey } = await getAuthDataByKeyId(
       logger,
       pgClient,
@@ -50,7 +50,7 @@ async function lambdaProxyEventHandler(
       pgClient,
       uid,
       appId,
-      keyName,
+      publicKey,
       secretKey,
       tokenExpiry,
       sessionExpiry,

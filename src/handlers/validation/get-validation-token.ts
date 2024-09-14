@@ -28,7 +28,7 @@ async function lambdaProxyEventHandler(
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
     const {
-      keyName,
+      publicKey,
       clientId,
       timestamp,
       exp,
@@ -40,9 +40,9 @@ async function lambdaProxyEventHandler(
       throw new ValidationError(`Invalid token type`);
     }
 
-    logger.info(`Validating auth token`, { keyName, clientId });
+    logger.info(`Validating auth token`, { publicKey, clientId });
 
-    const { appPid, keyId } = getKeyParts(keyName);
+    const { appPid, keyId } = getKeyParts(publicKey);
     const { appId, secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
 
     verifyAuthToken(token, secretKey);

@@ -20,17 +20,17 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { keyName } = event.queryStringParameters!;
+    const { publicKey } = event.queryStringParameters!;
 
-    if (!keyName) {
-      throw new ValidationError('Missing keyName query param');
+    if (!publicKey) {
+      throw new ValidationError('Missing publicKey query param');
     }
 
     const clientId = GOOGLE_CLIENT_ID;
     const responseType = 'code';
     const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
     const scope = 'openid email profile';
-    const state = keyName;
+    const state = publicKey;
     const rawQueryparams = true;
 
     return redirect(

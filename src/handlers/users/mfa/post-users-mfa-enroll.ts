@@ -43,9 +43,9 @@ export const handler: APIGatewayProxyHandler = async (
       existingFactor || (await createUserMfaFactor(logger, pgClient, uid));
     const email = await getUserEmailAddress(logger, pgClient, uid);
     const qrCodeUri = await generateAuthMfaTotpQrCodeUrl(secret, email, 'RelayBox');
-    const { keyName, keyId } = getRequestAuthParams(event);
+    const { publicKey, keyId } = getRequestAuthParams(event);
     const { secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
-    const tmpToken = await getTmpToken(logger, uid, keyName, secretKey);
+    const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
 
     return httpResponse._200({ id, type, secret, qrCodeUri, tmpToken });
   } catch (err: any) {

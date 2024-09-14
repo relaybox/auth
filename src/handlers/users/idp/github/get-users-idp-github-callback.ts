@@ -35,13 +35,13 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const { code, state: keyName } = event.queryStringParameters!;
+    const { code, state: publicKey } = event.queryStringParameters!;
 
-    if (!code || !keyName) {
-      throw new ValidationError('Missing authorization code or keyName params');
+    if (!code || !publicKey) {
+      throw new ValidationError('Missing authorization code or publicKey params');
     }
 
-    const { keyId } = getKeyParts(keyName);
+    const { keyId } = getKeyParts(publicKey);
     const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { clientId, clientSecret } = await getAuthProviderDataByProviderName(
@@ -103,7 +103,7 @@ export const handler: APIGatewayProxyHandler = async (
       pgClient,
       id,
       appId,
-      keyName,
+      publicKey,
       secretKey,
       tokenExpiry,
       sessionExpiry,

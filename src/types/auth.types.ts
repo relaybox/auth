@@ -99,7 +99,7 @@ export interface AuthUserSession {
 }
 
 export interface RequestAuthParams {
-  keyName: string;
+  publicKey: string;
   keyId: string;
   appPid: string;
 }

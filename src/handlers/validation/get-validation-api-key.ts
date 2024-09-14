@@ -25,8 +25,8 @@ async function lambdaProxyEventHandler(
     const clientId = event.headers['X-Ds-Client-Id'];
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
-    const [keyName, providedSecret] = apiKey.split(':');
-    const { appPid, keyId } = getKeyParts(keyName);
+    const [publicKey, providedSecret] = apiKey.split(':');
+    const { appPid, keyId } = getKeyParts(publicKey);
     const { secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
 
     if (providedSecret !== secretKey) {
