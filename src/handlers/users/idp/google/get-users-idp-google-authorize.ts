@@ -1,12 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
+import {
+  getAuthDataByKeyId,
+  getAuthProviderDataByProviderName,
+  getKeyParts
+} from 'src/modules/users/users.service';
+import { AuthProvider } from 'src/types/auth.types';
 import { handleErrorResponse, redirect } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-users-idp-google-authorize');
 
-const GOOGLE_CLIENT_ID = '716987004698-2903nfndh2v79ldg6ltm7bu8b38dttuk.apps.googleusercontent.com';
 const API_SERVICE_URL = process.env.API_SERVICE_URL || '';
 
 export const handler: APIGatewayProxyHandler = async (
@@ -26,7 +31,15 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing publicKey query param');
     }
 
-    const clientId = GOOGLE_CLIENT_ID;
+    const { keyId } = getKeyParts(publicKey);
+    const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
+    const { clientId } = await getAuthProviderDataByProviderName(
+      logger,
+      pgClient,
+      appId,
+      AuthProvider.GOOGLE
+    );
+
     const responseType = 'code';
     const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
     const scope = 'openid email profile';
