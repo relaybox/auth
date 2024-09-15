@@ -51,7 +51,6 @@ custom:
       - Authorization
       - X-Ds-Client-Id
       - X-Ds-Connection-Id
-      - X-Ds-Key-Name
       - X-Ds-Public-Key
     allowCredentials: true
 
