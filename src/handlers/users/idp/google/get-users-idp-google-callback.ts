@@ -20,9 +20,9 @@ import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-google-callback');
 
-const API_SERVICE_URL = process.env.API_SERVICE_URL || '';
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || '';
 const PROVIDER_NAME = 'google';
-const REDIRECT_URI = `${API_SERVICE_URL}/users/idp/google/callback`;
+const REDIRECT_URI = `${AUTH_SERVICE_URL}/users/idp/google/callback`;
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,

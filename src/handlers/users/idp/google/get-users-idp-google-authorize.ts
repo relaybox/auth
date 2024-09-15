@@ -12,7 +12,7 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-users-idp-google-authorize');
 
-const API_SERVICE_URL = process.env.API_SERVICE_URL || '';
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || '';
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     const responseType = 'code';
-    const redirectUri = `${API_SERVICE_URL}/users/idp/google/callback`;
+    const redirectUri = `${AUTH_SERVICE_URL}/users/idp/google/callback`;
     const scope = 'openid email profile';
     const state = publicKey;
     const rawQueryparams = true;
