@@ -871,7 +871,7 @@ export async function validatePassword(
   appId: string,
   password: string
 ): Promise<void> {
-  logger.debug(`Validating password`, { password });
+  logger.debug(`Validating password`);
 
   const { passwordPattern } = await getApplicationAuthenticationPreferences(
     logger,
