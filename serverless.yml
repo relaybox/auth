@@ -72,6 +72,10 @@ custom:
     DB_PROXY_ENABLED: ${env:DB_PROXY_ENABLED, ''}
     DB_TLS_DISABLED: ${env:DB_TLS_DISABLED, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
+    SMTP_HOST: ${env:SMTP_HOST, ''}
+    SMTP_USERNAME: ${env:SMTP_USERNAME, ''}
+    SMTP_PASSWORD: ${env:SMTP_PASSWORD, ''}
+    SMTP_AUTH_EMAIL: ${env:SMTP_AUTH_EMAIL, ''}
     PUBLIC_URL: ${env:PUBLIC_URL, ''}
     VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
     VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
@@ -96,7 +100,7 @@ provider:
   region: ${opt:region, 'eu-west-2'}
   logRetentionInDays: 30
   iam:
-    deploymentRole: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/relaybox-${self:provider.stage}-CloudFormationExecutionRole
+    deploymentRole: arn:aws:iam::${self:custom.vars.AWS_ACCOUNT_ID}:role/relaybox-${self:provider.stage}-CloudFormationExecutionRole
     role:
       statements:
         - Effect: Allow
