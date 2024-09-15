@@ -36,8 +36,8 @@ jobs:
           touch .env
           echo AUTH_ENCRYPTION_KEY=${{ secrets.AUTH_ENCRYPTION_KEY }} >> .env
           echo AUTH_ENCRYPTION_SALT=${{ secrets.AUTH_ENCRYPTION_SALT }} >> .env
-          echo AUTH_HMAC_KEY=${{ secrets.AUTH_HMAC_KEY }} >> .env
           echo AUTH_HASH_ID_SECRET=${{ secrets.AUTH_HASH_ID_SECRET }} >> .env
+          echo AUTH_HMAC_KEY=${{ secrets.AUTH_HMAC_KEY }} >> .env
           echo AUTH_SERVICE_URL=${{ vars.AUTH_SERVICE_URL }} >> .env
           echo AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} >> .env
           echo COGNITO_CLIENT_ID=${{ vars.COGNITO_CLIENT_ID }} >> .env
@@ -53,14 +53,14 @@ jobs:
           echo DB_PROXY_ENABLED=${{ vars.DB_PROXY_ENABLED }} >> .env
           echo DB_TLS_DISABLED=${{ vars.DB_TLS_DISABLED }} >> .env
           echo DB_USER=${{ vars.DB_USER }} >> .env
-          echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
-          echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
-          echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
           echo JWT_ISSUER=${{ vars.JWT_ISSUER }} >> .env
+          echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
+          echo SMTP_AUTH_EMAIL=${{ vars.SMTP_AUTH_EMAIL }} >> .env
           echo SMTP_HOST=${{ vars.SMTP_HOST }} >> .env
           echo SMTP_USERNAME=${{ vars.SMTP_USERNAME }} >> .env
           echo SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} >> .env
-          echo SMTP_AUTH_EMAIL=${{ vars.SMTP_AUTH_EMAIL }} >> .env
+          echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
+          echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
           cat .env
 
       - name: npm ci
