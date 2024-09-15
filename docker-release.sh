@@ -5,5 +5,5 @@ VERSION=$(cat package.json | grep '"version":' | awk -F'"' '{print $4}')
 docker build -t relaybox/auth:latest -t relaybox/auth:$VERSION .
 
 # Push both the 'latest' and versioned tags to Docker Hub
-# docker push relaybox/auth:latest
-# docker push relaybox/auth:$VERSION
+docker push relaybox/auth:latest
+docker push relaybox/auth:$VERSION
