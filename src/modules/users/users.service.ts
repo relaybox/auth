@@ -59,7 +59,7 @@ export async function createUser(
 ): Promise<AuthUser> {
   logger.debug(`Creating user`, { orgId });
 
-  username = username || generateUsername('', 3);
+  username = username || generateUsername('_', 3);
   const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);
   const emailHash = generateHash(email);
