@@ -1,4 +1,12 @@
-import crypto from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHmac,
+  pbkdf2Sync,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual
+} from 'crypto';
 
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
@@ -22,9 +30,9 @@ enum Digest {
 
 export function encrypt(value: string, salt?: string): string {
   const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
-  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(AUTH_ENCRYPTION_ALGORITHM, key, iv);
+  const key = scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
+  const iv = randomBytes(16);
+  const cipher = createCipheriv(AUTH_ENCRYPTION_ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(value), cipher.final()]);
   const encryptedString = `${iv.toString(Encoding.HEX)}:${encrypted.toString(Encoding.HEX)}`;
 
@@ -35,9 +43,9 @@ export function decrypt(encryptedValue: string, salt?: string): string {
   const decryptionSalt = salt || AUTH_ENCRYPTION_SALT;
   const encryptedString = Buffer.from(encryptedValue, Encoding.BASE64).toString(Encoding.UTF8);
   const [ivHex, encryptedHex] = encryptedString.split(':');
-  const key = crypto.scryptSync(AUTH_ENCRYPTION_KEY, decryptionSalt, 32);
+  const key = scryptSync(AUTH_ENCRYPTION_KEY, decryptionSalt, 32);
 
-  const decipher = crypto.createDecipheriv(
+  const decipher = createDecipheriv(
     AUTH_ENCRYPTION_ALGORITHM,
     key,
     Buffer.from(ivHex, Encoding.HEX)
@@ -52,36 +60,33 @@ export function decrypt(encryptedValue: string, salt?: string): string {
 }
 
 export function generateHash(value: string): string {
-  const hmac = crypto.createHmac(Digest.SHA256, AUTH_HMAC_KEY);
+  const hmac = createHmac(Digest.SHA256, AUTH_HMAC_KEY);
   hmac.update(value);
   return hmac.digest(Encoding.HEX);
 }
 
 export function generateSalt(): string {
-  return crypto.randomBytes(SALT_LENGTH).toString(Encoding.HEX);
+  return randomBytes(SALT_LENGTH).toString(Encoding.HEX);
 }
 
 export function generateSecret(): string {
-  return crypto.randomBytes(SECRET_LENGTH).toString(Encoding.HEX);
+  return randomBytes(SECRET_LENGTH).toString(Encoding.HEX);
 }
 
 export function strongHash(password: string, salt: string): string {
-  const hash = crypto
-    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512)
-    .toString(Encoding.HEX);
+  const hash = pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512).toString(
+    Encoding.HEX
+  );
 
   return hash;
 }
 
 export function verifyStrongHash(password: string, storedHash: string, salt: string): boolean {
-  const hash = crypto
-    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512)
-    .toString(Encoding.HEX);
-
-  return crypto.timingSafeEqual(
-    Buffer.from(hash, Encoding.HEX),
-    Buffer.from(storedHash, Encoding.HEX)
+  const hash = pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, Digest.SHA512).toString(
+    Encoding.HEX
   );
+
+  return timingSafeEqual(Buffer.from(hash, Encoding.HEX), Buffer.from(storedHash, Encoding.HEX));
 }
 
 export function getKeyVersion() {

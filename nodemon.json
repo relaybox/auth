@@ -2,6 +2,6 @@
   "watch": ["src"],
   "ignore": ["src/**/*.test.ts", "node_modules"],
   "ext": "ts,mjs,js,json,graphql",
-  "exec": "nodemon --exec sls offline",
+  "exec": "nodemon --exec sls offline --host 0.0.0.0",
   "legacyWatch": true
 }
