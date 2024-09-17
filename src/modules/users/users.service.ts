@@ -33,7 +33,12 @@ import {
 } from 'src/types/auth.types';
 import { smtpTransport } from 'src/lib/smtp';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { generateUsername } from 'unique-username-generator';
+import {
+  uniqueNamesGenerator,
+  adjectives,
+  animals,
+  NumberDictionary
+} from 'unique-names-generator';
 import { authenticator } from 'otplib';
 import {
   decodeAuthToken,
@@ -59,7 +64,19 @@ export async function createUser(
 ): Promise<AuthUser> {
   logger.debug(`Creating user`, { orgId });
 
-  username = username || generateUsername('_', 3);
+  const numberDictionary = NumberDictionary.generate({
+    min: 100,
+    max: 999
+  });
+
+  username =
+    username ||
+    uniqueNamesGenerator({
+      dictionaries: [adjectives, animals, numberDictionary],
+      separator: '',
+      style: 'capital'
+    });
+
   const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);
   const emailHash = generateHash(email);
