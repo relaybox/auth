@@ -90,6 +90,13 @@ jobs:
           VERSION=${{ github.event.release.tag_name }}
           echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
 
+      - name: Validate version extraction
+        run: |
+          if [ -z "${{ steps.get_version.outputs.version }}" ]; then
+            echo "Error: Version could not be extracted from the tag."
+            exit 1
+          fi
+
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
 
@@ -115,6 +122,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: main
 
       - name: Update package version
         run: |
