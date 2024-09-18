@@ -1,9 +1,8 @@
 name: Deploy production
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [published]
 
 jobs:
   deploy:
@@ -73,3 +72,58 @@ jobs:
           stage: ${{ vars.STAGE }}
           aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           node-env: ${{ vars.NODE_ENV }}
+
+  publish-docker-image:
+    name: publish-docker-image
+    runs-on: ubuntu-latest
+    needs: deploy
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          echo "Building Docker image with version ${{ steps.get_version.outputs.version }}"
+          docker build -t relaybox/auth:latest -t relaybox/auth:${{ steps.get_version.outputs.version }} .
+
+      - name: Push Docker image
+        run: |
+          docker push relaybox/auth:latest
+          docker push relaybox/auth:${{ steps.get_version.outputs.version }}
+
+  update-package-version:
+    name: update-package-version
+    runs-on: ubuntu-latest
+    needs: deploy
+    permissions:
+      contents: write
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update package version
+        run: |
+          VERSION=${{ github.ref_name }}
+          npm version ${VERSION#v} --no-git-tag-version
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update package version [skip ci]'
+          commit_author: GitHub Actions <actions@github.com>
+          branch: main
