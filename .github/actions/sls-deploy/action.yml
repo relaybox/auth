@@ -5,18 +5,13 @@ description: deploy sls application
 inputs:
   aws-account-id:
     required: true
-
   app-namespace:
     required: true
-
   stage:
     required: true
-
   node-env:
     required: true
 
-# User from tools account (based on access key and secret in environment settings) then assumes deployer role
-# from stage account (dev or prod...) which has the necessary permissions to deploy the project
 runs:
   using: 'composite'
   steps:

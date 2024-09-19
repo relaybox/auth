@@ -11,21 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: development
-    strategy:
-      matrix:
-        node-version: [20.x]
+
     steps:
-      - name: Dump context
-        id: github_context_dump
-        run: echo '${{ toJSON(github) }}'
+      - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
 
-      - uses: aws-actions/configure-aws-credentials@v3
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
