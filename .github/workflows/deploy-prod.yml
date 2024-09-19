@@ -59,7 +59,7 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: deploy main
+      - name: deploy prod
         uses: ./.github/actions/sls-deploy
         with:
           app-namespace: relaybox
