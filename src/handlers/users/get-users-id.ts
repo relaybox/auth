@@ -10,7 +10,7 @@ import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-id-session');
+const logger = getLogger('post-users-id');
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
