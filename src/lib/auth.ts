@@ -33,6 +33,8 @@ import {
 import qrcode from 'qrcode';
 import { PolicyEffect } from 'src/types/aws.types';
 
+// AUTH SERVICE v3
+
 export function authenticate(
   cognitoClient: CognitoIdentityProviderClient,
   email: string,
