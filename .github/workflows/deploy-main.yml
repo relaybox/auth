@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/20240924_deployment_refactor_v2
 
 jobs:
   deploy:
@@ -21,19 +22,19 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.APP_NAMESPACE }}-${{ vars.STAGE }}-DeployerRole
+          role-session-name: gha_deployer
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
 
-      - name: npm ci
+      - name: Install Dependencies
         run: npm ci
 
-      - name: deploy main
+      - name: Deploy Application
         uses: ./.github/actions/sls-deploy
         with:
-          app-namespace: relaybox
           stage: ${{ vars.STAGE }}
-          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           node-env: ${{ vars.NODE_ENV }}
           vars: ${{ toJson(vars) }}
           secrets: ${{ toJson(secrets) }}
