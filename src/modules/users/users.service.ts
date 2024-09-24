@@ -49,8 +49,6 @@ import {
   verifyAuthToken
 } from 'src/lib/token';
 
-// FORCE
-
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
 export async function createUser(

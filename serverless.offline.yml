@@ -1,14 +1,8 @@
 service: relaybox-auth
 
 plugins:
-  - serverless-dotenv-plugin
   - serverless-esbuild
-  - serverless-plugin-canary-deployments
-  - serverless-plugin-utils
   - serverless-offline
-  - serverless-domain-manager
-
-useDotenv: true
 
 package:
   individually: true
@@ -20,26 +14,10 @@ custom:
     bundle: true
     minify: true
 
-  customDomain:
-    domainName: auth.${self:provider.stage}.relaybox-services.net
-    stage: ${self:provider.stage}
-    certificateName: '*.${self:provider.stage}.relaybox-services.net'
-    createRoute53Record: true
-    createRoute53IPv6Record: true
-    endpointType: edge
-    securityPolicy: tls_1_2
-    apiType: rest
-    autoDomain: true
-
   serverless-offline:
     httpPort: 4005
     lambdaPort: 3005
     reloadHandler: true
-
-  deploymentSettings:
-    type: AllAtOnce
-    alias: live
-    preTrafficHook: pre-traffic
 
   keepAlive:
     eventBridge:
@@ -90,6 +68,7 @@ custom:
     PUBLIC_URL: ${env:PUBLIC_URL, ''}
     VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
     VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
+    NODE_ENV: ${env:NODE_ENV, 'production'}
 
 provider:
   name: aws
@@ -98,38 +77,8 @@ provider:
   environment: ${self:custom.vars}
   stage: ${opt:stage, env:STAGE, 'dev'}
   timeout: 300
-  apiGateway:
-    binaryMediaTypes:
-      - multipart/form-data
-  deploymentBucket:
-    name: ${self:service}.${self:provider.stage}.sls-deploys
-    maxPreviousDeploymentArtifacts: 10
-    blockPublicAccess: true
-    serverSideEncryption: AES256
-    tags:
-      Env: ${self:provider.stage}
-  region: ${opt:region, 'eu-west-2'}
-  logRetentionInDays: 30
-  iam:
-    deploymentRole: arn:aws:iam::${self:custom.vars.AWS_ACCOUNT_ID}:role/relaybox-${self:provider.stage}-CloudFormationExecutionRole
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - codedeploy:*
-          Resource:
-            - '*'
-        - Effect: Allow
-          Action:
-            - cognito-idp:AdminSetUserMFAPreference
-          Resource:
-            - !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${AWS::Region}_*
-  vpc:
-    securityGroupIds: ${split(${self:custom.vars.VPC_SECURITY_GROUP_IDS}, ',')}
-    subnetIds: ${split(${self:custom.vars.VPC_SUBNET_IDS}, ',')}
 
 functions:
-  - ${file(./functions/admin.yml)}
   - ${file(./functions/authorizers.yml)}
   - ${file(./functions/validation.yml)}
   - ${file(./functions/users.yml)}
