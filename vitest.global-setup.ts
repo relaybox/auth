@@ -8,7 +8,7 @@ export async function setup() {
     console.log('Waiting for Serverless Offline to start...');
 
     slsOfflineProcess = spawn('npm', ['run', 'test:prepare'], {
-      stdio: ['pipe', 'pipe', 'pipe', null]
+      stdio: ['pipe', 'pipe', 'pipe']
     });
 
     // https://github.com/dherault/serverless-offline/issues/1330
@@ -42,7 +42,7 @@ export async function teardown() {
     return new Promise<void>((resolve) => {
       slsOfflineProcess?.on('exit', () => {
         console.log('Serverless Offline process exited');
-        resolve(); // Resolve when process has fully exited
+        resolve();
       });
     });
   }
