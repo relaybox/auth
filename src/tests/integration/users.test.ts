@@ -22,8 +22,34 @@ describe('/users', () => {
   });
 
   afterAll(async () => {
-    await teardownDb(logger, pgClient);
+    // await teardownDb(logger, pgClient);
     await pgClient.clean();
+  });
+
+  describe('POST /users/create', () => {
+    it('should create a new user', async () => {
+      const body = {
+        email: 'test@test.com',
+        password: 'password'
+      };
+
+      const headers = {
+        'X-Ds-Public-Key': publicKey
+      };
+
+      console.log(publicKey);
+
+      const response = await fetch('http://localhost:4006/dev/users/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      expect(response.status).toBe(200);
+    });
   });
 
   describe('GET /users/id', () => {

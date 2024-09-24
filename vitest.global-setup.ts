@@ -1,15 +1,23 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import killPort from 'kill-port';
 
-let slsOfflineProcess: ChildProcessWithoutNullStreams | null;
+const SLS_OFFLINE_LAMBDA_PORT = 3006;
+
+let slsOfflineProcess: any;
 
 export async function setup() {
   return new Promise<void>((resolve, reject) => {
     console.log('Waiting for Serverless Offline to start...');
 
     slsOfflineProcess = spawn('npm', ['run', 'test:prepare'], {
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['inherit']
     });
+
+    // slsOfflineProcess.stdout.on('data', (data: any) => {
+    //   const message = data.toString();
+
+    //   process.stdout.write(`Serverless stdout: ${message}`);
+    // });
 
     // https://github.com/dherault/serverless-offline/issues/1330
     slsOfflineProcess.stderr.on('data', (data: any) => {
@@ -37,7 +45,7 @@ export async function teardown() {
   if (slsOfflineProcess) {
     console.log('Stopping Serverless Offline...');
 
-    killPort(3006);
+    killPort(SLS_OFFLINE_LAMBDA_PORT);
 
     return new Promise<void>((resolve) => {
       slsOfflineProcess?.on('exit', () => {

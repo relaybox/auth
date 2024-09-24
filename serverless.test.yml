@@ -3,20 +3,26 @@ service: relaybox-auth
 plugins:
   - serverless-esbuild
   - serverless-offline
+  - serverless-dotenv-plugin
 
 package:
   individually: true
 
 variablesResolutionMode: 20210326
 
+useDotenv: true
+
 custom:
+  dotenv:
+    path: ./.env.test
+
   esbuild:
     bundle: true
     minify: true
 
   serverless-offline:
-    httpPort: 4005
-    lambdaPort: 3005
+    httpPort: 4006
+    lambdaPort: 3006
     reloadHandler: true
 
   keepAlive:
