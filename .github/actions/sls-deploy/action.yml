@@ -1,5 +1,4 @@
 name: sls-deploy
-description: Deploy Serverless Application
 
 inputs:
   stage:
@@ -12,7 +11,7 @@ inputs:
     required: true
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Deploy Application
       shell: bash

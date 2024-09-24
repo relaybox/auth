@@ -5,13 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "TZ=UTC LOGGING_ENABLED=false nodemon",
-    "build": "etsc --minify",
-    "start": "node ./build/app.js",
+    "start": "sls offline --host 0.0.0.0",
     "test": "vitest",
-    "test:watch": "vitest --runInBand --watch",
     "deploy": "sls deploy",
-    "package": "sls package",
-    "jsdoc": "jsdoc -c jsdoc.json"
+    "package": "sls package"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +25,6 @@
     "@types/uuid": "^9.0.7",
     "aws-lambda": "^1.0.7",
     "esbuild": "^0.19.10",
-    "esbuild-node-tsc": "^2.0.5",
     "jsdoc": "^4.0.3",
     "nodemon": "^3.0.2",
     "serverless": "^3.38.0",
