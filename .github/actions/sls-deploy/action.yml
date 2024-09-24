@@ -20,7 +20,7 @@ runs:
   using: 'composite'
   steps:
     - shell: bash
-      run: |        
+      run: |
         echo AUTH_ENCRYPTION_KEY=${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_KEY }} >> $GITHUB_ENV
         echo AUTH_ENCRYPTION_SALT=${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_SALT }} >> $GITHUB_ENV
         echo AUTH_HASH_ID_SECRET=${{ fromJson(inputs.secrets).AUTH_HASH_ID_SECRET }} >> $GITHUB_ENV
@@ -49,7 +49,7 @@ runs:
         echo VPC_SECURITY_GROUP_IDS=${{ fromJson(inputs.vars).VPC_SECURITY_GROUP_IDS }} >> $GITHUB_ENV
         echo VPC_SUBNET_IDS=${{ fromJson(inputs.vars).VPC_SUBNET_IDS }} >> $GITHUB_ENV
 
-  - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
+    - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
       shell: bash
       run: |
         CREDS=`aws sts assume-role \
