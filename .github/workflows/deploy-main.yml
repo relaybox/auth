@@ -35,7 +35,6 @@ jobs:
         uses: ./.github/actions/sls-deploy
         with:
           stage: ${{ vars.STAGE }}
-          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           node-env: ${{ vars.NODE_ENV }}
           vars: ${{ toJson(vars) }}
           secrets: ${{ toJson(secrets) }}

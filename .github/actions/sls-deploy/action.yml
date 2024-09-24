@@ -14,27 +14,38 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Export Environment Variables
-      shell: bash
-      run: |
-        echo "${{ inputs.vars }}" > vars.json
-        echo "${{ inputs.secrets }}" > secrets.json
-
-        for key in $(jq -r 'keys[]' vars.json); do
-          value=$(jq -r ".\"$key\"" vars.json)
-          echo "$key=$value" >> $GITHUB_ENV
-        done
-
-        for key in $(jq -r 'keys[]' secrets.json); do
-          value=$(jq -r ".\"$key\"" secrets.json)
-          echo "$key=$value" >> $GITHUB_ENV
-        done
-
     - name: Deploy Application
       shell: bash
       env:
         NODE_ENV: ${{ inputs.node-env }}
         STAGE: ${{ inputs.stage }}
         SLS_DEBUG: '*'
+        AUTH_ENCRYPTION_KEY: ${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_KEY }}
+        AUTH_ENCRYPTION_SALT: ${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_SALT }}
+        AUTH_HASH_ID_SECRET: ${{ fromJson(inputs.secrets).AUTH_HASH_ID_SECRET }}
+        AUTH_HMAC_KEY: ${{ fromJson(inputs.secrets).AUTH_HMAC_KEY }}
+        AUTH_SERVICE_URL: ${{ fromJson(inputs.vars).AUTH_SERVICE_URL }}
+        AWS_ACCOUNT_ID: ${{ fromJson(inputs.vars).AWS_ACCOUNT_ID }}
+        COGNITO_CLIENT_ID: ${{ fromJson(inputs.vars).COGNITO_CLIENT_ID }}
+        COGNITO_CLIENT_SECRET: ${{ fromJson(inputs.secrets).COGNITO_CLIENT_SECRET }}
+        COGNITO_OAUTH_CALLBACK_URL: ${{ fromJson(inputs.vars).COGNITO_OAUTH_CALLBACK_URL }}
+        COGNITO_USER_POOL_ID: ${{ fromJson(inputs.vars).COGNITO_USER_POOL_ID }}
+        COGNITO_USER_POOL_DOMAIN: ${{ fromJson(inputs.vars).COGNITO_USER_POOL_DOMAIN }}
+        DB_HOST: ${{ fromJson(inputs.vars).DB_HOST }}
+        DB_MAX_CONNECTIONS: ${{ fromJson(inputs.vars).DB_MAX_CONNECTIONS }}
+        DB_NAME: ${{ fromJson(inputs.vars).DB_NAME }}
+        DB_PASSWORD: ${{ fromJson(inputs.secrets).DB_PASSWORD }}
+        DB_PORT: ${{ fromJson(inputs.vars).DB_PORT }}
+        DB_PROXY_ENABLED: ${{ fromJson(inputs.vars).DB_PROXY_ENABLED }}
+        DB_TLS_DISABLED: ${{ fromJson(inputs.vars).DB_TLS_DISABLED }}
+        DB_USER: ${{ fromJson(inputs.vars).DB_USER }}
+        JWT_ISSUER: ${{ fromJson(inputs.vars).JWT_ISSUER }}
+        LOG_LEVEL: ${{ fromJson(inputs.vars).LOG_LEVEL }}
+        SMTP_AUTH_EMAIL: ${{ fromJson(inputs.vars).SMTP_AUTH_EMAIL }}
+        SMTP_HOST: ${{ fromJson(inputs.vars).SMTP_HOST }}
+        SMTP_USERNAME: ${{ fromJson(inputs.vars).SMTP_USERNAME }}
+        SMTP_PASSWORD: ${{ fromJson(inputs.secrets).SMTP_PASSWORD }}
+        VPC_SECURITY_GROUP_IDS: ${{ fromJson(inputs.vars).VPC_SECURITY_GROUP_IDS }}
+        VPC_SUBNET_IDS: ${{ fromJson(inputs.vars).VPC_SUBNET_IDS }}
       run: |
         npm run deploy -- --stage ${{ inputs.stage }}
