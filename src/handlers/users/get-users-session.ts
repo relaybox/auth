@@ -16,7 +16,7 @@ import { lambdaProxyEventMiddleware } from 'src/util/request.util';
 
 const logger = getLogger('get-users-session');
 
-async function lambdaProxyEventHandler(
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
 ): Promise<APIGatewayProxyResult> {

@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { NotFoundError, UnauthorizedError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import {
@@ -10,14 +10,12 @@ import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-id');
+const logger = getLogger('get-users-id');
 
-// FORCE DEPLOYMENT
-
-export const handler: APIGatewayProxyHandler = async (
+export async function handler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   const pgClient = await getPgClient();
@@ -49,4 +47,4 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}

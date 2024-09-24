@@ -7,10 +7,10 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-users-session');
 
-export const handler: APIGatewayProxyHandler = async (
+export async function handler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   const pgClient = await getPgClient();
@@ -28,4 +28,4 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}

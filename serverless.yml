@@ -130,7 +130,6 @@ provider:
 
 functions:
   - ${file(./functions/admin.yml)}
-  - ${file(./functions/admin-authorizers.yml)}
   - ${file(./functions/authorizers.yml)}
   - ${file(./functions/validation.yml)}
   - ${file(./functions/users.yml)}

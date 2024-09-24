@@ -1,3 +1,0 @@
-admin-authorizer:
-  handler: src/handlers/authorizers/admin-authorizer.handler
-  type: TOKEN

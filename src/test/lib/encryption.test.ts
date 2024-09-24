@@ -1,25 +1,57 @@
 import { describe, expect, it } from 'vitest';
-import { encrypt, decrypt, strongHash, verifyStrongHash, generateSalt } from 'src/lib/encryption';
+import {
+  encrypt,
+  decrypt,
+  strongHash,
+  generateSalt,
+  verifyStrongHash,
+  generateSecret
+} from 'src/lib/encryption';
 
-describe('encrypt / decrypt', () => {
-  it('should encrpt an email address', () => {
-    const email = 'test@test.com';
-    const encryptedEmail = encrypt(email);
-    const decryptedEmail = decrypt(encryptedEmail);
-
-    expect(encryptedEmail).not.toBe(email);
-    expect(decryptedEmail).toBe(email);
+describe('encryption', () => {
+  describe('encrypt', () => {
+    it('should encrypt a string', () => {
+      const string = 'test@test.com';
+      const encryptedString = encrypt(string);
+      expect(encryptedString).not.toBe(string);
+    });
   });
-});
 
-describe('strongHash / verifyStrongHash', () => {
-  it('should generate a hash for a password', () => {
-    const password = 'password';
-    const salt = generateSalt();
-    const hash = strongHash(password, salt);
-    const isValid = verifyStrongHash(password, hash, salt);
+  describe('decrypt', () => {
+    it('should decrypt an encrypted string', () => {
+      const string = 'test@test.com';
+      const encryptedString = encrypt(string);
+      const decryptedString = decrypt(encryptedString);
+      expect(decryptedString).toBe(string);
+    });
+  });
 
-    expect(hash).toBeDefined();
-    expect(isValid).toBe(true);
+  describe('strongHash', () => {
+    it('should generate a hash from a string', () => {
+      const string = 'password';
+      const salt = generateSalt();
+      const hash = strongHash(string, salt);
+
+      expect(hash).toBeDefined();
+      expect(hash).not.toBe(string);
+    });
+  });
+
+  describe('verifyStrongHash', () => {
+    it('should verify a hash value matches a string', () => {
+      const string = 'password';
+      const salt = generateSalt();
+      const hash = strongHash(string, salt);
+      const isMatch = verifyStrongHash(string, hash, salt);
+
+      expect(hash).toBeDefined();
+      expect(isMatch).toBe(true);
+    });
+  });
+
+  describe('generateSecret', () => {
+    it('should a 64 bit secret secret', () => {
+      expect(generateSecret()).toHaveLength(64);
+    });
   });
 });

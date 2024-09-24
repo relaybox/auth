@@ -42,7 +42,6 @@ import {
 import { authenticator } from 'otplib';
 import {
   decodeAuthToken,
-  DEFAULT_REFRESH_TOKEN_EXPIRY_SECS,
   getAuthRefreshToken,
   getAuthToken,
   getTmpToken,
@@ -318,14 +317,6 @@ export async function getUserDataByClientId(
   logger.debug(`Getting user data for client id`, { clientId });
 
   const { rows } = await repository.getUserDataByClientId(pgClient, clientId);
-
-  // if (!rows.length) {
-  //   throw new NotFoundError(`User not found`);
-  // }
-
-  // if (rows[0].appId !== appId) {
-  //   throw new UnauthorizedError(`Cross organsiation authentication not supported`);
-  // }
 
   return rows[0];
 }
