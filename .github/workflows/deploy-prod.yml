@@ -24,38 +24,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Create .env
-        run: |
-          touch .env
-          echo AUTH_ENCRYPTION_KEY=${{ secrets.AUTH_ENCRYPTION_KEY }} >> .env
-          echo AUTH_ENCRYPTION_SALT=${{ secrets.AUTH_ENCRYPTION_SALT }} >> .env
-          echo AUTH_HASH_ID_SECRET=${{ secrets.AUTH_HASH_ID_SECRET }} >> .env
-          echo AUTH_HMAC_KEY=${{ secrets.AUTH_HMAC_KEY }} >> .env
-          echo AUTH_SERVICE_URL=${{ vars.AUTH_SERVICE_URL }} >> .env
-          echo AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} >> .env
-          echo COGNITO_CLIENT_ID=${{ vars.COGNITO_CLIENT_ID }} >> .env
-          echo COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} >> .env
-          echo COGNITO_OAUTH_CALLBACK_URL=${{ vars.COGNITO_OAUTH_CALLBACK_URL }} >> .env
-          echo COGNITO_USER_POOL_ID=${{ vars.COGNITO_USER_POOL_ID }} >> .env
-          echo COGNITO_USER_POOL_DOMAIN=${{ vars.COGNITO_USER_POOL_DOMAIN }} >> .env
-          echo DB_HOST=${{ vars.DB_HOST }} >> .env
-          echo DB_MAX_CONNECTIONS="${{ vars.DB_MAX_CONNECTIONS }}" >> .env
-          echo DB_NAME=${{ vars.DB_NAME }} >> .env
-          echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> .env
-          echo DB_PORT=${{ vars.DB_PORT }} >> .env
-          echo DB_PROXY_ENABLED=${{ vars.DB_PROXY_ENABLED }} >> .env
-          echo DB_TLS_DISABLED=${{ vars.DB_TLS_DISABLED }} >> .env
-          echo DB_USER=${{ vars.DB_USER }} >> .env
-          echo JWT_ISSUER=${{ vars.JWT_ISSUER }} >> .env
-          echo LOG_LEVEL=${{ vars.LOG_LEVEL }} >> .env
-          echo SMTP_AUTH_EMAIL=${{ vars.SMTP_AUTH_EMAIL }} >> .env
-          echo SMTP_HOST=${{ vars.SMTP_HOST }} >> .env
-          echo SMTP_USERNAME=${{ vars.SMTP_USERNAME }} >> .env
-          echo SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} >> .env
-          echo VPC_SECURITY_GROUP_IDS=${{ vars.VPC_SECURITY_GROUP_IDS }} >> .env
-          echo VPC_SUBNET_IDS=${{ vars.VPC_SUBNET_IDS }} >> .env
-          cat .env
-
       - name: npm ci
         run: npm ci
 
@@ -66,6 +34,8 @@ jobs:
           stage: ${{ vars.STAGE }}
           aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           node-env: ${{ vars.NODE_ENV }}
+          vars: ${{ toJson(vars) }}
+          secrets: ${{ toJson(secrets) }}
 
   publish-docker-image:
     name: publish-docker-image
