@@ -1,0 +1,22 @@
+service: relaybox-auth
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: 'node20'
+    platform: 'node'
+
+provider:
+  environment:
+    isOffline: ${opt:offline, false}
+
+functions:
+  - ${file(./functions/authorizers.yml)}
+  - ${file(./functions/validation.yml)}
+  - ${file(./functions/users.yml)}

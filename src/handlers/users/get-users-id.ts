@@ -12,8 +12,6 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-users-id');
 
-// FORCE DEPLOYMENT
-
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
   context: any

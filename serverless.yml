@@ -12,8 +12,12 @@ useDotenv: true
 
 custom:
   esbuild:
-    bundle: true
-    minify: true
+    config: './build.config.cjs'
+    # bundle: true
+    # minify: true
+    # sourcemap: true
+    # target: 'node20'
+    # platform: 'node'
 
   customDomain:
     domainName: auth.${self:provider.stage}.relaybox-services.net
