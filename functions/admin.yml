@@ -1,6 +1,5 @@
 admin-authorizer:
   handler: src/handlers/authorizers/admin-authorizer.handler
-  type: TOKEN
 
 post-admin-login:
   handler: src/handlers/admin/post-admin-login.handler
@@ -55,7 +54,9 @@ post-admin-confirm-password:
         path: /admin/confirm-password
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 get-admin-refresh:
   handler: src/handlers/admin/get-admin-refresh.handler
@@ -75,7 +76,9 @@ get-admin-session:
         path: /admin/session
         method: get
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-mfa-sms-enable:
   handler: src/handlers/admin/mfa/post-admin-mfa-sms-enable.handler
@@ -85,7 +88,9 @@ post-admin-mfa-sms-enable:
         path: /admin/mfa/sms-enable
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-mfa-totp-enable:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-enable.handler
@@ -95,7 +100,9 @@ post-admin-mfa-totp-enable:
         path: /admin/mfa/totp-enable
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-mfa-totp-associate:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-associate.handler
@@ -105,7 +112,9 @@ post-admin-mfa-totp-associate:
         path: /admin/mfa/totp-associate
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-mfa-totp-verify:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-verify.handler
@@ -115,7 +124,9 @@ post-admin-mfa-totp-verify:
         path: /admin/mfa/totp-verify
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-mfa-totp-challenge:
   handler: src/handlers/admin/mfa/post-admin-mfa-totp-challenge.handler
@@ -134,7 +145,9 @@ post-admin-mfa-totp-disable:
         path: /admin/mfa/totp-disable
         method: post
         cors: ${self:custom.cors}
-        authorizer: admin-authorizer
+        authorizer:
+          name: admin-authorizer
+          type: TOKEN
 
 post-admin-idp-code:
   handler: src/handlers/admin/idp/post-admin-idp-code.handler

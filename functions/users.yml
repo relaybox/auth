@@ -111,7 +111,9 @@ get-users-id:
         path: /users/{id}
         method: get
         cors: ${self:custom.cors}
-        authorizer: user-authorizer
+        authorizer:
+          name: user-authorizer
+          type: TOKEN
 
 get-users-me:
   handler: src/handlers/users/get-users-me.handler
@@ -122,7 +124,9 @@ get-users-me:
         path: /users/me
         method: get
         cors: ${self:custom.cors}
-        authorizer: user-authorizer
+        authorizer:
+          name: user-authorizer
+          type: TOKEN
 
 get-users-session:
   handler: src/handlers/users/get-users-session.handler
@@ -133,7 +137,9 @@ get-users-session:
         path: /users/session
         method: get
         cors: ${self:custom.cors}
-        authorizer: session-authorizer
+        authorizer:
+          name: session-authorizer
+          type: TOKEN
 
 post-users-mfa-enroll:
   handler: src/handlers/users/mfa/post-users-mfa-enroll.handler
@@ -143,7 +149,9 @@ post-users-mfa-enroll:
         path: /users/mfa/enroll
         method: post
         cors: ${self:custom.cors}
-        authorizer: user-authorizer
+        authorizer:
+          name: user-authorizer
+          type: TOKEN
 
 post-users-mfa-challenge:
   handler: src/handlers/users/mfa/post-users-mfa-challenge.handler
@@ -153,7 +161,9 @@ post-users-mfa-challenge:
         path: /users/mfa/challenge
         method: post
         cors: ${self:custom.cors}
-        authorizer: tmp-authorizer
+        authorizer:
+          name: tmp-authorizer
+          type: TOKEN
 
 post-users-mfa-verify:
   handler: src/handlers/users/mfa/post-users-mfa-verify.handler
@@ -163,7 +173,9 @@ post-users-mfa-verify:
         path: /users/mfa/verify
         method: post
         cors: ${self:custom.cors}
-        authorizer: tmp-authorizer
+        authorizer:
+          name: tmp-authorizer
+          type: TOKEN
 
 put-users-status:
   handler: src/handlers/users/put-users-status.handler
@@ -173,4 +185,6 @@ put-users-status:
         path: /users/status
         method: put
         cors: ${self:custom.cors}
-        authorizer: user-authorizer
+        authorizer:
+          name: user-authorizer
+          type: TOKEN
