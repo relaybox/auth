@@ -3,20 +3,29 @@ import PgClient from 'serverless-postgres';
 import { setupDb } from '../db/setup';
 import { getLogger } from '@/util/logger.util';
 import { getPgClient } from '@/lib/postgres';
+import { teardownDb } from '../db/teardown';
 
 const logger = getLogger('test');
-let pgClient: PgClient;
-
-beforeAll(async () => {
-  pgClient = await getPgClient();
-  await setupDb(logger, pgClient);
-});
-
-afterAll(async () => {
-  await pgClient.clean();
-});
 
 describe('/users', () => {
+  let pgClient: PgClient;
+  let apiKey: string;
+  let publicKey: string;
+
+  beforeAll(async () => {
+    pgClient = await getPgClient();
+
+    const credentials = await setupDb(logger, pgClient);
+
+    apiKey = credentials.apiKey;
+    publicKey = credentials.publicKey;
+  });
+
+  afterAll(async () => {
+    await teardownDb(logger, pgClient);
+    await pgClient.clean();
+  });
+
   describe('GET /users/id', () => {
     it('should return a user by id', async () => {
       const response = await fetch('http://localhost:4006/dev/users/id');
