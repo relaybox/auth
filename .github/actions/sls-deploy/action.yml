@@ -28,14 +28,14 @@ runs:
         echo AUTH_SERVICE_URL=${{ fromJson(inputs.vars).AUTH_SERVICE_URL }} >> $GITHUB_ENV
         echo AWS_ACCOUNT_ID=${{ fromJson(inputs.vars).AWS_ACCOUNT_ID }} >> $GITHUB_ENV
         echo COGNITO_CLIENT_ID=${{ fromJson(inputs.vars).COGNITO_CLIENT_ID }} >> $GITHUB_ENV
-        echo COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} >> $GITHUB_ENV
+        echo COGNITO_CLIENT_SECRET=${{ fromJson(inputs.secrets).COGNITO_CLIENT_SECRET }} >> $GITHUB_ENV
         echo COGNITO_OAUTH_CALLBACK_URL=${{ fromJson(inputs.vars).COGNITO_OAUTH_CALLBACK_URL }} >> $GITHUB_ENV
         echo COGNITO_USER_POOL_ID=${{ fromJson(inputs.vars).COGNITO_USER_POOL_ID }} >> $GITHUB_ENV
         echo COGNITO_USER_POOL_DOMAIN=${{ fromJson(inputs.vars).COGNITO_USER_POOL_DOMAIN }} >> $GITHUB_ENV
         echo DB_HOST=${{ fromJson(inputs.vars).DB_HOST }} >> $GITHUB_ENV
         echo DB_MAX_CONNECTIONS="${{ fromJson(inputs.vars).DB_MAX_CONNECTIONS }}" >> $GITHUB_ENV
         echo DB_NAME=${{ fromJson(inputs.vars).DB_NAME }} >> $GITHUB_ENV
-        echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        echo DB_PASSWORD="${{ fromJson(inputs.secrets).DB_PASSWORD }}" >> $GITHUB_ENV
         echo DB_PORT=${{ fromJson(inputs.vars).DB_PORT }} >> $GITHUB_ENV
         echo DB_PROXY_ENABLED=${{ fromJson(inputs.vars).DB_PROXY_ENABLED }} >> $GITHUB_ENV
         echo DB_TLS_DISABLED=${{ fromJson(inputs.vars).DB_TLS_DISABLED }} >> $GITHUB_ENV
@@ -45,7 +45,7 @@ runs:
         echo SMTP_AUTH_EMAIL=${{ fromJson(inputs.vars).SMTP_AUTH_EMAIL }} >> $GITHUB_ENV
         echo SMTP_HOST=${{ fromJson(inputs.vars).SMTP_HOST }} >> $GITHUB_ENV
         echo SMTP_USERNAME=${{ fromJson(inputs.vars).SMTP_USERNAME }} >> $GITHUB_ENV
-        echo SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} >> $GITHUB_ENV
+        echo SMTP_PASSWORD=${{ fromJson(inputs.secrets).SMTP_PASSWORD }} >> $GITHUB_ENV
         echo VPC_SECURITY_GROUP_IDS=${{ fromJson(inputs.vars).VPC_SECURITY_GROUP_IDS }} >> $GITHUB_ENV
         echo VPC_SUBNET_IDS=${{ fromJson(inputs.vars).VPC_SUBNET_IDS }} >> $GITHUB_ENV
 
