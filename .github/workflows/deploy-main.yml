@@ -34,7 +34,9 @@ jobs:
       - name: Deploy Application
         uses: ./.github/actions/sls-deploy
         with:
+          app-namespace: relaybox
           stage: ${{ vars.STAGE }}
+          aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
           node-env: ${{ vars.NODE_ENV }}
           vars: ${{ toJson(vars) }}
           secrets: ${{ toJson(secrets) }}
