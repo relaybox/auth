@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Deploy Application
-        uses: ./.github/actions/sls-deploy
+        uses: ./.github/actions/serverless-deploy
         with:
           stage: ${{ vars.STAGE }}
           node-env: ${{ vars.NODE_ENV }}
