@@ -43,7 +43,6 @@
     "vitest": "^1.4.0"
   },
   "dependencies": {
-    "@relaybox/rest": "file:../relaybox-rest-js",
     "aws-jwt-verify": "^4.0.0",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
