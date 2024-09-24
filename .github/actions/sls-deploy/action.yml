@@ -11,11 +11,45 @@ inputs:
     required: true
   node-env:
     required: true
+  vars:
+    required: true
+  secrets:
+    required: true
 
 runs:
   using: 'composite'
   steps:
-    - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
+    - shell: bash
+      run: |        
+        echo AUTH_ENCRYPTION_KEY=${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_KEY }} >> $GITHUB_ENV
+        echo AUTH_ENCRYPTION_SALT=${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_SALT }} >> $GITHUB_ENV
+        echo AUTH_HASH_ID_SECRET=${{ fromJson(inputs.secrets).AUTH_HASH_ID_SECRET }} >> $GITHUB_ENV
+        echo AUTH_HMAC_KEY=${{ fromJson(inputs.secrets).AUTH_HMAC_KEY }} >> $GITHUB_ENV
+        echo AUTH_SERVICE_URL=${{ fromJson(inputs.vars).AUTH_SERVICE_URL }} >> $GITHUB_ENV
+        echo AWS_ACCOUNT_ID=${{ fromJson(inputs.vars).AWS_ACCOUNT_ID }} >> $GITHUB_ENV
+        echo COGNITO_CLIENT_ID=${{ fromJson(inputs.vars).COGNITO_CLIENT_ID }} >> $GITHUB_ENV
+        echo COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} >> $GITHUB_ENV
+        echo COGNITO_OAUTH_CALLBACK_URL=${{ fromJson(inputs.vars).COGNITO_OAUTH_CALLBACK_URL }} >> $GITHUB_ENV
+        echo COGNITO_USER_POOL_ID=${{ fromJson(inputs.vars).COGNITO_USER_POOL_ID }} >> $GITHUB_ENV
+        echo COGNITO_USER_POOL_DOMAIN=${{ fromJson(inputs.vars).COGNITO_USER_POOL_DOMAIN }} >> $GITHUB_ENV
+        echo DB_HOST=${{ fromJson(inputs.vars).DB_HOST }} >> $GITHUB_ENV
+        echo DB_MAX_CONNECTIONS="${{ fromJson(inputs.vars).DB_MAX_CONNECTIONS }}" >> $GITHUB_ENV
+        echo DB_NAME=${{ fromJson(inputs.vars).DB_NAME }} >> $GITHUB_ENV
+        echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        echo DB_PORT=${{ fromJson(inputs.vars).DB_PORT }} >> $GITHUB_ENV
+        echo DB_PROXY_ENABLED=${{ fromJson(inputs.vars).DB_PROXY_ENABLED }} >> $GITHUB_ENV
+        echo DB_TLS_DISABLED=${{ fromJson(inputs.vars).DB_TLS_DISABLED }} >> $GITHUB_ENV
+        echo DB_USER=${{ fromJson(inputs.vars).DB_USER }} >> $GITHUB_ENV
+        echo JWT_ISSUER=${{ fromJson(inputs.vars).JWT_ISSUER }} >> $GITHUB_ENV
+        echo LOG_LEVEL=${{ fromJson(inputs.vars).LOG_LEVEL }} >> $GITHUB_ENV
+        echo SMTP_AUTH_EMAIL=${{ fromJson(inputs.vars).SMTP_AUTH_EMAIL }} >> $GITHUB_ENV
+        echo SMTP_HOST=${{ fromJson(inputs.vars).SMTP_HOST }} >> $GITHUB_ENV
+        echo SMTP_USERNAME=${{ fromJson(inputs.vars).SMTP_USERNAME }} >> $GITHUB_ENV
+        echo SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} >> $GITHUB_ENV
+        echo VPC_SECURITY_GROUP_IDS=${{ fromJson(inputs.vars).VPC_SECURITY_GROUP_IDS }} >> $GITHUB_ENV
+        echo VPC_SUBNET_IDS=${{ fromJson(inputs.vars).VPC_SUBNET_IDS }} >> $GITHUB_ENV
+
+  - name: 'Deploy: ${{ inputs.service-name }} | ${{ inputs.stage }}'
       shell: bash
       run: |
         CREDS=`aws sts assume-role \

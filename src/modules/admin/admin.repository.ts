@@ -1,4 +1,3 @@
-import moment, { Moment } from 'moment-timezone';
 import PgClient from 'serverless-postgres';
 import { QueryResult } from 'pg';
 
@@ -62,25 +61,25 @@ export async function validateUsername(
   return pgClient.query(query, params);
 }
 
-export async function saveAnonymousUser(
-  pgClient: PgClient,
-  sub: string,
-  expires: Moment
-): Promise<any> {
-  const query = `
-    INSERT INTO 
-      admin_users(sub, "lastOnline", anonymous, expires, "createdAt") 
-    VALUES 
-      ($1, $2, $3, $4, $5)
-    RETURNING id;
-  `;
+// export async function saveAnonymousUser(
+//   pgClient: PgClient,
+//   sub: string,
+//   expires: Moment
+// ): Promise<any> {
+//   const query = `
+//     INSERT INTO
+//       admin_users(sub, "lastOnline", anonymous, expires, "createdAt")
+//     VALUES
+//       ($1, $2, $3, $4, $5)
+//     RETURNING id;
+//   `;
 
-  const utc = moment.utc().toISOString();
+//   const utc = moment.utc().toISOString();
 
-  const { rows } = await pgClient.query(query, [sub, utc, true, expires.toISOString(), utc]);
+//   const { rows } = await pgClient.query(query, [sub, utc, true, expires.toISOString(), utc]);
 
-  return rows[0];
-}
+//   return rows[0];
+// }
 
 export async function saveUserVerification(pgClient: PgClient, id: string): Promise<QueryResult> {
   const query = `
@@ -110,6 +109,8 @@ export function confirmSession(
   sub: string,
   username: string
 ): Promise<QueryResult> {
+  const now = new Date().toISOString();
+
   const query = `
     UPDATE admin_users SET 
       username = $1, confirmed = $2 
@@ -118,7 +119,7 @@ export function confirmSession(
       id, username, confirmed;
   `;
 
-  return pgClient.query(query, [username, moment.utc().toISOString(), sub]);
+  return pgClient.query(query, [username, now, sub]);
 }
 
 export function getUserBySub(pgClient: PgClient, sub: string): Promise<QueryResult> {
