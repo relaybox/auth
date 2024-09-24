@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/20240924_deployment_refactor_v2
+      - feature/20240924_build_config
 
 jobs:
   deploy:
