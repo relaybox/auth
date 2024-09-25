@@ -10,7 +10,8 @@
     "package": "sls package",
     "test:prepare": "serverless offline -c serverless.test.yml",
     "test": "vitest --run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:logs": "tail -f ./src/tests/sls-offline.log"
   },
   "keywords": [],
   "author": "",

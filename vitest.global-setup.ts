@@ -5,7 +5,7 @@ import fs from 'fs';
 
 const SLS_OFFLINE_LAMBDA_PORT = 30060;
 
-const logFilePath = path.join(__dirname, 'src/tests/test.log');
+const logFilePath = path.join(__dirname, 'src/tests/sls-offline.log');
 const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
 let slsOfflineProcess: ChildProcessWithoutNullStreams | null;

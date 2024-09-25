@@ -262,7 +262,7 @@ export async function sendAuthVerificationCode(
   logger: Logger,
   email: string,
   code: number
-): Promise<string> {
+): Promise<string | undefined> {
   logger.debug(`Sending auth verification code`);
 
   try {
@@ -277,8 +277,11 @@ export async function sendAuthVerificationCode(
 
     return result?.messageId;
   } catch (err: any) {
-    logger.error(`Failed to send contact request email`);
-    throw err;
+    logger.error(`Failed to send verification code email`);
+
+    if (process.env.NODE_ENV === 'production') {
+      throw err;
+    }
   }
 }
 

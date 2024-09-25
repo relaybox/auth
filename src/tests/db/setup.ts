@@ -1,4 +1,5 @@
 import { generateSecret } from '@/lib/encryption';
+import { AuthStorageType } from '@/types/auth.types';
 import { nanoid } from 'nanoid';
 import PgClient from 'serverless-postgres';
 import { Logger } from 'winston';
@@ -63,8 +64,32 @@ async function createApplicationCredentials(
   const { rows } = await pgClient.query(query, [orgId, appId, appPid, keyId, secretKey, now]);
 
   return {
-    apiKey: `${appPid}:${keyId}:${secretKey}`,
-    publicKey: `${appPid}:${keyId}`
+    apiKey: `${appPid}.${keyId}:${secretKey}`,
+    publicKey: `${appPid}.${keyId}`
+  };
+}
+
+async function createApplicationPreferences(
+  pgClient: PgClient,
+  appId: string
+): Promise<{ tokenExpiry: number; sessionExpiry: number; authStorageType: AuthStorageType }> {
+  const now = new Date().toISOString();
+
+  const query = `
+    INSERT INTO application_authentication_preferences (
+      "appId", 
+      "tokenExpiry",
+      "sessionExpiry",
+      "authStorageType",
+      "createdAt"
+    ) VALUES ($1, $2, $3, $4, $5);`;
+
+  await pgClient.query(query, [appId, 3600, 3600, AuthStorageType.PERSIST, now]);
+
+  return {
+    tokenExpiry: 3600,
+    sessionExpiry: 3600,
+    authStorageType: AuthStorageType.PERSIST
   };
 }
 
@@ -75,6 +100,10 @@ export async function setupDb(
   const orgId = await createOrganisation(pgClient, 'Test Org');
   const { appId, appPid } = await createApplication(pgClient, orgId, 'Test App');
   const { apiKey, publicKey } = await createApplicationCredentials(pgClient, orgId, appId, appPid);
+  const { tokenExpiry, sessionExpiry, authStorageType } = await createApplicationPreferences(
+    pgClient,
+    appId
+  );
 
   return { apiKey, publicKey };
 }

@@ -41,7 +41,8 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { keyId } = getRequestAuthParams(event, authenticationActionLog);
-    console.log('>>>>>', keyId);
+
+    console.log('>>>>>', process.env.DB_NAME);
     const { orgId, appId } = await getAuthDataByKeyId(
       logger,
       pgClient,
