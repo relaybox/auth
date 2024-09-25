@@ -10,6 +10,12 @@ export interface AuthMfaChallengeResponse {
   challengeParameters: Record<string, string>;
 }
 
+export interface AuthSignupResponse {
+  uid: string;
+  identityId: string;
+  clientId: string;
+}
+
 export interface AuthUserData {
   id: string;
   email: string;

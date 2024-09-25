@@ -74,6 +74,7 @@ async function createApplicationPreferences(
   appId: string
 ): Promise<{ tokenExpiry: number; sessionExpiry: number; authStorageType: AuthStorageType }> {
   const now = new Date().toISOString();
+  const passwordPattern = '(?=.*[!@#$%^&*(),.?":{}|<>])(?=.*d).{9,}$';
 
   const query = `
     INSERT INTO application_authentication_preferences (
@@ -81,10 +82,11 @@ async function createApplicationPreferences(
       "tokenExpiry",
       "sessionExpiry",
       "authStorageType",
-      "createdAt"
-    ) VALUES ($1, $2, $3, $4, $5);`;
+      "createdAt",
+      "passwordPattern"
+    ) VALUES ($1, $2, $3, $4, $5, $6);`;
 
-  await pgClient.query(query, [appId, 3600, 3600, AuthStorageType.PERSIST, now]);
+  await pgClient.query(query, [appId, 3600, 3600, AuthStorageType.PERSIST, now, passwordPattern]);
 
   return {
     tokenExpiry: 3600,
@@ -96,7 +98,7 @@ async function createApplicationPreferences(
 export async function setupDb(
   logger: Logger,
   pgClient: PgClient
-): Promise<{ apiKey: string; publicKey: string }> {
+): Promise<{ orgId: string; appId: string; apiKey: string; publicKey: string }> {
   const orgId = await createOrganisation(pgClient, 'Test Org');
   const { appId, appPid } = await createApplication(pgClient, orgId, 'Test App');
   const { apiKey, publicKey } = await createApplicationCredentials(pgClient, orgId, appId, appPid);
@@ -105,5 +107,5 @@ export async function setupDb(
     appId
   );
 
-  return { apiKey, publicKey };
+  return { orgId, appId, apiKey, publicKey };
 }

@@ -1,21 +1,20 @@
-interface HTTPResponse {
-  statusCode: number;
-  error?: string;
-  message: Record<string, string> | string;
+interface HTTPResponse<T> {
+  status: number;
+  data: T;
 }
 
-export async function request(
-  url: string,
-  method: string = 'GET',
-  body?: any
-): Promise<HTTPResponse> {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
+const API_SERVICE_URL = 'http://localhost:40060/dev';
 
-  return response.json() as unknown as HTTPResponse;
+export async function request<T = any>(
+  url: string,
+  options?: RequestInit
+): Promise<HTTPResponse<T>> {
+  const requestUrl = `${API_SERVICE_URL}${url}`;
+  const response = await fetch(requestUrl, options);
+  const data = (await response.json()) as unknown as T;
+
+  return {
+    status: response.status,
+    data
+  };
 }

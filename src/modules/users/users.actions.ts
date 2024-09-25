@@ -11,6 +11,7 @@ import {
 } from 'src/lib/errors';
 import {
   AuthProvider,
+  AuthSignupResponse,
   AuthUser,
   AuthUserIdentityCredentials,
   AuthVerificationCodeType
@@ -44,7 +45,7 @@ export async function registerUser(
   firstName?: string,
   lastName?: string,
   provider: AuthProvider = AuthProvider.EMAIL
-): Promise<{ uid: string; identityId: string; clientId: string }> {
+): Promise<AuthSignupResponse> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
