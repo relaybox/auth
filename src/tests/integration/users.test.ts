@@ -329,7 +329,7 @@ describe('/users', () => {
 
     describe('GET /users/session', () => {
       describe('2xx', () => {
-        it('should get session data for authenticated user', async () => {
+        it('should return session data for authenticated user', async () => {
           const { session } = authUserSession!;
 
           const requestHeaders = {
@@ -381,7 +381,7 @@ describe('/users', () => {
 
     describe('GET /users/token/refresh', () => {
       describe('2xx', () => {
-        it('should get refreshed token for authenticated user', async () => {
+        it('should return refreshed token for authenticated user', async () => {
           const { session } = authUserSession!;
 
           const requestHeaders = {
@@ -422,6 +422,77 @@ describe('/users', () => {
           };
 
           const { status } = await request('/users/token/refresh', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(401);
+        });
+      });
+    });
+
+    describe('GET /users/:id', () => {
+      describe('2xx', () => {
+        it('should return non-sensitive user data by client id', async () => {
+          const { session, user } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer ${session?.token}`
+          };
+
+          const { status, data } = await request(`/users/${user.clientId}`, {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(200);
+          expect(data.id).toEqual(user.id);
+          expect(data.clientId).toEqual(user.clientId);
+        });
+      });
+
+      describe('4xx', () => {
+        it('should return 404 Not Found if user not found', async () => {
+          const { session } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer ${session?.token}`
+          };
+
+          const { status } = await request(`/users/unknown-client-id`, {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(404);
+        });
+
+        it('should return 403 Forbidden if token is invalid', async () => {
+          const { user } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer invalid-token`
+          };
+
+          const { status } = await request(`/users/${user.clientId}`, {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(403);
+        });
+
+        it('should return 401 Unauthorized if authorization header is missing', async () => {
+          const { user } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers
+          };
+
+          const { status } = await request(`/users/${user.clientId}`, {
             method: 'GET',
             headers: requestHeaders
           });
