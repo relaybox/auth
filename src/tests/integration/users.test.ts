@@ -32,14 +32,14 @@ describe('/users', () => {
 
   beforeAll(async () => {
     pgClient = await getPgClient();
-    mockAppData = await setupDb(logger, pgClient);
+    mockAppData = await setupDb(pgClient);
     headers = {
       'X-Ds-Public-Key': mockAppData.publicKey
     };
   });
 
   afterAll(async () => {
-    await teardownDb(logger, pgClient);
+    await teardownDb(pgClient);
     await pgClient.clean();
   });
 
@@ -356,7 +356,7 @@ describe('/users', () => {
             Authorization: `Bearer invalid-token`
           };
 
-          const { status, data } = await request('/users/session', {
+          const { status } = await request('/users/session', {
             method: 'GET',
             headers: requestHeaders
           });

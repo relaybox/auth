@@ -96,7 +96,6 @@ async function createApplicationPreferences(
 }
 
 export async function setupDb(
-  logger: Logger,
   pgClient: PgClient
 ): Promise<{ orgId: string; appId: string; apiKey: string; publicKey: string }> {
   const orgId = await createOrganisation(pgClient, 'Test Org');

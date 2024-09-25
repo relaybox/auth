@@ -19,5 +19,9 @@ export default defineConfig({
       reporter: ['text', 'html'],
       exclude: ['**/node_modules/**', '**/*.test.ts']
     }
+    // sequence: {
+    //   shuffle: false,
+    //   concurrent: false
+    // }
   }
 });

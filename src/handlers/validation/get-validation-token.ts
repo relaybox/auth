@@ -8,7 +8,7 @@ import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { ForbiddenError, ValidationError } from 'src/lib/errors';
+import { ForbiddenError, UnauthorizedError, ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
 import { getKeyParts, getUserDataByClientId } from 'src/modules/users/users.service';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
@@ -24,7 +24,12 @@ async function lambdaProxyEventHandler(
   const pgClient = await getPgClient();
 
   try {
-    const token = event.headers.Authorization!.substring(7);
+    const token = event.headers.Authorization?.substring(7);
+
+    if (!token) {
+      throw new UnauthorizedError('Missing authorization header');
+    }
+
     const connectionId = event.headers['X-Ds-Connection-Id'];
 
     const {
