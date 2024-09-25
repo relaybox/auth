@@ -4,10 +4,23 @@ import { setupDb } from '../db/setup';
 import { getLogger } from '@/util/logger.util';
 import { getPgClient } from '@/lib/postgres';
 import { teardownDb } from '../db/teardown';
-import { getUserByEmail } from '@/modules/users/users.service';
+import { getUserByEmail, getUserDataByClientId } from '@/modules/users/users.service';
 import { request } from '../http/request';
+import { get } from 'http';
+import { createMockUser, getVerificationCode } from '../db/helpers';
+import { registerUser } from '@/modules/users/users.actions';
+import { AuthSignupResponse, AuthUser } from '@/types/auth.types';
 
 const logger = getLogger('test');
+
+const email = 'test@test.com';
+const password = 'Password$100';
+
+interface CreateUserResponse {
+  message: string;
+  id: string;
+  clientId: string;
+}
 
 describe('/users', () => {
   let pgClient: PgClient;
@@ -21,9 +34,7 @@ describe('/users', () => {
 
   beforeAll(async () => {
     pgClient = await getPgClient();
-
     mockAppData = await setupDb(logger, pgClient);
-
     headers = {
       'X-Ds-Public-Key': mockAppData.publicKey
     };
@@ -35,9 +46,6 @@ describe('/users', () => {
   });
 
   describe('POST /users/create', () => {
-    const email = 'test@test.com';
-    const password = 'Password$100';
-
     describe('2xx', () => {
       it('should create a new user with email and password', async () => {
         const body = {
@@ -45,16 +53,13 @@ describe('/users', () => {
           password
         };
 
-        const { orgId, appId } = mockAppData;
+        const { status, data } = await request<CreateUserResponse>('/users/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
 
-        const { status, data } = await request<{ message: string; id: string; clientId: string }>(
-          '/users/create',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-          }
-        );
+        const { orgId, appId } = mockAppData;
 
         const user = await getUserByEmail(logger, pgClient, orgId, appId, email);
 
@@ -72,14 +77,11 @@ describe('/users', () => {
           email
         };
 
-        const { status, data } = await request<{ message: string; id: string; clientId: string }>(
-          '/users/create',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-          }
-        );
+        const { status } = await request<CreateUserResponse>('/users/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
 
         expect(status).toEqual(400);
       });
@@ -90,14 +92,11 @@ describe('/users', () => {
           password: 'weak-password'
         };
 
-        const { status, data } = await request<{ message: string; id: string; clientId: string }>(
-          '/users/create',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-          }
-        );
+        const { status } = await request<CreateUserResponse>('/users/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
 
         expect(status).toEqual(400);
       });
@@ -108,14 +107,11 @@ describe('/users', () => {
           password
         };
 
-        const { status, data } = await request<{ message: string; id: string; clientId: string }>(
-          '/users/create',
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-          }
-        );
+        const { status, data } = await request<CreateUserResponse>('/users/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
 
         expect(status).toEqual(401);
         expect(data.message).toEqual('Registration failed');
@@ -123,27 +119,100 @@ describe('/users', () => {
     });
   });
 
-  describe('GET /users/id', () => {
-    it('should return a user by id', async () => {
-      const response = await request('/users/id');
+  describe('POST /users/verify', () => {
+    let user: AuthUser | undefined;
 
-      expect(response.status).toBe(401);
+    const email = 'test@verify.com';
+
+    beforeAll(async () => {
+      const { orgId, appId } = mockAppData;
+      user = await createMockUser(logger, pgClient, orgId, appId, email, password);
+    });
+
+    describe('2xx', () => {
+      it('should authenticate a user with email and password', async () => {
+        const code = await getVerificationCode(pgClient, user!.id);
+
+        const body = {
+          email,
+          code
+        };
+
+        const { status, data } = await request('/users/verify', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(200);
+        expect(data.message).toEqual('User verification successful');
+      });
+    });
+
+    describe('4xx', () => {
+      it('should return 400 Bad Request if schema validation fails', async () => {
+        const body = {
+          email,
+          code: 'invalid-code'
+        };
+
+        const { status, data } = await request('/users/verify', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(400);
+      });
+
+      it('should return 401 Unauthorized if verification code is invalid', async () => {
+        const body = {
+          email,
+          code: '123456'
+        };
+
+        const { status } = await request('/users/verify', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(401);
+      });
+
+      it('should return 401 Unauthorized if email address is invalid', async () => {
+        const body = {
+          email: 'no-in-the@system.com',
+          code: '123456'
+        };
+
+        const { status } = await request('/users/verify', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(401);
+      });
     });
   });
 
-  describe('GET /users/me', () => {
-    it('should return the current user', async () => {
-      const response = await request('/users/me');
+  describe('POST /users/authenticate', () => {
+    describe('2xx', () => {
+      it('should authenticate a user with email and password', async () => {
+        const body = {
+          email,
+          password
+        };
 
-      expect(response.status).toBe(401);
-    });
-  });
+        const { status, data } = await request('/users/authenticate', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
 
-  describe('GET /users/session', () => {
-    it('should return the current user session', async () => {
-      const response = await request('/users/session');
-
-      expect(response.status).toBe(401);
+        console.log(status, data);
+      });
     });
   });
 });

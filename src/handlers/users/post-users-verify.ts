@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { AuthenticationError } from 'src/lib/errors';
+import { AuthenticationError, SchemaValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { validateEventSchema } from 'src/lib/validation';
 import { verifyUser } from 'src/modules/users/users.actions';
@@ -18,7 +18,7 @@ import {
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
-import { z } from 'zod';
+import { Schema, z } from 'zod';
 
 const logger = getLogger('post-users-verify');
 
@@ -75,6 +75,10 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog,
       err
     );
+
+    if (err instanceof SchemaValidationError) {
+      return handleErrorResponse(logger, err);
+    }
 
     const genericError = new AuthenticationError('User verification failed');
 
