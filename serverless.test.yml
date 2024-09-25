@@ -21,8 +21,8 @@ custom:
     minify: true
 
   serverless-offline:
-    httpPort: 4006
-    lambdaPort: 3006
+    httpPort: 40060
+    lambdaPort: 30060
     reloadHandler: true
 
   keepAlive:

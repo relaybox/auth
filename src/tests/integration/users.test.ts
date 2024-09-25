@@ -22,7 +22,7 @@ describe('/users', () => {
   });
 
   afterAll(async () => {
-    // await teardownDb(logger, pgClient);
+    await teardownDb(logger, pgClient);
     await pgClient.clean();
   });
 
@@ -37,16 +37,13 @@ describe('/users', () => {
         'X-Ds-Public-Key': publicKey
       };
 
-      console.log(publicKey);
-
-      const response = await fetch('http://localhost:4006/dev/users/create', {
+      const response = await fetch('http://localhost:40060/dev/users/create', {
         method: 'POST',
         headers,
         body: JSON.stringify(body)
       });
 
       const data = await response.json();
-      console.log(data);
 
       expect(response.status).toBe(200);
     });
@@ -54,7 +51,7 @@ describe('/users', () => {
 
   describe('GET /users/id', () => {
     it('should return a user by id', async () => {
-      const response = await fetch('http://localhost:4006/dev/users/id');
+      const response = await fetch('http://localhost:40060/dev/users/id');
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -63,7 +60,7 @@ describe('/users', () => {
 
   describe('GET /users/me', () => {
     it('should return the current user', async () => {
-      const response = await fetch('http://localhost:4006/dev/users/me');
+      const response = await fetch('http://localhost:40060/dev/users/me');
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -72,7 +69,7 @@ describe('/users', () => {
 
   describe('GET /users/session', () => {
     it('should return the current user session', async () => {
-      const response = await fetch('http://localhost:4006/dev/users/session');
+      const response = await fetch('http://localhost:40060/dev/users/session');
       const data = await response.json();
 
       expect(response.status).toBe(401);

@@ -41,6 +41,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    console.log('>>>>>', keyId);
     const { orgId, appId } = await getAuthDataByKeyId(
       logger,
       pgClient,
@@ -93,7 +94,7 @@ export const handler: APIGatewayProxyHandler = async (
       return handleErrorResponse(logger, err);
     }
 
-    // const genericError = new AuthenticationError('Registration failed');
+    const genericError = new AuthenticationError('Registration failed');
 
     return handleErrorResponse(logger, err);
   } finally {
