@@ -6,7 +6,7 @@ import { getLogger } from 'src/util/logger.util';
 import { authorizeClientRequest } from 'src/modules/users/users.service';
 import { TokenType } from 'src/types/jwt.types';
 
-const logger = getLogger('user-authorizer');
+const logger = getLogger('session-authorizer');
 
 export const handler = async (
   event: APIGatewayTokenAuthorizerEvent,

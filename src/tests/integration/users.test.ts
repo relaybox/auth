@@ -7,7 +7,7 @@ import { teardownDb } from '../db/teardown';
 import { getUserByEmail } from '@/modules/users/users.service';
 import { request } from '../http/request';
 import { createMockUser, getVerificationCode } from '../db/helpers';
-import { AuthUser } from '@/types/auth.types';
+import { AuthUser, AuthUserSession } from '@/types/auth.types';
 
 const logger = getLogger('test');
 
@@ -291,6 +291,143 @@ describe('/users', () => {
 
         expect(status).toEqual(401);
         expect(data.message).toEqual('Login failed');
+      });
+    });
+  });
+
+  describe('Authenticated user endpoints', () => {
+    let authUserSession: AuthUserSession | undefined;
+
+    const email = 'test@session.com';
+
+    beforeAll(async () => {
+      const { orgId, appId } = mockAppData;
+
+      const user = await createMockUser(logger, pgClient, orgId, appId, email, password);
+      const code = await getVerificationCode(pgClient, user!.id);
+
+      await request('/users/verify', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email,
+          code
+        })
+      });
+
+      const { data } = await request('/users/authenticate', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
+
+      authUserSession = data;
+    });
+
+    describe('GET /users/session', () => {
+      describe('2xx', () => {
+        it('should get session data for authenticated user', async () => {
+          const { session } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer ${session?.refreshToken}`
+          };
+
+          const { status, data } = await request('/users/session', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(200);
+          expect(data.user.id).toEqual(authUserSession!.user.id);
+          expect(data.session.token).toBeDefined();
+          expect(data.session.token).not.toEqual(session?.token);
+        });
+      });
+
+      describe('4xx', () => {
+        it('should return 403 Forbidden if invalid token is provided', async () => {
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer invalid-token`
+          };
+
+          const { status, data } = await request('/users/session', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(403);
+        });
+
+        it('should return 401 Unauthorized if authorization header is missing', async () => {
+          const requestHeaders = {
+            ...headers
+          };
+
+          const { status, data } = await request('/users/session', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(401);
+        });
+      });
+    });
+
+    describe('GET /users/token/refresh', () => {
+      describe('2xx', () => {
+        it('should get refreshed token for authenticated user', async () => {
+          const { session } = authUserSession!;
+
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer ${session?.refreshToken}`
+          };
+
+          const { status, data } = await request('/users/token/refresh', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(200);
+          expect(data.token).toBeDefined();
+          expect(data.expiresIn).toEqual(expect.any(Number));
+          expect(data.expiresAt).toEqual(expect.any(Number));
+        });
+      });
+
+      describe('4xx', () => {
+        it('should return 403 Forbidden if token is invalid', async () => {
+          const requestHeaders = {
+            ...headers,
+            Authorization: `Bearer invalid-token`
+          };
+
+          const { status, data } = await request('/users/token/refresh', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(403);
+        });
+
+        it('should return 401 Bad Request if authorization header is missing', async () => {
+          const requestHeaders = {
+            ...headers
+          };
+
+          const { status } = await request('/users/token/refresh', {
+            method: 'GET',
+            headers: requestHeaders
+          });
+
+          expect(status).toEqual(401);
+        });
       });
     });
   });

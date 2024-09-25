@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { ValidationError } from 'src/lib/errors';
+import { TokenError, UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
 import { decodeAuthToken, getAuthToken, verifyRefreshToken } from 'src/lib/token';
 import {
@@ -24,13 +24,19 @@ export const handler: APIGatewayProxyHandler = async (
   const pgClient = await getPgClient();
 
   try {
-    const refreshToken = event.headers.Authorization!.substring(7);
+    const refreshToken = event.headers.Authorization?.substring(7);
 
     if (!refreshToken) {
-      throw new ValidationError('Missing refresh token header');
+      throw new UnauthorizedError('Missing authorization header');
     }
 
-    const { sub, publicKey, clientId, tokenType } = decodeAuthToken(refreshToken);
+    const decodedToken = decodeAuthToken(refreshToken);
+
+    if (!decodedToken) {
+      throw new TokenError('Invalid token');
+    }
+
+    const { sub, publicKey, clientId, tokenType } = decodedToken;
     const { keyId } = getKeyParts(publicKey);
     const { secretKey, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { tokenExpiry } = await getApplicationAuthenticationPreferences(logger, pgClient, appId);

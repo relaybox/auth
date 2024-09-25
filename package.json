@@ -11,7 +11,7 @@
     "test:prepare": "serverless offline -c serverless.test.yml",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:logs": "tail -f ./src/tests/sls-offline.log"
+    "test:logs": "tail -f ./src/tests/server.log"
   },
   "keywords": [],
   "author": "",

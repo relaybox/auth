@@ -7,7 +7,7 @@ const API_SERVICE_URL = 'http://localhost:40060/dev';
 
 export async function request<T = any>(
   url: string,
-  options?: RequestInit
+  options: RequestInit = {}
 ): Promise<HTTPResponse<T>> {
   const requestUrl = `${API_SERVICE_URL}${url}`;
   const response = await fetch(requestUrl, options);
