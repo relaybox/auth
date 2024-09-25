@@ -16,6 +16,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+ENV TZ=UTC
+
 COPY --from=builder /app /app
 
 EXPOSE 4005

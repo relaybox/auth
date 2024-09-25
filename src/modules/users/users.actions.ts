@@ -195,7 +195,7 @@ export async function verifyUser(
       throw new ValidationError(`User already verified`);
     }
 
-    logger.info(`Verifying user`, { appId, identityId });
+    logger.info(`Unverified user found, running verification`, { appId, identityId });
 
     await validateAuthVerificationCode(
       logger,

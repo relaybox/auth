@@ -4,12 +4,10 @@ import { setupDb } from '../db/setup';
 import { getLogger } from '@/util/logger.util';
 import { getPgClient } from '@/lib/postgres';
 import { teardownDb } from '../db/teardown';
-import { getUserByEmail, getUserDataByClientId } from '@/modules/users/users.service';
+import { getUserByEmail } from '@/modules/users/users.service';
 import { request } from '../http/request';
-import { get } from 'http';
 import { createMockUser, getVerificationCode } from '../db/helpers';
-import { registerUser } from '@/modules/users/users.actions';
-import { AuthSignupResponse, AuthUser } from '@/types/auth.types';
+import { AuthUser } from '@/types/auth.types';
 
 const logger = getLogger('test');
 
@@ -171,33 +169,58 @@ describe('/users', () => {
           code: '123456'
         };
 
-        const { status } = await request('/users/verify', {
+        const { status, data } = await request('/users/verify', {
           method: 'POST',
           headers,
           body: JSON.stringify(body)
         });
 
         expect(status).toEqual(401);
+        expect(data.message).toEqual('User verification failed');
       });
 
       it('should return 401 Unauthorized if email address is invalid', async () => {
         const body = {
-          email: 'no-in-the@system.com',
+          email: 'not-in-the@system.com',
           code: '123456'
         };
 
-        const { status } = await request('/users/verify', {
+        const { status, data } = await request('/users/verify', {
           method: 'POST',
           headers,
           body: JSON.stringify(body)
         });
 
         expect(status).toEqual(401);
+        expect(data.message).toEqual('User verification failed');
       });
     });
   });
 
   describe('POST /users/authenticate', () => {
+    let user: AuthUser | undefined;
+
+    const email = 'test@authenticate.com';
+
+    beforeAll(async () => {
+      const { orgId, appId } = mockAppData;
+
+      user = await createMockUser(logger, pgClient, orgId, appId, email, password);
+
+      const code = await getVerificationCode(pgClient, user!.id);
+
+      const body = {
+        email,
+        code
+      };
+
+      await request('/users/verify', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+    });
+
     describe('2xx', () => {
       it('should authenticate a user with email and password', async () => {
         const body = {
@@ -211,7 +234,63 @@ describe('/users', () => {
           body: JSON.stringify(body)
         });
 
-        console.log(status, data);
+        expect(status).toEqual(200);
+        expect(data.user.id).toEqual(user!.id);
+        expect(data.user.verifiedAt).toEqual(expect.any(String));
+        expect(data.session.token).toBeDefined();
+        expect(data.session.refreshToken).toBeDefined();
+        expect(data.session.expiresIn).toEqual(expect.any(Number));
+        expect(data.session.expiresAt).toEqual(expect.any(Number));
+        expect(data.session.destroyAt).toEqual(expect.any(Number));
+        expect(data.session.authStorageType).toBeDefined();
+      });
+    });
+
+    describe('4xx', () => {
+      it('should return 400 Bad Request if schema validation fails', async () => {
+        const body = {
+          email
+        };
+
+        const { status } = await request('/users/authenticate', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(400);
+      });
+
+      it('should return 401 Unauthorized with generic message if password authentication fails', async () => {
+        const body = {
+          email,
+          password: 'invalid-password'
+        };
+
+        const { status, data } = await request('/users/authenticate', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(401);
+        expect(data.message).toEqual('Login failed');
+      });
+
+      it('should return 401 Unauthorized with generic message if user not found', async () => {
+        const body = {
+          email: 'not-in-the@system.com',
+          password
+        };
+
+        const { status, data } = await request('/users/authenticate', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+
+        expect(status).toEqual(401);
+        expect(data.message).toEqual('Login failed');
       });
     });
   });
