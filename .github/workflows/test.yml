@@ -49,18 +49,12 @@ jobs:
             db
           path: relaybox-db
 
-      - name: list files
-        run: |
-          cd relaybox-db
-          ls -al
-
       - name: Restore database
         run: |
-          psql -h ${{ inputs.db-host }} -p 5433 -U ${{ inputs.db-user }} -d ${{ inputs.db-name }} -f relaybox-db/db/schema.sql
-
-      - name: Verify database restoration
-        run: |
-          psql -h ${{ inputs.db-host }} -p 5433 -U ${{ inputs.db-user }} -d ${{ inputs.db-name }} -c "\dt"
+          psql -h ${{ inputs.db-host }} \
+            -p 5433 -U ${{ inputs.db-user }} \
+            -d ${{ inputs.db-name }} \
+            -f relaybox-db/db/schema.sql
 
       - name: Checkout current repository
         uses: actions/checkout@v4

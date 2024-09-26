@@ -6,6 +6,16 @@ on:
       - published
 
 jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+    with:
+      environment: production
+      db-user: postgres
+      db-name: relaybox_core_test
+      db-host: '127.0.0.1'
+    secrets: inherit
+
   deploy:
     name: deploy-prod
     runs-on: ubuntu-latest
