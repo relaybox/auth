@@ -19,7 +19,7 @@ jobs:
     name: Run
     runs-on: ubuntu-latest
     environment:
-      name: £{{ inputs.environment }}
+      name: ${{ inputs.environment }}
     permissions:
       contents: read
       packages: write
@@ -39,9 +39,6 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
