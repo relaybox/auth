@@ -17,7 +17,7 @@ jobs:
     secrets: inherit
 
   deploy:
-    name: Deploy / prod
+    name: Deploy
     runs-on: ubuntu-latest
     environment:
       name: production

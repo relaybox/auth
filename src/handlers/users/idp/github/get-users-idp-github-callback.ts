@@ -20,8 +20,6 @@ import { registerIdpUser } from 'src/modules/users/users.actions';
 
 const logger = getLogger('post-users-idp-github');
 
-// const GITHUB_CLIENT_ID = 'Ov23liE7QYs1UQ9axuJr';
-// const GITHUB_CLIENT_SECRET = 'f1899c077d17dde34413a3e15e0939cd4aa20e57';
 const PROVIDER_NAME = 'github';
 
 export const handler: APIGatewayProxyHandler = async (
