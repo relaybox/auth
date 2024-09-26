@@ -120,11 +120,11 @@ describe('/validation', () => {
       it('should return 403 Forbidden if auth token expired', async () => {
         const { user } = authUserSession!;
 
-        const invalidToken = getAuthToken(logger, user.id, publicKey, secretKey, user.clientId, -1);
+        const expiredToken = getAuthToken(logger, user.id, publicKey, secretKey, user.clientId, -1);
 
         const requestHeaders = {
           ...headers,
-          Authorization: `Bearer ${invalidToken}`
+          Authorization: `Bearer ${expiredToken}`
         };
 
         const { status } = await request('/validation/token', {
