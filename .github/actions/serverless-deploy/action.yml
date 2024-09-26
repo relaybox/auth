@@ -21,15 +21,9 @@ runs:
         SLS_DEBUG: '*'
         AUTH_ENCRYPTION_KEY: ${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_KEY }}
         AUTH_ENCRYPTION_SALT: ${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_SALT }}
-        AUTH_HASH_ID_SECRET: ${{ fromJson(inputs.secrets).AUTH_HASH_ID_SECRET }}
         AUTH_HMAC_KEY: ${{ fromJson(inputs.secrets).AUTH_HMAC_KEY }}
         AUTH_SERVICE_URL: ${{ fromJson(inputs.vars).AUTH_SERVICE_URL }}
         AWS_ACCOUNT_ID: ${{ fromJson(inputs.vars).AWS_ACCOUNT_ID }}
-        COGNITO_CLIENT_ID: ${{ fromJson(inputs.vars).COGNITO_CLIENT_ID }}
-        COGNITO_CLIENT_SECRET: ${{ fromJson(inputs.secrets).COGNITO_CLIENT_SECRET }}
-        COGNITO_OAUTH_CALLBACK_URL: ${{ fromJson(inputs.vars).COGNITO_OAUTH_CALLBACK_URL }}
-        COGNITO_USER_POOL_ID: ${{ fromJson(inputs.vars).COGNITO_USER_POOL_ID }}
-        COGNITO_USER_POOL_DOMAIN: ${{ fromJson(inputs.vars).COGNITO_USER_POOL_DOMAIN }}
         DB_HOST: ${{ fromJson(inputs.vars).DB_HOST }}
         DB_MAX_CONNECTIONS: ${{ fromJson(inputs.vars).DB_MAX_CONNECTIONS }}
         DB_NAME: ${{ fromJson(inputs.vars).DB_NAME }}
