@@ -43,7 +43,6 @@
     "vitest": "^1.4.0"
   },
   "dependencies": {
-    "aws-jwt-verify": "^4.0.0",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
     "lambda-multipart-parser": "^1.0.1",
