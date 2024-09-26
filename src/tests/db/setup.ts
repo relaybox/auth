@@ -46,7 +46,7 @@ async function createApplicationCredentials(
   orgId: string,
   appId: string,
   appPid: string
-): Promise<{ apiKey: string; publicKey: string }> {
+): Promise<{ secretKey: string; apiKey: string; publicKey: string }> {
   const keyId = nanoid(12);
   const secretKey = generateSecret();
   const now = new Date().toISOString();
@@ -64,6 +64,7 @@ async function createApplicationCredentials(
   const { rows } = await pgClient.query(query, [orgId, appId, appPid, keyId, secretKey, now]);
 
   return {
+    secretKey,
     apiKey: `${appPid}.${keyId}:${secretKey}`,
     publicKey: `${appPid}.${keyId}`
   };
@@ -97,14 +98,19 @@ async function createApplicationPreferences(
 
 export async function createDbState(
   pgClient: PgClient
-): Promise<{ orgId: string; appId: string; apiKey: string; publicKey: string }> {
+): Promise<{ orgId: string; appId: string; apiKey: string; publicKey: string; secretKey: string }> {
   const orgId = await createOrganisation(pgClient, 'Test Org');
   const { appId, appPid } = await createApplication(pgClient, orgId, 'Test App');
-  const { apiKey, publicKey } = await createApplicationCredentials(pgClient, orgId, appId, appPid);
+  const { apiKey, publicKey, secretKey } = await createApplicationCredentials(
+    pgClient,
+    orgId,
+    appId,
+    appPid
+  );
   const { tokenExpiry, sessionExpiry, authStorageType } = await createApplicationPreferences(
     pgClient,
     appId
   );
 
-  return { orgId, appId, apiKey, publicKey };
+  return { orgId, appId, apiKey, publicKey, secretKey };
 }

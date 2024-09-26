@@ -406,14 +406,7 @@ export async function getAuthSession(
     };
   }
 
-  const authToken = await getAuthToken(
-    logger,
-    uid,
-    publicKey,
-    secretKey,
-    user.clientId!,
-    expiresIn
-  );
+  const authToken = getAuthToken(logger, uid, publicKey, secretKey, user.clientId!, expiresIn);
   const refreshToken = await getAuthRefreshToken(
     logger,
     uid,

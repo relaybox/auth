@@ -35,14 +35,14 @@ export function verifyAuthToken(token: string, secretKey: string) {
   return payload;
 }
 
-export async function getAuthToken(
+export function getAuthToken(
   logger: Logger,
   uid: string,
   publicKey: string,
   secretKey: string,
   clientId: string,
   expiresIn: number = DEFAULT_ID_TOKEN_EXPIRY_SECS
-): Promise<any> {
+): string {
   logger.debug(`Generating auth token`);
 
   const payload = {

@@ -7,6 +7,8 @@ import { request } from '../http/request';
 import { getPgClient } from '@/lib/postgres';
 import { purgeDbState } from '../db/teardown';
 import { createDbState } from '../db/setup';
+import { decodeAuthToken, getAuthToken } from '@/lib/token';
+import jwt from 'jsonwebtoken';
 
 const logger = getLogger('validation-test');
 
@@ -18,12 +20,16 @@ describe('/validation', () => {
   let headers: Record<string, string>;
   let orgId: string;
   let appId: string;
+  let publicKey: string;
+  let secretKey: string;
 
   beforeAll(async () => {
     pgClient = await getPgClient();
     const dbState = await createDbState(pgClient);
     orgId = dbState.orgId;
     appId = dbState.appId;
+    publicKey = dbState.publicKey;
+    secretKey = dbState.secretKey;
     headers = {
       'X-Ds-Public-Key': dbState.publicKey
     };
@@ -76,6 +82,73 @@ describe('/validation', () => {
 
         expect(status).toEqual(200);
         expect(data.user.id).toEqual(authUserSession!.user.id);
+      });
+    });
+
+    describe('4xx', () => {
+      it('should return 401 Unauthorized if authorization header is missing', async () => {
+        const requestHeaders = {
+          ...headers
+        };
+
+        const { status } = await request('/validation/token', {
+          method: 'GET',
+          headers: requestHeaders
+        });
+
+        expect(status).toEqual(401);
+      });
+
+      it('should return 403 Forbidden if auth token is invalid', async () => {
+        const requestHeaders = {
+          ...headers,
+          Authorization: `Bearer invalid-token`
+        };
+
+        const { status } = await request('/validation/token', {
+          method: 'GET',
+          headers: requestHeaders
+        });
+
+        expect(status).toEqual(403);
+      });
+
+      it('should return 403 Forbidden if auth token signature is invalid', async () => {
+        const { user } = authUserSession!;
+
+        const secretKey = 'invalid-secret';
+
+        const invalidToken = getAuthToken(logger, user.id, publicKey, secretKey, user.clientId);
+
+        const requestHeaders = {
+          ...headers,
+          Authorization: `Bearer ${invalidToken}`
+        };
+
+        const { status } = await request('/validation/token', {
+          method: 'GET',
+          headers: requestHeaders
+        });
+
+        expect(status).toEqual(403);
+      });
+
+      it('should return 403 Forbidden if auth token has expired', async () => {
+        const { user } = authUserSession!;
+
+        const invalidToken = getAuthToken(logger, user.id, publicKey, secretKey, user.clientId, -1);
+
+        const requestHeaders = {
+          ...headers,
+          Authorization: `Bearer ${invalidToken}`
+        };
+
+        const { status } = await request('/validation/token', {
+          method: 'GET',
+          headers: requestHeaders
+        });
+
+        expect(status).toEqual(403);
       });
     });
   });

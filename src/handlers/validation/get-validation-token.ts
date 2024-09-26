@@ -8,10 +8,11 @@ import { getPgClient } from 'src/lib/postgres';
 import * as httpResponse from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 import { lambdaProxyEventMiddleware } from 'src/util/request.util';
-import { ForbiddenError, UnauthorizedError, ValidationError } from 'src/lib/errors';
+import { ForbiddenError, TokenError, UnauthorizedError, ValidationError } from 'src/lib/errors';
 import { TokenType } from 'src/types/jwt.types';
 import { getKeyParts, getUserDataByClientId } from 'src/modules/users/users.service';
 import { decodeAuthToken, verifyAuthToken } from 'src/lib/token';
+import { handleErrorResponse } from 'src/util/http.util';
 
 const logger = getLogger('get-validation-token');
 
@@ -30,7 +31,11 @@ async function lambdaProxyEventHandler(
       throw new UnauthorizedError('Missing authorization header');
     }
 
-    const connectionId = event.headers['X-Ds-Connection-Id'];
+    const decodedToken = decodeAuthToken(token);
+
+    if (!decodedToken) {
+      throw new TokenError('Invalid auth token');
+    }
 
     const {
       publicKey,
@@ -39,7 +44,7 @@ async function lambdaProxyEventHandler(
       exp,
       tokenType,
       permissions: inlinePermissions
-    } = decodeAuthToken(token);
+    } = decodedToken;
 
     if (tokenType !== TokenType.ID_TOKEN) {
       throw new ValidationError(`Invalid token type`);
@@ -50,8 +55,13 @@ async function lambdaProxyEventHandler(
     const { appPid, keyId } = getKeyParts(publicKey);
     const { appId, secretKey } = await getTokenValidationCredentials(logger, pgClient, keyId);
 
-    verifyAuthToken(token, secretKey);
+    try {
+      verifyAuthToken(token, secretKey);
+    } catch (err) {
+      throw new TokenError('Invalid auth token');
+    }
 
+    const connectionId = event.headers['X-Ds-Connection-Id'];
     const credentials = getClientCredentials(logger, appPid, clientId, connectionId);
     const sessionPermissions = await getPermissions(logger, pgClient, keyId, inlinePermissions);
     const user = await getUserDataByClientId(logger, pgClient, appId, clientId);
@@ -73,7 +83,7 @@ async function lambdaProxyEventHandler(
     return httpResponse._200(sessionData);
   } catch (err: any) {
     logger.error(err);
-    return httpResponse._500({ message: err.message });
+    return handleErrorResponse(logger, err);
   } finally {
     pgClient.clean();
   }
