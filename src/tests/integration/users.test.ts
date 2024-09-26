@@ -8,6 +8,7 @@ import { getUserByEmail } from '@/modules/users/users.service';
 import { request } from '../http/request';
 import { getVerificationCode } from '../db/helpers';
 import { AuthUserSession } from '@/types/auth.types';
+import { runAuthenticationFlow } from '../http/helpers';
 
 const logger = getLogger('test');
 
@@ -108,6 +109,7 @@ describe('/users', () => {
         };
 
         await request('/users/create', requestOptions);
+
         const { status, data } = await request('/users/create', requestOptions);
 
         expect(status).toEqual(401);
@@ -164,7 +166,7 @@ describe('/users', () => {
         expect(status).toEqual(400);
       });
 
-      it('should return 401 Unauthorized if verification code is invalid', async () => {
+      it('should return 401 Unauthorized if verification code invalid', async () => {
         const body = {
           email,
           code: '123456'
@@ -180,7 +182,7 @@ describe('/users', () => {
         expect(data.message).toEqual('User verification failed');
       });
 
-      it('should return 401 Unauthorized if email address is invalid', async () => {
+      it('should return 401 Unauthorized if email address invalid', async () => {
         const body = {
           email: 'not-in-the@system.com',
           code: '123456'
@@ -200,6 +202,7 @@ describe('/users', () => {
 
   describe('POST /users/authenticate', () => {
     let uid: string;
+
     const email = 'test@authenticate.com';
 
     beforeAll(async () => {
@@ -299,30 +302,15 @@ describe('/users', () => {
   describe('Authenticated user endpoints', () => {
     const email = 'test@session.com';
 
-    let authUserSession: AuthUserSession | undefined;
+    let authUserSession: AuthUserSession;
 
     beforeAll(async () => {
-      const { data: userRegistrationResponse } = await request('/users/create', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, password })
-      });
-
-      const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
-
-      await request('/users/verify', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, code })
-      });
-
-      const { data } = await request<AuthUserSession>('/users/authenticate', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, password })
-      });
-
-      authUserSession = data;
+      authUserSession = (await runAuthenticationFlow(
+        pgClient,
+        email,
+        password,
+        headers
+      )) as AuthUserSession;
     });
 
     describe('GET /users/session', () => {
@@ -348,7 +336,7 @@ describe('/users', () => {
       });
 
       describe('4xx', () => {
-        it('should return 403 Forbidden if invalid token is provided', async () => {
+        it('should return 403 Forbidden if invalid token provided', async () => {
           const requestHeaders = {
             ...headers,
             Authorization: `Bearer invalid-token`
@@ -362,7 +350,7 @@ describe('/users', () => {
           expect(status).toEqual(403);
         });
 
-        it('should return 401 Unauthorized if authorization header is missing', async () => {
+        it('should return 401 Unauthorized if authorization header missing', async () => {
           const requestHeaders = {
             ...headers
           };
@@ -400,7 +388,7 @@ describe('/users', () => {
       });
 
       describe('4xx', () => {
-        it('should return 403 Forbidden if token is invalid', async () => {
+        it('should return 403 Forbidden if token invalid', async () => {
           const requestHeaders = {
             ...headers,
             Authorization: `Bearer invalid-token`
@@ -414,7 +402,7 @@ describe('/users', () => {
           expect(status).toEqual(403);
         });
 
-        it('should return 401 Bad Request if authorization header is missing', async () => {
+        it('should return 401 Bad Request if authorization header missing', async () => {
           const requestHeaders = {
             ...headers
           };
@@ -467,7 +455,7 @@ describe('/users', () => {
           expect(status).toEqual(404);
         });
 
-        it('should return 403 Forbidden if token is invalid', async () => {
+        it('should return 403 Forbidden if token invalid', async () => {
           const { user } = authUserSession!;
 
           const requestHeaders = {
@@ -483,7 +471,7 @@ describe('/users', () => {
           expect(status).toEqual(403);
         });
 
-        it('should return 401 Unauthorized if authorization header is missing', async () => {
+        it('should return 401 Unauthorized if authorization header missing', async () => {
           const { user } = authUserSession!;
 
           const requestHeaders = {

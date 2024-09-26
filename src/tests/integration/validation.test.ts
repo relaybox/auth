@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { getVerificationCode } from '../db/helpers';
 import PgClient from 'serverless-postgres';
 import { AuthUserSession } from '@/types/auth.types';
 import { getLogger } from '@/util/logger.util';
@@ -7,8 +6,8 @@ import { request } from '../http/request';
 import { getPgClient } from '@/lib/postgres';
 import { purgeDbState } from '../db/teardown';
 import { createDbState } from '../db/setup';
-import { decodeAuthToken, getAuthToken } from '@/lib/token';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/token';
+import { runAuthenticationFlow } from '../http/helpers';
 
 const logger = getLogger('validation-test');
 
@@ -40,34 +39,19 @@ describe('/validation', () => {
   });
 
   describe('GET /validation/token', () => {
-    let authUserSession: AuthUserSession | undefined;
+    let authUserSession: AuthUserSession;
 
     beforeAll(async () => {
-      const { data: userRegistrationResponse } = await request('/users/create', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, password })
-      });
-
-      const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
-
-      await request('/users/verify', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, code })
-      });
-
-      const { data } = await request<AuthUserSession>('/users/authenticate', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, password })
-      });
-
-      authUserSession = data;
+      authUserSession = (await runAuthenticationFlow(
+        pgClient,
+        email,
+        password,
+        headers
+      )) as AuthUserSession;
     });
 
     describe('2xx', () => {
-      it('should return a valid session', async () => {
+      it('should return a valid session based on auth bearer token', async () => {
         const { session } = authUserSession!;
 
         const requestHeaders = {
@@ -86,7 +70,7 @@ describe('/validation', () => {
     });
 
     describe('4xx', () => {
-      it('should return 401 Unauthorized if authorization header is missing', async () => {
+      it('should return 401 Unauthorized if authorization header missing', async () => {
         const requestHeaders = {
           ...headers
         };
@@ -99,7 +83,7 @@ describe('/validation', () => {
         expect(status).toEqual(401);
       });
 
-      it('should return 403 Forbidden if auth token is invalid', async () => {
+      it('should return 403 Forbidden if auth token invalid', async () => {
         const requestHeaders = {
           ...headers,
           Authorization: `Bearer invalid-token`
@@ -113,7 +97,7 @@ describe('/validation', () => {
         expect(status).toEqual(403);
       });
 
-      it('should return 403 Forbidden if auth token signature is invalid', async () => {
+      it('should return 403 Forbidden if auth token signature invalid', async () => {
         const { user } = authUserSession!;
 
         const secretKey = 'invalid-secret';
@@ -133,7 +117,7 @@ describe('/validation', () => {
         expect(status).toEqual(403);
       });
 
-      it('should return 403 Forbidden if auth token has expired', async () => {
+      it('should return 403 Forbidden if auth token expired', async () => {
         const { user } = authUserSession!;
 
         const invalidToken = getAuthToken(logger, user.id, publicKey, secretKey, user.clientId, -1);
