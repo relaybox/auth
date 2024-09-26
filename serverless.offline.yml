@@ -79,6 +79,6 @@ provider:
   timeout: 300
 
 functions:
-  - ${file(./functions/authorizers.yml)}
+  # - ${file(./functions/authorizers.yml)}
   - ${file(./functions/validation.yml)}
   - ${file(./functions/users.yml)}

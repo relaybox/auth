@@ -1,17 +1,17 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import PgClient from 'serverless-postgres';
-import { setupDb } from '../db/setup';
+import { createDbState } from '../db/setup';
 import { getLogger } from '@/util/logger.util';
 import { getPgClient } from '@/lib/postgres';
-import { teardownDb } from '../db/teardown';
+import { purgeDbState } from '../db/teardown';
 import { getUserByEmail } from '@/modules/users/users.service';
 import { request } from '../http/request';
-import { createMockUser, getVerificationCode } from '../db/helpers';
-import { AuthUser, AuthUserSession } from '@/types/auth.types';
+import { getVerificationCode } from '../db/helpers';
+import { AuthUserSession } from '@/types/auth.types';
 
 const logger = getLogger('test');
 
-const email = 'test@test.com';
+const email = 'new@user.com';
 const password = 'Password$100';
 
 interface CreateUserResponse {
@@ -23,23 +23,21 @@ interface CreateUserResponse {
 describe('/users', () => {
   let pgClient: PgClient;
   let headers: Record<string, string>;
-  let mockAppData: {
-    orgId: string;
-    appId: string;
-    apiKey: string;
-    publicKey: string;
-  };
+  let orgId: string;
+  let appId: string;
 
   beforeAll(async () => {
     pgClient = await getPgClient();
-    mockAppData = await setupDb(pgClient);
+    const dbState = await createDbState(pgClient);
+    orgId = dbState.orgId;
+    appId = dbState.appId;
     headers = {
-      'X-Ds-Public-Key': mockAppData.publicKey
+      'X-Ds-Public-Key': dbState.publicKey
     };
   });
 
   afterAll(async () => {
-    await teardownDb(pgClient);
+    await purgeDbState(pgClient);
     await pgClient.clean();
   });
 
@@ -57,8 +55,6 @@ describe('/users', () => {
           body: JSON.stringify(body)
         });
 
-        const { orgId, appId } = mockAppData;
-
         const user = await getUserByEmail(logger, pgClient, orgId, appId, email);
 
         expect(status).toEqual(200);
@@ -75,7 +71,7 @@ describe('/users', () => {
           email
         };
 
-        const { status } = await request<CreateUserResponse>('/users/create', {
+        const { status } = await request('/users/create', {
           method: 'POST',
           headers,
           body: JSON.stringify(body)
@@ -90,7 +86,7 @@ describe('/users', () => {
           password: 'weak-password'
         };
 
-        const { status } = await request<CreateUserResponse>('/users/create', {
+        const { status } = await request('/users/create', {
           method: 'POST',
           headers,
           body: JSON.stringify(body)
@@ -105,11 +101,14 @@ describe('/users', () => {
           password
         };
 
-        const { status, data } = await request<CreateUserResponse>('/users/create', {
+        const requestOptions = {
           method: 'POST',
           headers,
           body: JSON.stringify(body)
-        });
+        };
+
+        await request('/users/create', requestOptions);
+        const { status, data } = await request('/users/create', requestOptions);
 
         expect(status).toEqual(401);
         expect(data.message).toEqual('Registration failed');
@@ -118,18 +117,20 @@ describe('/users', () => {
   });
 
   describe('POST /users/verify', () => {
-    let user: AuthUser | undefined;
-
     const email = 'test@verify.com';
 
-    beforeAll(async () => {
-      const { orgId, appId } = mockAppData;
-      user = await createMockUser(logger, pgClient, orgId, appId, email, password);
-    });
-
     describe('2xx', () => {
-      it('should authenticate a user with email and password', async () => {
-        const code = await getVerificationCode(pgClient, user!.id);
+      it('should verify a user following registration', async () => {
+        const { data: userRegistrationResponse } = await request('/users/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            email,
+            password
+          })
+        });
+
+        const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
 
         const body = {
           email,
@@ -198,26 +199,26 @@ describe('/users', () => {
   });
 
   describe('POST /users/authenticate', () => {
-    let user: AuthUser | undefined;
-
+    let uid: string;
     const email = 'test@authenticate.com';
 
     beforeAll(async () => {
-      const { orgId, appId } = mockAppData;
+      const { data: userRegistrationResponse } = await request('/users/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, password })
+      });
 
-      user = await createMockUser(logger, pgClient, orgId, appId, email, password);
-
-      const code = await getVerificationCode(pgClient, user!.id);
-
-      const body = {
-        email,
-        code
-      };
+      uid = userRegistrationResponse.id;
+      const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
 
       await request('/users/verify', {
         method: 'POST',
         headers,
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          email,
+          code
+        })
       });
     });
 
@@ -235,7 +236,7 @@ describe('/users', () => {
         });
 
         expect(status).toEqual(200);
-        expect(data.user.id).toEqual(user!.id);
+        expect(data.user.id).toEqual(uid);
         expect(data.user.verifiedAt).toEqual(expect.any(String));
         expect(data.session.token).toBeDefined();
         expect(data.session.refreshToken).toBeDefined();
@@ -296,32 +297,29 @@ describe('/users', () => {
   });
 
   describe('Authenticated user endpoints', () => {
-    let authUserSession: AuthUserSession | undefined;
-
     const email = 'test@session.com';
 
-    beforeAll(async () => {
-      const { orgId, appId } = mockAppData;
+    let authUserSession: AuthUserSession | undefined;
 
-      const user = await createMockUser(logger, pgClient, orgId, appId, email, password);
-      const code = await getVerificationCode(pgClient, user!.id);
+    beforeAll(async () => {
+      const { data: userRegistrationResponse } = await request('/users/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, password })
+      });
+
+      const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
 
       await request('/users/verify', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          email,
-          code
-        })
+        body: JSON.stringify({ email, code })
       });
 
-      const { data } = await request('/users/authenticate', {
+      const { data } = await request<AuthUserSession>('/users/authenticate', {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          email,
-          password
-        })
+        body: JSON.stringify({ email, password })
       });
 
       authUserSession = data;

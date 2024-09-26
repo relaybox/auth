@@ -1,71 +1,67 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createMockUser, getVerificationCode } from '../db/helpers';
+import { getVerificationCode } from '../db/helpers';
 import PgClient from 'serverless-postgres';
-import { setupDb } from '../db/setup';
 import { AuthUserSession } from '@/types/auth.types';
 import { getLogger } from '@/util/logger.util';
 import { request } from '../http/request';
 import { getPgClient } from '@/lib/postgres';
-import { teardownDb } from '../db/teardown';
+import { purgeDbState } from '../db/teardown';
+import { createDbState } from '../db/setup';
 
 const logger = getLogger('validation-test');
 
 const email = 'test@session.com';
 const password = 'Password$100';
 
-describe.skip('/validation', () => {
+describe('/validation', () => {
   let pgClient: PgClient;
   let headers: Record<string, string>;
-  let mockAppData: {
-    orgId: string;
-    appId: string;
-    apiKey: string;
-    publicKey: string;
-  };
-
-  let authUserSession: AuthUserSession | undefined;
+  let orgId: string;
+  let appId: string;
 
   beforeAll(async () => {
     pgClient = await getPgClient();
-    mockAppData = await setupDb(pgClient);
+    const dbState = await createDbState(pgClient);
+    orgId = dbState.orgId;
+    appId = dbState.appId;
     headers = {
-      'X-Ds-Public-Key': mockAppData.publicKey
+      'X-Ds-Public-Key': dbState.publicKey
     };
-
-    const { orgId, appId } = mockAppData;
-
-    const user = await createMockUser(logger, pgClient, orgId, appId, email, password);
-    const code = await getVerificationCode(pgClient, user!.id);
-
-    await request('/users/verify', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        email,
-        code
-      })
-    });
-
-    const { data } = await request('/users/authenticate', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        email,
-        password
-      })
-    });
-
-    authUserSession = data;
   });
 
   afterAll(async () => {
-    // await teardownDb(logger, pgClient);s
     await pgClient.clean();
   });
 
   describe('GET /validation/token', () => {
+    let authUserSession: AuthUserSession | undefined;
+
+    beforeAll(async () => {
+      const { data: userRegistrationResponse } = await request('/users/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, password })
+      });
+
+      const code = await getVerificationCode(pgClient, userRegistrationResponse.id);
+
+      await request('/users/verify', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, code })
+      });
+
+      const { data } = await request<AuthUserSession>('/users/authenticate', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, password })
+      });
+
+      authUserSession = data;
+    });
+
     describe('2xx', () => {
-      it('shuold return a valid session', async () => {
+      it('should return a valid session', async () => {
         const { session } = authUserSession!;
 
         const requestHeaders = {
@@ -78,7 +74,8 @@ describe.skip('/validation', () => {
           headers: requestHeaders
         });
 
-        console.log(data);
+        expect(status).toEqual(200);
+        expect(data.user.id).toEqual(authUserSession!.user.id);
       });
     });
   });

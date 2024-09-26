@@ -1,3 +1,12 @@
+user-authorizer:
+  handler: src/handlers/users/authorizers/user-authorizer.handler
+
+session-authorizer:
+  handler: src/handlers/users/authorizers/session-authorizer.handler
+
+tmp-authorizer:
+  handler: src/handlers/users/authorizers/tmp-authorizer.handler
+
 post-users-create:
   handler: src/handlers/users/post-users-create.handler
   timeout: 30

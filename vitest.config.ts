@@ -18,10 +18,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       exclude: ['**/node_modules/**', '**/*.test.ts']
+    },
+    sequence: {
+      shuffle: false,
+      concurrent: false
+    },
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     }
-    // sequence: {
-    //   shuffle: false,
-    //   concurrent: false
-    // }
   }
 });

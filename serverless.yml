@@ -129,6 +129,6 @@ provider:
     subnetIds: ${split(${self:custom.vars.VPC_SUBNET_IDS}, ',')}
 
 functions:
-  - ${file(./functions/authorizers.yml)}
+  # - ${file(./functions/authorizers.yml)}
   - ${file(./functions/validation.yml)}
   - ${file(./functions/users.yml)}

@@ -1,8 +1,0 @@
-user-authorizer:
-  handler: src/handlers/authorizers/user-authorizer.handler
-
-session-authorizer:
-  handler: src/handlers/authorizers/session-authorizer.handler
-
-tmp-authorizer:
-  handler: src/handlers/authorizers/tmp-authorizer.handler
