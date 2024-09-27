@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node build.config.js",
     "start": "sls offline -c serverless.yml --host 0.0.0.0"
   },
   "keywords": [],

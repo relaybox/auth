@@ -6,6 +6,9 @@ WORKDIR /app
 COPY ./platform/package.json ./package.json
 RUN npm install --verbose
 
+COPY ./build.config.js ./build.config.js
+RUN npm run build
+
 COPY ./src ./src
 COPY ./functions ./functions
 COPY ./tsconfig.json ./

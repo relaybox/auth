@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import PgClient from 'serverless-postgres';
 import { createDbState } from '../db/setup';
 import { getLogger } from '@/util/logger.util';
