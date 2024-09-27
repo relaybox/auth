@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "sls offline -c serverless.offline.yml --host 0.0.0.0"
+    "start": "sls offline -c serverless.yml --host 0.0.0.0"
   },
   "keywords": [],
   "author": "",

@@ -40,6 +40,8 @@ export const handler: APIGatewayProxyHandler = async (
   const authenticationActionLog = getAuthenticationActionLog();
 
   try {
+    const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
+
     const { keyId } = getRequestAuthParams(event, authenticationActionLog);
 
     const { orgId, appId } = await getAuthDataByKeyId(
@@ -48,8 +50,6 @@ export const handler: APIGatewayProxyHandler = async (
       keyId,
       authenticationActionLog
     );
-
-    const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
 
     await validateUsername(logger, pgClient, appId, username);
     await validatePassword(logger, pgClient, appId, password);

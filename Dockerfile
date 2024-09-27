@@ -3,13 +3,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.offline.json ./package.json
+COPY ./platform/package.json ./package.json
 RUN npm install --verbose
 
 COPY ./src ./src
 COPY ./functions ./functions
 COPY ./tsconfig.json ./
-COPY ./serverless.offline.yml ./
+COPY ./platform/serverless.yml ./serverless.yml
 
 # Stage 2: Production stage
 FROM node:20-alpine
