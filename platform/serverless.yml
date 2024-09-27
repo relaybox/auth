@@ -19,12 +19,8 @@ custom:
       - nodemailer
       - otplib
       - qrcode
-      - serverless
-      - serverless-esbuild
-      - serverless-offline
       - serverless-postgres
       - unique-names-generator
-      - uuid
       - winston
       - zod
 
