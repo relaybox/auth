@@ -9,19 +9,6 @@ package:
 variablesResolutionMode: 20210326
 
 custom:
-  # esbuild:
-  #   bundle: true
-  #   minify: true
-  #   external:
-  #     - jsonwebtoken
-  #     - nodemailer
-  #     - otplib
-  #     - qrcode
-  #     - serverless-postgres
-  #     - unique-names-generator
-  #     - winston
-  #     - zod
-
   serverless-offline:
     httpPort: 4005
     lambdaPort: 3005

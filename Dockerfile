@@ -3,15 +3,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY ./platform/package.json ./package.json
-RUN npm install --verbose
-
+COPY ./platform/* .
 COPY ./src ./src
 COPY ./functions ./functions
 COPY ./tsconfig.json ./
-COPY ./platform/serverless.yml ./serverless.yml
 
-COPY ./platform/build.config.js ./build.config.js
+RUN npm install --verbose
 RUN npm run build
 RUN rm -rf src
 
