@@ -17,7 +17,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@aws-sdk/client-codedeploy": "^3.513.0",
+    "@aws-sdk/client-codedeploy": "^3.658.1",
     "@types/aws-lambda": "^8.10.130",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/kill-port": "^2.0.3",
