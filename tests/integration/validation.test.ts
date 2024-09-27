@@ -4,7 +4,6 @@ import { AuthUserSession } from '@/types/auth.types';
 import { getLogger } from '@/util/logger.util';
 import { request } from '../http/request';
 import { getPgClient } from '@/lib/postgres';
-import { purgeDbState } from '../db/teardown';
 import { createDbState } from '../db/setup';
 import { getAuthToken } from '@/lib/token';
 import { runAuthenticationFlow } from '../http/helpers';
