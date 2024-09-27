@@ -5,36 +5,7 @@ const path = require('path');
 const entryPattern = 'src/handlers/**/*.ts';
 const entryPoints = glob.sync(entryPattern);
 
-const nodeBuiltIns = [
-  'assert',
-  'buffer',
-  'child_process',
-  'cluster',
-  'crypto',
-  'dgram',
-  'dns',
-  'domain',
-  'events',
-  'fs',
-  'http',
-  'https',
-  'net',
-  'os',
-  'path',
-  'punycode',
-  'querystring',
-  'readline',
-  'stream',
-  'string_decoder',
-  'timers',
-  'tls',
-  'tty',
-  'url',
-  'util',
-  'v8',
-  'vm',
-  'zlib'
-];
+const nodeBuiltIns = ['crypto'];
 
 const dependencies = [
   'jsonwebtoken',

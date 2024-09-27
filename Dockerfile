@@ -6,13 +6,14 @@ WORKDIR /app
 COPY ./platform/package.json ./package.json
 RUN npm install --verbose
 
-COPY ./build.config.js ./build.config.js
-RUN npm run build
-
 COPY ./src ./src
 COPY ./functions ./functions
 COPY ./tsconfig.json ./
 COPY ./platform/serverless.yml ./serverless.yml
+
+COPY ./platform/build.config.js ./build.config.js
+RUN npm run build
+RUN rm -rf src
 
 # Stage 2: Production stage
 FROM node:20-alpine
