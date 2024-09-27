@@ -28,6 +28,17 @@ enum Digest {
   SHA512 = 'sha512'
 }
 
+/**
+ * TODO: Implement key versioning strategy
+ *
+ * Implement flow that incrementally updates
+ * values with new key version as users authenticate
+ * Potentially move key versioning to kms for cloud hosted apps
+ */
+export function getKeyVersion() {
+  return 1;
+}
+
 export function encrypt(value: string, salt?: string): string {
   const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
   const key = scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
@@ -87,8 +98,4 @@ export function verifyStrongHash(password: string, storedHash: string, salt: str
   );
 
   return timingSafeEqual(Buffer.from(hash, Encoding.HEX), Buffer.from(storedHash, Encoding.HEX));
-}
-
-export function getKeyVersion() {
-  return 1;
 }
