@@ -28,7 +28,7 @@ esbuild
     outbase: '.',
     format: 'cjs',
     platform: 'node',
-    target: 'node16',
+    target: 'node20',
     sourcemap: false,
     minify: true,
     splitting: false,

@@ -117,5 +117,5 @@ provider:
     subnetIds: ${split(${self:custom.vars.VPC_SUBNET_IDS}, ',')}
 
 functions:
-  - ${file(./functions/validation.yml)}
   - ${file(./functions/users.yml)}
+  - ${file(./functions/validation.yml)}
