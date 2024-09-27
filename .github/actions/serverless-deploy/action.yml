@@ -1,4 +1,4 @@
-name: sls-deploy
+name: serverless-deploy
 
 inputs:
   stage:
