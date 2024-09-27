@@ -13,6 +13,20 @@ custom:
   esbuild:
     bundle: true
     minify: true
+    external:
+      - jsonwebtoken
+      - lambda-multipart-parser
+      - nodemailer
+      - otplib
+      - qrcode
+      - serverless
+      - serverless-esbuild
+      - serverless-offline
+      - serverless-postgres
+      - unique-names-generator
+      - uuid
+      - winston
+      - zod
 
   serverless-offline:
     httpPort: 4005
@@ -59,8 +73,6 @@ custom:
     SMTP_PASSWORD: ${env:SMTP_PASSWORD, ''}
     SMTP_USERNAME: ${env:SMTP_USERNAME, ''}
     PUBLIC_URL: ${env:PUBLIC_URL, ''}
-    VPC_SECURITY_GROUP_IDS: ${env:VPC_SECURITY_GROUP_IDS, ''}
-    VPC_SUBNET_IDS: ${env:VPC_SUBNET_IDS, ''}
     NODE_ENV: ${env:NODE_ENV, 'production'}
 
 provider:
