@@ -1,5 +1,3 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import parser from 'lambda-multipart-parser';
 import { GithubUserData } from 'src/types/auth.types';
 
 const GITHUB_WEB_URL = 'https://github.com';
@@ -18,29 +16,6 @@ export async function getGitHubPrimaryData(
   const { id: providerId, login: username } = await getGitHubUserData(authorization);
 
   return { providerId, username, email };
-}
-
-export async function getGitHubAuthToken(event: APIGatewayProxyEvent): Promise<any> {
-  const { client_id, client_secret, code } = await parser.parse(event);
-
-  const queryParams = new URLSearchParams({
-    client_id,
-    client_secret,
-    code
-  });
-
-  const requestUrl = `${GITHUB_WEB_URL}/login/oauth/access_token?${queryParams}`;
-
-  const response = await fetch(requestUrl, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json'
-    }
-  });
-
-  const token = await response.json();
-
-  return token;
 }
 
 export async function getGitHubAuthTokenWeb(

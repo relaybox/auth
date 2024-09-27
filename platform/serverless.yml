@@ -15,7 +15,6 @@ custom:
     minify: true
     external:
       - jsonwebtoken
-      - lambda-multipart-parser
       - nodemailer
       - otplib
       - qrcode
