@@ -5,9 +5,7 @@ const path = require('path');
 const entryPattern = 'src/handlers/**/*.ts';
 const entryPoints = glob.sync(entryPattern);
 
-const nodeBuiltIns = ['crypto'];
-
-const dependencies = [
+const externalDependencies = [
   'jsonwebtoken',
   'nodemailer',
   'otplib',
@@ -17,8 +15,6 @@ const dependencies = [
   'winston',
   'zod'
 ];
-
-const externalDependencies = [...dependencies, ...nodeBuiltIns];
 
 esbuild
   .build({
