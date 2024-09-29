@@ -35,6 +35,7 @@ custom:
     httpPort: 4005
     lambdaPort: 3005
     reloadHandler: true
+    noPrependStageInUrl: true
 
   deploymentSettings:
     type: AllAtOnce
