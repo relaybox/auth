@@ -21,6 +21,7 @@ ENV NODE_ENV=production
 ENV TZ=UTC
 
 COPY --from=builder /app /app
+RUN npm uninstall esbuild
 
 EXPOSE 4005
 

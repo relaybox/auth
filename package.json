@@ -16,7 +16,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-codedeploy": "^3.658.1",
     "@types/aws-lambda": "^8.10.130",
