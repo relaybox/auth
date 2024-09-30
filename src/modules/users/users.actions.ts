@@ -34,6 +34,8 @@ import {
 } from './users.service';
 import { authenticator } from 'otplib';
 
+const AUTO_VERIFY = process.env.AUTO_VERIFY === 'true';
+
 export async function registerUser(
   logger: Logger,
   pgClient: PgClient,
@@ -51,7 +53,8 @@ export async function registerUser(
   try {
     await pgClient.query('BEGIN');
 
-    const autoVerify = false;
+    const autoVerify = AUTO_VERIFY;
+    const providerId = null;
 
     const { id: uid, clientId } = await getOrCreateUser(
       logger,
@@ -73,7 +76,9 @@ export async function registerUser(
       uid,
       email,
       password,
-      provider
+      provider,
+      providerId,
+      autoVerify
     );
 
     const code = await createAuthVerificationCode(
@@ -84,7 +89,9 @@ export async function registerUser(
       AuthVerificationCodeType.REGISTER
     );
 
-    await sendAuthVerificationCode(logger, email, code);
+    if (!autoVerify) {
+      await sendAuthVerificationCode(logger, email, code);
+    }
 
     await pgClient.query('COMMIT');
 
