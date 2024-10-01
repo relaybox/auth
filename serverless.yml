@@ -58,6 +58,7 @@ custom:
       - X-Ds-Client-Id
       - X-Ds-Connection-Id
       - X-Ds-Public-Key
+      - X-Ds-Internal-Id
     allowCredentials: true
 
   vars:
