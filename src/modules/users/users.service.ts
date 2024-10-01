@@ -115,7 +115,7 @@ export async function createUserIdentity(
   email: string,
   password: string,
   provider?: AuthProvider,
-  providerId?: string,
+  providerId?: string | null,
   autoVerify: boolean = false
 ): Promise<AuthUser> {
   logger.debug(`Creating user identity`, { uid, provider });
