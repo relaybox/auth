@@ -20,7 +20,7 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "vitest.global-setup.ts", "tests/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"],
   "useUnknownInCatchVariables": false
 }
