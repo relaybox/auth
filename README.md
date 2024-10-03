@@ -2,6 +2,8 @@
 
 RelayBox Auth is a serverless authentication service written in NodeJS, built to handle user authentication, session management and access control to RelayBox realtime services and applications.
 
+View [@relaybox/client](https://relaybox.net/docs/api-reference/rlaybox-client) for more information on how the SDK interacts with this service.
+
 The auth service manages multiple processes including:
 
 - Registration and verification
@@ -47,4 +49,4 @@ Test files can be found at `./test`. These files include mocks and intergation t
 
 ## About the "Auth" service
 
-The "auth" service is a group of Lambda functions that handle the entire authentication flow. From user registration and verification to authentication and session management. It also handles connection token verification from uws realtime service.
+The "auth" service is a group of Lambda functions that handle the entire authentication flow. From user registration and verification to authentication and session management. It also handles connection token verification from uws realtime service. To learn more about `uws`, head over to the [uws repo](https://github.com/relaybox/uws).
