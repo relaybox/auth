@@ -1,8 +1,8 @@
 # Auth - RelayBox Authentication Service
 
-RelayBox Auth is a serverless authentication service written in NodeJS, built to handle user authentication, session management and access control to RelayBox realtime services and applications.
+RelayBox Auth is a REST authentication service written in NodeJS, built to handle user authentication, session management and access control to RelayBox realtime services and applications.
 
-View [@relaybox/client](https://relaybox.net/docs/api-reference/relaybox-client/auth) for more information about how client interact with the Auth service. This service essentially provides the backend for the SDK.
+View [@relaybox/client](https://relaybox.net/docs/api-reference/relaybox-client/auth) for more information about how client-side applications interact with this service. Think of this REST API as the backend for `relayBox.auth()`.
 
 The auth service manages multiple processes including:
 
@@ -23,7 +23,7 @@ The auth service manages multiple processes including:
 
 ### Installation
 
-Copy `.env.template` to `.env` and update the values as required. Once complete, install the dependencies with...
+Copy `.env.template` to `.env` in the project root directory and update the values as required by your local environment. Once complete, install the dependencies with...
 
 ```
 npm install
@@ -39,13 +39,19 @@ This will start the dev server on port `4005`. The default process manager is `n
 
 ## Local Development
 
-We'd recommend forking and/or cloning [relaybox-local](https://github.com/relaybox/relaybox-local) to assist with local development. It provides a local Docker environment for running RelayBox services and applications.
+We'd recommend forking and/or cloning [relaybox-local](https://github.com/relaybox/relaybox-local) to assist with local development. It provides a local Docker environment for running RelayBox services including:
+
+- Postgres
+- Redis
+- RabbitMQ
+
+...and also runs nginx as a proxy service to manage path based routing for the system as a whole.
 
 For local development we use `serverless-offline` with `esbuild` to run the application locally and `vitest` as a test runner.
 
 ## Testing
 
-Test files can be found at `./test`. These files include mocks and intergation tests. To manage local testing either amend `.env.test` to point at you local database or run a dedicated instance. Connection settings can be adjusted in `.env.test`.
+Test files can be found at `./test`. These files include mocks and intergation tests. To manage local testing configuration, either amend `.env.test` to point at your local database or run a dedicated instance.
 
 ## About the "Auth" service
 
@@ -53,4 +59,4 @@ The "auth" service is a group of Lambda functions that handle the entire authent
 
 By leveraging strong cryptographic and security principles, this service can also be used as a standalone authentication service for any application that requires user authentication and session management.
 
-Find out more about the service and it's features [here](https://relaybox.net/docs/authentication/live-auth#getting-started-with-liveauth)
+Find out more about the service and it's features [here](https://relaybox.net/docs/authentication/live-auth)
