@@ -8,6 +8,7 @@ import {
   timingSafeEqual
 } from 'crypto';
 
+const EMULATOR = process.env.EMULATOR === 'true';
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
 const AUTH_HMAC_KEY = process.env.AUTH_HMAC_KEY || '';
@@ -42,10 +43,8 @@ export function getKeyVersion() {
 export function encrypt(value: string, salt?: string): string {
   const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
 
-  if (!AUTH_ENCRYPTION_KEY || !encryptionSalt) {
-    throw new Error(
-      'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
-    );
+  if ((!AUTH_ENCRYPTION_KEY || !encryptionSalt) && !EMULATOR) {
+    throw new Error('Missing required encryption key or salt');
   }
 
   const key = scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
@@ -63,10 +62,8 @@ export function encrypt(value: string, salt?: string): string {
 export function decrypt(encryptedValue: string, salt?: string): string {
   const decryptionSalt = salt || AUTH_ENCRYPTION_SALT;
 
-  if (!AUTH_ENCRYPTION_KEY || !decryptionSalt) {
-    throw new Error(
-      'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
-    );
+  if ((!AUTH_ENCRYPTION_KEY || !decryptionSalt) && !EMULATOR) {
+    throw new Error('Missing required encryption key or salt');
   }
 
   const encryptedString = Buffer.from(encryptedValue, Encoding.BASE64).toString(Encoding.UTF8);
