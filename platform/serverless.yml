@@ -50,6 +50,7 @@ custom:
     DB_PROXY_ENABLED: ${env:DB_PROXY_ENABLED, ''}
     DB_TLS_DISABLED: ${env:DB_TLS_DISABLED, ''}
     DB_USER: ${env:DB_USER, ''}
+    EMULATOR: ${env:EMULATOR, ''}
     JWT_ISSUER: ${env:JWT_ISSUER, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
     SMTP_AUTH_EMAIL: ${env:SMTP_AUTH_EMAIL, ''}
