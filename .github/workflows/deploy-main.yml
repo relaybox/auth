@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/20241004_repo_vars_to_secrets
 
 jobs:
   test:
