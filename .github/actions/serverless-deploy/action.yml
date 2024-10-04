@@ -23,22 +23,22 @@ runs:
         AUTH_ENCRYPTION_SALT: ${{ fromJson(inputs.secrets).AUTH_ENCRYPTION_SALT }}
         AUTH_HMAC_KEY: ${{ fromJson(inputs.secrets).AUTH_HMAC_KEY }}
         AUTH_SERVICE_URL: ${{ fromJson(inputs.vars).AUTH_SERVICE_URL }}
-        AWS_ACCOUNT_ID: ${{ fromJson(inputs.vars).AWS_ACCOUNT_ID }}
-        DB_HOST: ${{ fromJson(inputs.vars).DB_HOST }}
+        AWS_ACCOUNT_ID: ${{ fromJson(inputs.secrets).AWS_ACCOUNT_ID }}
+        DB_HOST: ${{ fromJson(inputs.secrets).DB_HOST }}
         DB_MAX_CONNECTIONS: ${{ fromJson(inputs.vars).DB_MAX_CONNECTIONS }}
-        DB_NAME: ${{ fromJson(inputs.vars).DB_NAME }}
+        DB_NAME: ${{ fromJson(inputs.secrets).DB_NAME }}
         DB_PASSWORD: ${{ fromJson(inputs.secrets).DB_PASSWORD }}
-        DB_PORT: ${{ fromJson(inputs.vars).DB_PORT }}
+        DB_PORT: ${{ fromJson(inputs.secrets).DB_PORT }}
         DB_PROXY_ENABLED: ${{ fromJson(inputs.vars).DB_PROXY_ENABLED }}
         DB_TLS_DISABLED: ${{ fromJson(inputs.vars).DB_TLS_DISABLED }}
-        DB_USER: ${{ fromJson(inputs.vars).DB_USER }}
-        JWT_ISSUER: ${{ fromJson(inputs.vars).JWT_ISSUER }}
+        DB_USER: ${{ fromJson(inputs.secrets).DB_USER }}
+        JWT_ISSUER: ${{ fromJson(inputs.secrets).JWT_ISSUER }}
         LOG_LEVEL: ${{ fromJson(inputs.vars).LOG_LEVEL }}
-        SMTP_AUTH_EMAIL: ${{ fromJson(inputs.vars).SMTP_AUTH_EMAIL }}
-        SMTP_HOST: ${{ fromJson(inputs.vars).SMTP_HOST }}
-        SMTP_USERNAME: ${{ fromJson(inputs.vars).SMTP_USERNAME }}
+        SMTP_AUTH_EMAIL: ${{ fromJson(inputs.secrets).SMTP_AUTH_EMAIL }}
+        SMTP_HOST: ${{ fromJson(inputs.secrets).SMTP_HOST }}
+        SMTP_USERNAME: ${{ fromJson(inputs.secrets).SMTP_USERNAME }}
         SMTP_PASSWORD: ${{ fromJson(inputs.secrets).SMTP_PASSWORD }}
-        VPC_SECURITY_GROUP_IDS: ${{ fromJson(inputs.vars).VPC_SECURITY_GROUP_IDS }}
-        VPC_SUBNET_IDS: ${{ fromJson(inputs.vars).VPC_SUBNET_IDS }}
+        VPC_SECURITY_GROUP_IDS: ${{ fromJson(inputs.secrets).VPC_SECURITY_GROUP_IDS }}
+        VPC_SUBNET_IDS: ${{ fromJson(inputs.secrets).VPC_SUBNET_IDS }}
       run: |
         npm run deploy -- --stage ${{ inputs.stage }}
