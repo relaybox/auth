@@ -11,18 +11,28 @@ import {
 describe('encryption', () => {
   describe('encrypt', () => {
     it('should encrypt a string', () => {
-      const string = 'test@test.com';
-      const encryptedString = encrypt(string);
-      expect(encryptedString).not.toBe(string);
+      const stringToEncrypt = 'test@test.com';
+      const encryptedString = encrypt(stringToEncrypt);
+      expect(encryptedString).not.toBe(stringToEncrypt);
     });
   });
 
   describe('decrypt', () => {
     it('should decrypt an encrypted string', () => {
-      const string = 'test@test.com';
-      const encryptedString = encrypt(string);
+      const stringToEncrypt = 'test@test.com';
+      const encryptedString = encrypt(stringToEncrypt);
       const decryptedString = decrypt(encryptedString);
-      expect(decryptedString).toBe(string);
+      expect(decryptedString).toBe(stringToEncrypt);
+    });
+
+    it('should decrypt value with salt', () => {
+      const stringToEncrypt = 'test-client-id';
+      const salt = '92a7f968a5362e469935c340f969e109';
+
+      const encryptedString = encrypt(stringToEncrypt, salt);
+      const decryptedString = decrypt(encryptedString, salt);
+
+      expect(decryptedString).toBe(stringToEncrypt);
     });
   });
 

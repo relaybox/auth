@@ -11,7 +11,7 @@ import {
 const AUTH_ENCRYPTION_KEY = process.env.AUTH_ENCRYPTION_KEY || '';
 const AUTH_ENCRYPTION_SALT = process.env.AUTH_ENCRYPTION_SALT || '';
 const AUTH_HMAC_KEY = process.env.AUTH_HMAC_KEY || '';
-const AUTH_ENCRYPTION_ALGORITHM = 'aes-256-cbc';
+const AUTH_ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 const SALT_LENGTH = 16;
 const SECRET_LENGTH = 32;
 const ITERATIONS = 100000;
@@ -41,31 +41,51 @@ export function getKeyVersion() {
 
 export function encrypt(value: string, salt?: string): string {
   const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
+
+  if (!AUTH_ENCRYPTION_KEY || !AUTH_ENCRYPTION_SALT) {
+    throw new Error(
+      'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
+    );
+  }
+
   const key = scryptSync(AUTH_ENCRYPTION_KEY, encryptionSalt, 32);
-  const iv = randomBytes(16);
+  const iv = randomBytes(12);
   const cipher = createCipheriv(AUTH_ENCRYPTION_ALGORITHM, key, iv);
-  const encrypted = Buffer.concat([cipher.update(value), cipher.final()]);
-  const encryptedString = `${iv.toString(Encoding.HEX)}:${encrypted.toString(Encoding.HEX)}`;
+  const encrypted = Buffer.concat([cipher.update(value, Encoding.UTF8), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const encryptedString = `${iv.toString(Encoding.HEX)}:${authTag.toString(
+    Encoding.HEX
+  )}:${encrypted.toString(Encoding.HEX)}`;
 
   return Buffer.from(encryptedString).toString(Encoding.BASE64);
 }
 
 export function decrypt(encryptedValue: string, salt?: string): string {
   const decryptionSalt = salt || AUTH_ENCRYPTION_SALT;
+
+  if (!AUTH_ENCRYPTION_KEY || !AUTH_ENCRYPTION_SALT) {
+    throw new Error(
+      'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
+    );
+  }
+
   const encryptedString = Buffer.from(encryptedValue, Encoding.BASE64).toString(Encoding.UTF8);
-  const [ivHex, encryptedHex] = encryptedString.split(':');
+
+  const [ivHex, authTagHex, encryptedHex] = encryptedString.split(':');
+
+  if (!ivHex || !authTagHex || !encryptedHex) {
+    throw new Error('Invalid encrypted data format');
+  }
+
+  const iv = Buffer.from(ivHex, Encoding.HEX);
+  const authTag = Buffer.from(authTagHex, Encoding.HEX);
+  const encrypted = Buffer.from(encryptedHex, Encoding.HEX);
   const key = scryptSync(AUTH_ENCRYPTION_KEY, decryptionSalt, 32);
+  const decipher = createDecipheriv(AUTH_ENCRYPTION_ALGORITHM, key, iv);
 
-  const decipher = createDecipheriv(
-    AUTH_ENCRYPTION_ALGORITHM,
-    key,
-    Buffer.from(ivHex, Encoding.HEX)
-  );
+  decipher.setAuthTag(authTag);
 
-  const decrypted = Buffer.concat([
-    decipher.update(Buffer.from(encryptedHex, Encoding.HEX)),
-    decipher.final()
-  ]);
+  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
 
   return decrypted.toString();
 }
