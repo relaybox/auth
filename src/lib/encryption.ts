@@ -42,7 +42,7 @@ export function getKeyVersion() {
 export function encrypt(value: string, salt?: string): string {
   const encryptionSalt = salt || AUTH_ENCRYPTION_SALT;
 
-  if (!AUTH_ENCRYPTION_KEY || !AUTH_ENCRYPTION_SALT) {
+  if (!AUTH_ENCRYPTION_KEY || !encryptionSalt) {
     throw new Error(
       'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
     );
@@ -63,7 +63,7 @@ export function encrypt(value: string, salt?: string): string {
 export function decrypt(encryptedValue: string, salt?: string): string {
   const decryptionSalt = salt || AUTH_ENCRYPTION_SALT;
 
-  if (!AUTH_ENCRYPTION_KEY || !AUTH_ENCRYPTION_SALT) {
+  if (!AUTH_ENCRYPTION_KEY || !decryptionSalt) {
     throw new Error(
       'Missing required environment variables: AUTH_ENCRYPTION_KEY or AUTH_ENCRYPTION_SALT'
     );
