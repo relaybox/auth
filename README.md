@@ -55,7 +55,7 @@ Test files can be found at `./test`. These files include mocks and intergation t
 
 ## About the "Auth" service
 
-The "auth" service is a group of Lambda functions that handle the entire authentication flow. From user registration and verification to authentication and session management. It also handles connection token verification from uws realtime service. To learn more about `uws`, head over to the [uws repo](https://github.com/relaybox/uws).
+The "auth" service is a group of Lambda functions that handle the entire authentication flow. From user registration and verification to authentication and session management. It also handles connection token verification from core realtime service. To learn more about `core`, head over to the [core repo](https://github.com/relaybox/core).
 
 By leveraging strong cryptographic and security principles, this service can also be used as a standalone authentication service for any application that requires user authentication and session management.
 
