@@ -1,6 +1,6 @@
 # Auth - RelayBox Authentication Service
 
-RelayBox Auth is a REST authentication service written in NodeJS, built to handle user authentication, session management and access control to RelayBox realtime services and applications.
+RelayBox Auth is a REST authentication service written in NodeJS, built to handle user authentication, session management and access control to RelayBox Core realtime service.
 
 View [@relaybox/client](https://relaybox.net/docs/api-reference/relaybox-client/auth) for more information about how client-side applications interact with this service. Think of this REST API as the backend for `relayBox.auth()`.
 
