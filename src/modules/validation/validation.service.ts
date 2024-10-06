@@ -32,24 +32,17 @@ export async function getPermissions(
 ): Promise<Record<string, string[]> | string[]> {
   logger.debug(`Getting permissions for key`, { keyId });
 
+  if (Object.keys(inlinePermissions).length > 0) {
+    return inlinePermissions;
+  }
+
   const { rows } = await getPermissionsByKeyId(pgClient, keyId);
 
   if (!rows.length) {
     throw new Error(`Permissions for key ${keyId} not found`);
   }
 
-  const formattedPermissions = formatPermissions(rows);
-
-  if (Array.isArray(formattedPermissions) && Object.keys(inlinePermissions).length === 0) {
-    return formattedPermissions;
-  }
-
-  return inlinePermissions;
-
-  // return {
-  //   ...formattedPermissions,
-  //   ...inlinePermissions
-  // };
+  return formatPermissions(rows);
 }
 
 export function formatPermissions(
