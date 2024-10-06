@@ -44,10 +44,12 @@ export async function getPermissions(
     return formattedPermissions;
   }
 
-  return {
-    ...formattedPermissions,
-    ...inlinePermissions
-  };
+  return inlinePermissions;
+
+  // return {
+  //   ...formattedPermissions,
+  //   ...inlinePermissions
+  // };
 }
 
 export function formatPermissions(
