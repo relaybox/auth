@@ -27,6 +27,7 @@ export interface WebhookPayload {
   event: string;
   data: any;
   session: ReducedWebhookSessionData;
+  timestamp: string;
   filterAttributes?: Record<string, unknown>;
 }
 
