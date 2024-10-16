@@ -1,3 +1,5 @@
+import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
+import { WebhookEvent } from '@/modules/webhook/webhook.types';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { AuthenticationError, PasswordRegexError, SchemaValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -8,6 +10,7 @@ import {
   getAuthDataByKeyId,
   getAuthenticationActionLog,
   getRequestAuthParams,
+  getUserDataByClientId,
   validatePassword,
   validateUsername
 } from 'src/modules/users/users.service';
@@ -77,6 +80,10 @@ export const handler: APIGatewayProxyHandler = async (
       AuthenticationActionResult.SUCCESS,
       authenticationActionLog
     );
+
+    // const userData = await getUserDataByClientId(logger, pgClient, appId, clientId);
+
+    // await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SIGNUP, userData!);
 
     return httpResponse._200({ message: 'Registration successful', id: uid, clientId });
   } catch (err: any) {

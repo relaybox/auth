@@ -1,3 +1,5 @@
+import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
+import { WebhookEvent } from '@/modules/webhook/webhook.types';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { SchemaValidationError, UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -44,7 +46,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { email, password } = validateEventSchema(event, schema);
-    const { publicKey, keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { publicKey, appPid, keyId } = getRequestAuthParams(event, authenticationActionLog);
     const { appId, secretKey } = await getAuthDataByKeyId(
       logger,
       pgClient,
@@ -94,6 +96,8 @@ export const handler: APIGatewayProxyHandler = async (
       AuthenticationActionResult.SUCCESS,
       authenticationActionLog
     );
+
+    await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SIGNIN, appPid, keyId, authSession.user);
 
     return httpResponse._200(authSession);
   } catch (err: any) {
