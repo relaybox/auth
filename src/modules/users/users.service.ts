@@ -50,6 +50,19 @@ import {
 
 const SMTP_AUTH_EMAIL = process.env.SMTP_AUTH_EMAIL || '';
 
+export function generateUsername() {
+  const numberDictionary = NumberDictionary.generate({
+    min: 100,
+    max: 999
+  });
+
+  return uniqueNamesGenerator({
+    dictionaries: [adjectives, animals, numberDictionary],
+    separator: '',
+    style: 'capital'
+  });
+}
+
 export async function createUser(
   logger: Logger,
   pgClient: PgClient,
@@ -63,18 +76,7 @@ export async function createUser(
 ): Promise<AuthUser> {
   logger.debug(`Creating user`, { orgId });
 
-  const numberDictionary = NumberDictionary.generate({
-    min: 100,
-    max: 999
-  });
-
-  username =
-    username ||
-    uniqueNamesGenerator({
-      dictionaries: [adjectives, animals, numberDictionary],
-      separator: '',
-      style: 'capital'
-    });
+  username = username || generateUsername();
 
   const clientId = nanoid(12);
   const encryptedEmail = encrypt(email);

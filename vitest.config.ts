@@ -8,7 +8,7 @@ export default defineConfig({
     }
   },
   test: {
-    // silent: true,
+    silent: true,
     globals: true,
     include: ['**/*.test.ts', '**/*.spec.ts'],
     environment: 'node',

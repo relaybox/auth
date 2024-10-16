@@ -53,7 +53,7 @@ export interface AuthUserIdentity {
   id: string;
   provider: AuthProvider;
   providerId: string | null;
-  verifiedAt: Date;
+  verifiedAt: string;
 }
 
 export interface AuthUserIdentityCredentials {

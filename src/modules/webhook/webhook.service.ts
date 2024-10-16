@@ -3,7 +3,7 @@ import { WebhookEvent, WebhookPayload } from './webhook.types';
 import { Logger } from 'winston';
 import { v4 as uuid } from 'uuid';
 import { defaultJobConfig, WebhookJobName, webhookQueue } from './webhook.queue';
-import { AuthUser } from '@/types/auth.types';
+import { AuthProvider, AuthUser } from '@/types/auth.types';
 
 export async function enqueueWebhookEvent(
   logger: Logger,
@@ -56,7 +56,7 @@ export async function enqueueWebhookEvent(
 
     return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
   } catch (err: unknown) {
-    logger.error(`Failed to enqueue webhook event`, { err });
+    logger.error(`Failed to enqueue webhook event`, { id, event, err });
     throw err;
   }
 }
