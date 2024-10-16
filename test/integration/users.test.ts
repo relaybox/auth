@@ -1,4 +1,3 @@
-import { mockQueue } from '../__mocks__/external/bullmq';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import PgClient from 'serverless-postgres';
 import { createDbState } from '../db/setup';

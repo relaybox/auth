@@ -1,3 +1,5 @@
+import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
+import { WebhookEvent } from '@/modules/webhook/webhook.types';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -47,7 +49,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     await verifyUserMfaChallenge(logger, pgClient, uid, factorId, challengeId, code);
 
-    const { publicKey, keyId } = getRequestAuthParams(event);
+    const { publicKey, appPid, keyId } = getRequestAuthParams(event);
     const { appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const { tokenExpiry, sessionExpiry, authStorageType } =
       await getApplicationAuthenticationPreferences(logger, pgClient, appId);
@@ -69,6 +71,15 @@ export const handler: APIGatewayProxyHandler = async (
     if (!authSession.user.authMfaEnabled) {
       await enableMfaForUser(logger, pgClient, uid, factorId);
     }
+
+    await enqueueWebhookEvent(
+      logger,
+      WebhookEvent.AUTH_SIGNIN,
+      appPid,
+      keyId,
+      authSession.user,
+      authSession.session?.expiresAt
+    );
 
     return httpResponse._200(authSession);
   } catch (err: any) {

@@ -45,7 +45,7 @@ export const handler: APIGatewayProxyHandler = async (
   try {
     const { email, password, username, firstName, lastName } = validateEventSchema(event, schema);
 
-    const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appPid, keyId } = getRequestAuthParams(event, authenticationActionLog);
 
     const { orgId, appId } = await getAuthDataByKeyId(
       logger,
@@ -81,9 +81,11 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    // const userData = await getUserDataByClientId(logger, pgClient, appId, clientId);
+    const userData = await getUserDataByClientId(logger, pgClient, appId, clientId);
 
-    // await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SIGNUP, userData!);
+    if (userData) {
+      await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SIGNUP, appPid, keyId, userData!);
+    }
 
     return httpResponse._200({ message: 'Registration successful', id: uid, clientId });
   } catch (err: any) {
