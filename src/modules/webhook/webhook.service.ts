@@ -10,15 +10,15 @@ export async function enqueueWebhookEvent(
   event: WebhookEvent,
   appPid: string,
   keyId: string,
-  authSession: AuthUserSession
+  authUser: AuthUser,
+  sessionExpiresAt: number | null = null
 ): Promise<Job> {
   const id = uuid();
+  const timestamp = new Date().toISOString();
 
-  const { session, user } = authSession;
+  logger.debug(`Enqueuing webhook event ${id}, "${event}"`, { id, event, uid: authUser.id });
 
-  logger.debug(`Enqueuing webhook event ${id}, "${event}"`, { id, event, uid: user.id });
-
-  const { identities, factors, authMfaEnabled, email, verifiedAt, ...userData } = user;
+  const { identities, factors, authMfaEnabled, email, verifiedAt, ...userData } = authUser;
 
   const webhookData = {
     identities,
@@ -31,23 +31,24 @@ export async function enqueueWebhookEvent(
   const webhookUserData = {
     ...userData,
     isOnline: true,
-    lastOnline: new Date().toISOString()
+    lastOnline: timestamp
   };
 
   const reducedWehbookSessionData = {
     appPid,
     keyId,
-    clientId: user.clientId,
+    clientId: authUser.clientId,
     connectionId: null,
     socketId: null,
-    timestamp: new Date().toISOString(),
-    exp: session?.expiresAt || null,
+    timestamp,
+    exp: sessionExpiresAt || null,
     user: webhookUserData
   };
 
   const jobData: WebhookPayload = {
     id,
     event,
+    timestamp,
     data: webhookData,
     session: reducedWehbookSessionData
   };

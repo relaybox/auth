@@ -316,7 +316,9 @@ export async function getUserDataByClientId(
       "appId", 
       "isOnline", 
       "lastOnline",
-      "blockedAt"
+      "blockedAt",
+      "firstName",
+      "lastName"
     FROM authentication_users
     WHERE "clientId" = $1;
   `;
@@ -371,6 +373,8 @@ export async function getUserDataById(pgClient: PgClient, id: string): Promise<Q
       au."verifiedAt",
       au."authMfaEnabled",
       au."blockedAt",
+      au."firstName",
+      au."lastName",
       COALESCE(identities_cte.identities, '[]') AS identities,
       COALESCE(factors_cte.factors, '[]') AS factors
     FROM authentication_users au

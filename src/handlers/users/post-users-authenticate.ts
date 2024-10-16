@@ -97,7 +97,16 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    await enqueueWebhookEvent(logger, WebhookEvent.AUTH_SIGNIN, appPid, keyId, authSession);
+    if (!authSession.user.authMfaEnabled) {
+      await enqueueWebhookEvent(
+        logger,
+        WebhookEvent.AUTH_SIGNIN,
+        appPid,
+        keyId,
+        authSession.user,
+        authSession.session?.expiresAt
+      );
+    }
 
     return httpResponse._200(authSession);
   } catch (err: any) {
