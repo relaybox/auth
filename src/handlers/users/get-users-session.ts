@@ -1,5 +1,4 @@
-import { ValidationError } from '@/lib/errors';
-import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import {
   createAuthenticationActivityLogEntry,
