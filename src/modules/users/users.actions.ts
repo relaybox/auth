@@ -188,7 +188,7 @@ export async function verifyUser(
   email: string,
   code: string,
   userIdentity?: AuthUserIdentityCredentials
-): Promise<void> {
+): Promise<any> {
   try {
     await pgClient.query('BEGIN');
 
@@ -212,13 +212,15 @@ export async function verifyUser(
       AuthVerificationCodeType.REGISTER
     );
 
-    await Promise.all([
+    const [verifyUserResult] = await Promise.all([
       repository.verifyUser(pgClient, uid),
       repository.verifyUserIdentity(pgClient, identityId),
       repository.invalidateAuthVerificationCode(pgClient, identityId, code)
     ]);
 
     await pgClient.query('COMMIT');
+
+    return verifyUserResult.rows[0];
   } catch (err: any) {
     await pgClient.query('ROLLBACK');
     logger.error(`Failed to verify user`, { err });

@@ -1,3 +1,5 @@
+import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
+import { WebhookEvent } from '@/modules/webhook/webhook.types';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { AuthenticationError, SchemaValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -8,6 +10,7 @@ import {
   getAuthDataByKeyId,
   getAuthenticationActionLog,
   getRequestAuthParams,
+  getUserDataById,
   getUserIdentityByEmail
 } from 'src/modules/users/users.service';
 import {
@@ -18,7 +21,7 @@ import {
 import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
-import { Schema, z } from 'zod';
+import { z } from 'zod';
 
 const logger = getLogger('post-users-verify');
 
@@ -41,7 +44,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   try {
     const { email, code } = validateEventSchema(event, schema);
-    const { keyId } = getRequestAuthParams(event, authenticationActionLog);
+    const { appPid, keyId } = getRequestAuthParams(event, authenticationActionLog);
     const { appId } = await getAuthDataByKeyId(logger, pgClient, keyId, authenticationActionLog);
 
     const userIdentity = await getUserIdentityByEmail(
@@ -53,7 +56,7 @@ export const handler: APIGatewayProxyHandler = async (
       authenticationActionLog
     );
 
-    await verifyUser(logger, pgClient, appId, email, code, userIdentity);
+    const { id: uid } = await verifyUser(logger, pgClient, appId, email, code, userIdentity);
 
     await createAuthenticationActivityLogEntry(
       logger,
@@ -63,6 +66,12 @@ export const handler: APIGatewayProxyHandler = async (
       AuthenticationActionResult.SUCCESS,
       authenticationActionLog
     );
+
+    const userData = await getUserDataById(logger, pgClient, uid);
+
+    if (userData) {
+      await enqueueWebhookEvent(logger, WebhookEvent.AUTH_VERIFY, appPid, keyId, userData!);
+    }
 
     return httpResponse._200({ message: 'User verification successful' });
   } catch (err: any) {

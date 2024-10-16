@@ -244,7 +244,8 @@ export function verifyUser(pgClient: PgClient, uid: string): Promise<QueryResult
   const query = `
     UPDATE authentication_users 
     SET "verifiedAt" = $2
-    WHERE id = $1;
+    WHERE id = $1
+    RETURNING id, "clientId";
   `;
 
   return pgClient.query(query, [uid, now]);

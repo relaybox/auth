@@ -18,42 +18,45 @@ export async function enqueueWebhookEvent(
 
   logger.debug(`Enqueuing webhook event ${id}, "${event}"`, { id, event, uid: authUser.id });
 
-  const { identities, factors, authMfaEnabled, email, verifiedAt, ...userData } = authUser;
+  try {
+    const { identities, factors, authMfaEnabled, email, verifiedAt, ...userData } = authUser;
 
-  const webhookData = {
-    identities,
-    factors,
-    authMfaEnabled,
-    email,
-    verifiedAt
-  };
+    const webhookData = {
+      identities,
+      factors,
+      authMfaEnabled,
+      email,
+      verifiedAt
+    };
 
-  const webhookUserData = {
-    ...userData,
-    isOnline: true,
-    lastOnline: timestamp
-  };
+    const webhookUserData = {
+      ...userData,
+      isOnline: true,
+      lastOnline: timestamp
+    };
 
-  const reducedWehbookSessionData = {
-    appPid,
-    keyId,
-    clientId: authUser.clientId,
-    connectionId: null,
-    socketId: null,
-    timestamp,
-    exp: sessionExpiresAt || null,
-    user: webhookUserData
-  };
+    const reducedWehbookSessionData = {
+      appPid,
+      keyId,
+      clientId: authUser.clientId,
+      connectionId: null,
+      socketId: null,
+      timestamp,
+      exp: sessionExpiresAt || null,
+      user: webhookUserData
+    };
 
-  const jobData: WebhookPayload = {
-    id,
-    event,
-    timestamp,
-    data: webhookData,
-    session: reducedWehbookSessionData
-  };
+    const jobData: WebhookPayload = {
+      id,
+      event,
+      timestamp,
+      data: webhookData,
+      session: reducedWehbookSessionData
+    };
 
-  console.log(jobData);
-
-  return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
+    return webhookQueue.add(WebhookJobName.WEBHOOK_PROCESS, jobData, defaultJobConfig);
+  } catch (err: unknown) {
+    logger.error(`Failed to enqueue webhook event`, { err });
+    throw err;
+  }
 }

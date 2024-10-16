@@ -33,5 +33,6 @@ export interface WebhookPayload {
 
 export enum WebhookEvent {
   AUTH_SIGNUP = 'auth:signup',
-  AUTH_SIGNIN = 'auth:signin'
+  AUTH_SIGNIN = 'auth:signin',
+  AUTH_VERIFY = 'auth:verify'
 }
