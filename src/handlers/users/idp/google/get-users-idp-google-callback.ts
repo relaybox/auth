@@ -17,6 +17,8 @@ import { encrypt, generateHash } from 'src/lib/encryption';
 import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
 import { registerIdpUser } from 'src/modules/users/users.actions';
+import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
+import { WebhookEvent } from '@/modules/webhook/webhook.types';
 
 const logger = getLogger('post-users-idp-google-callback');
 
@@ -41,7 +43,7 @@ export const handler: APIGatewayProxyHandler = async (
       throw new ValidationError('Missing authorization code or publicKey params');
     }
 
-    const { keyId } = getKeyParts(publicKey);
+    const { appPid, keyId } = getKeyParts(publicKey);
     const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
     const { clientId, clientSecret } = await getAuthProviderDataByProviderName(
@@ -109,6 +111,17 @@ export const handler: APIGatewayProxyHandler = async (
       authStorageType
     );
     const htmlContent = getUsersIdpCallbackHtml(authSession);
+
+    if (!authSession.user.authMfaEnabled) {
+      await enqueueWebhookEvent(
+        logger,
+        WebhookEvent.AUTH_SIGNIN,
+        appPid,
+        keyId,
+        authSession.user,
+        authSession.session?.expiresAt
+      );
+    }
 
     return {
       statusCode: 200,
