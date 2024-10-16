@@ -13,7 +13,8 @@ const externalDependencies = [
   'serverless-postgres',
   'unique-names-generator',
   'winston',
-  'zod'
+  'zod',
+  'bullmq'
 ];
 
 esbuild
