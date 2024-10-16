@@ -1,4 +1,15 @@
-import { AuthUser } from '@/types/auth.types';
+export interface PublicAuthUserData {
+  id: string;
+  clientId: string;
+  createdAt: string;
+  updatedAt: string;
+  username: string;
+  orgId: string;
+  appId: string;
+  isOnline: boolean;
+  lastOnline: string;
+  blockedAt: string | null;
+}
 
 export interface ReducedWebhookSessionData {
   appPid: string;
@@ -7,7 +18,8 @@ export interface ReducedWebhookSessionData {
   connectionId: string | null;
   socketId: string | null;
   timestamp: string;
-  user: AuthUser | null;
+  user: PublicAuthUserData;
+  exp: number | null;
 }
 
 export interface WebhookPayload {

@@ -85,6 +85,7 @@ export interface AuthUser {
   clientId: string;
   createdAt: string;
   updatedAt: string;
+  verifiedAt: string;
   identities: AuthUserIdentity[];
   blockedAt: string | null;
 }
