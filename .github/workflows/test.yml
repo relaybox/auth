@@ -13,6 +13,9 @@ on:
       db-host:
         required: true
         type: string
+      redis-port:
+        required: true
+        type: number
 
 jobs:
   test:
@@ -34,6 +37,17 @@ jobs:
           - 5433:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis
+        env:
+          REDIS_PORT: ${{ inputs.redis-port }}
+        ports:
+          - 6390:6379
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
