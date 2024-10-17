@@ -78,9 +78,9 @@ custom:
     JWT_ISSUER: ${env:JWT_ISSUER, ''}
     LOG_LEVEL: ${env:LOG_LEVEL, ''}
     REDIS_HOST: ${env:REDIS_HOST, ''}
+    REDIS_AUTH_TOKEN: ${env:REDIS_AUTH_TOKEN, ''}
     REDIS_PORT: ${env:REDIS_PORT, ''}
     REDIS_TLS_DISABLED: ${env:REDIS_TLS_DISABLED, ''}
-    REDIS_AUTH: ${env:REDIS_AUTH, ''}
     SMTP_AUTH_EMAIL: ${env:SMTP_AUTH_EMAIL, ''}
     SMTP_HOST: ${env:SMTP_HOST, ''}
     SMTP_PASSWORD: ${env:SMTP_PASSWORD, ''}

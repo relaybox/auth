@@ -34,6 +34,9 @@ runs:
         DB_USER: ${{ fromJson(inputs.secrets).DB_USER }}
         JWT_ISSUER: ${{ fromJson(inputs.secrets).JWT_ISSUER }}
         LOG_LEVEL: ${{ fromJson(inputs.vars).LOG_LEVEL }}
+        REDIS_HOST: ${{ fromJson(inputs.secrets).REDIS_HOST }}
+        REDIS_PORT: ${{ fromJson(inputs.secrets).REDIS_PORT }}
+        REDIS_AUTH_TOKEN: ${{ fromJson(inputs.secrets).REDIS_AUTH_TOKEN }}
         SMTP_AUTH_EMAIL: ${{ fromJson(inputs.secrets).SMTP_AUTH_EMAIL }}
         SMTP_HOST: ${{ fromJson(inputs.secrets).SMTP_HOST }}
         SMTP_USERNAME: ${{ fromJson(inputs.secrets).SMTP_USERNAME }}
