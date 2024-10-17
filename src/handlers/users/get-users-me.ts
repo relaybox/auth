@@ -5,7 +5,7 @@ import * as httpResponse from 'src/util/http.util';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
 
-const logger = getLogger('post-users-session');
+const logger = getLogger('get-users-me');
 
 export async function handler(
   event: APIGatewayProxyEvent,
