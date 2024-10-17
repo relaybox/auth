@@ -14,6 +14,7 @@ jobs:
       db-user: postgres
       db-name: relaybox_core_test
       db-host: '127.0.0.1'
+      redis-port: 6390
     secrets: inherit
 
   deploy:
