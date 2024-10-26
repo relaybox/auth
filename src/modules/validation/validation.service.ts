@@ -78,10 +78,6 @@ export function getClientCredentials(
     connectionId = clientId ? getNspId(appPid, genId) : getAnonymousNspId(appPid, genId);
   }
 
-  if (clientId) {
-    clientId = getNspId(appPid, clientId);
-  }
-
   const uid = clientId || connectionId;
 
   return {
