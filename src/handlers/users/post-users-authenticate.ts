@@ -1,10 +1,10 @@
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/modules/webhook/webhook.types';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { SchemaValidationError, UnauthorizedError } from 'src/lib/errors';
-import { getPgClient } from 'src/lib/postgres';
-import { validateEventSchema } from 'src/lib/validation';
-import { authenticateUser } from 'src/modules/users/users.actions';
+import { SchemaValidationError, UnauthorizedError } from '@/lib/errors';
+import { getPgClient } from '@/lib/postgres';
+import { validateEventSchema } from '@/lib/validation';
+import { authenticateUser } from '@/modules/users/users.actions';
 import {
   createAuthenticationActivityLogEntry,
   getApplicationAuthenticationPreferences,
@@ -14,15 +14,11 @@ import {
   getRequestAuthParams,
   getUserIdentityByEmail,
   updateUserIdentityLastLogin
-} from 'src/modules/users/users.service';
-import {
-  AuthenticationAction,
-  AuthenticationActionResult,
-  AuthProvider
-} from 'src/types/auth.types';
-import * as httpResponse from 'src/util/http.util';
-import { handleErrorResponse } from 'src/util/http.util';
-import { getLogger } from 'src/util/logger.util';
+} from '@/modules/users/users.service';
+import { AuthenticationAction, AuthenticationActionResult, AuthProvider } from '@/types/auth.types';
+import * as httpResponse from '@/util/http.util';
+import { handleErrorResponse } from '@/util/http.util';
+import { getLogger } from '@/util/logger.util';
 import { z } from 'zod';
 
 const logger = getLogger('post-users-authenticate');

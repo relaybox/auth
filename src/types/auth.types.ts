@@ -91,7 +91,8 @@ export enum AuthStorageType {
 export enum AuthProvider {
   EMAIL = 'email',
   GITHUB = 'github',
-  GOOGLE = 'google'
+  GOOGLE = 'google',
+  ANONYMOUS = 'anonymous'
 }
 
 export enum AuthMfaFactorType {

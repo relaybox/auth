@@ -46,14 +46,15 @@ export async function registerUser(
   username?: string,
   firstName?: string,
   lastName?: string,
-  provider: AuthProvider = AuthProvider.EMAIL
+  provider: AuthProvider = AuthProvider.EMAIL,
+  anonymous: boolean = false
 ): Promise<AuthSignupResponse> {
   logger.info(`Registering user`, { orgId, provider });
 
   try {
     await pgClient.query('BEGIN');
 
-    const autoVerify = AUTO_VERIFY;
+    const autoVerify = anonymous ?? AUTO_VERIFY;
     const providerId = null;
 
     const { id: uid, clientId } = await getOrCreateUser(
