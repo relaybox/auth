@@ -197,3 +197,12 @@ put-users-status:
         authorizer:
           name: user-authorizer
           type: TOKEN
+
+post-users-anonymous:
+  handler: src/handlers/users/post-users-anonymous.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/anonymous
+        method: post
+        cors: ${self:custom.cors}
