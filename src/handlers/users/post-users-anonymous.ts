@@ -16,8 +16,9 @@ import { generateSalt } from '@/lib/encryption';
 
 const logger = getLogger('post-users-anonymous');
 
-const ANONYMOUS_TOKEN_EXPIRY_SECS = 900;
+const ANONYMOUS_TOKEN_EXPIRY_SECS = 300;
 const ANONYMOUS_SESSION_EXPIRY_SECS = 30 * 24 * 60 * 60;
+const ANONYMOUS_DOMAIN = 'relaybox.ai';
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
@@ -42,7 +43,7 @@ export const handler: APIGatewayProxyHandler = async (
 
     const password = generateSalt();
     const username = generateUsername();
-    const email = `${username}@relaybox.ai`;
+    const email = `${username}@${ANONYMOUS_DOMAIN}`;
     const firstName = undefined;
     const lastName = undefined;
     const anonymous = true;
