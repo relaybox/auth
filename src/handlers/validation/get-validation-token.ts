@@ -72,6 +72,7 @@ async function lambdaProxyEventHandler(
 
     const sessionData = {
       appPid,
+      appId,
       keyId,
       exp,
       timestamp,

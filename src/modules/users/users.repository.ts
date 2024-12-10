@@ -314,7 +314,6 @@ export async function getUserDataByClientId(
       username, 
       "orgId", 
       "appId", 
-      "appId", 
       "isOnline", 
       "lastOnline",
       "blockedAt",
