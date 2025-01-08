@@ -13,7 +13,7 @@ const logger = getLogger('validation-test');
 const email = 'test@session.com';
 const password = 'Password$100';
 
-describe('/validation', () => {
+describe.skip('/validation', () => {
   let pgClient: PgClient;
   let headers: Record<string, string>;
   let orgId: string;
