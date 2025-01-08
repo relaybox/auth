@@ -36,6 +36,8 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   context.callbackWaitsForEmptyEventLoop = false;
 
+  return httpResponse._401({ message: 'New registration currently disabled' });
+
   logger.info(`Creating user`);
 
   const pgClient = await getPgClient();
