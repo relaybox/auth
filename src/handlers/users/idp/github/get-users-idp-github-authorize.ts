@@ -41,7 +41,13 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     const redirectUri = `${AUTH_SERVICE_URL}/users/idp/github/callback`;
-    const scope = 'user:email read:org';
+
+    /**
+     * THIS NEEDS TO BE SET VIA APP PERMISSIONS
+     */
+    const scope = 'user:email repo';
+    // -----------------------------------------
+
     const state = publicKey;
     const rawQueryparams = true;
 

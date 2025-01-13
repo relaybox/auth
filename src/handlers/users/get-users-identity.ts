@@ -43,8 +43,6 @@ export async function handler(
       provider as AuthProvider
     );
 
-    console.log(uid);
-
     if (!userIdentity) {
       throw new NotFoundError(`User not found`);
     }
