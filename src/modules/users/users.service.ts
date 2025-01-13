@@ -950,8 +950,6 @@ export async function getUserIdentityByUid(
   try {
     const { rows } = await repository.getUserIdentityByUid(pgClient, uid, provider);
 
-    console.log(rows);
-
     if (rows.length === 0) {
       return null;
     }

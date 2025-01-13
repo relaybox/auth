@@ -676,14 +676,17 @@ export function getUserIdentityByUid(
   provider: AuthProvider
 ): Promise<QueryResult> {
   const query = `
-    SELECT aui.email 
+    SELECT
+      aui.id,
+      aui."accessToken", 
+      aui.provider, 
+      aui."providerId", 
+      aui."verifiedAt"
     FROM authentication_users au 
     LEFT JOIN authentication_user_identities aui ON au.id = aui.uid
     WHERE au."id" = $1
     AND aui.provider = $2;
   `;
-
-  console.log(query);
 
   return pgClient.query(query, [uid, provider]);
 }
