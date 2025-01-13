@@ -6,9 +6,9 @@ const GITHUB_API_URL = 'https://api.github.com';
 export async function getGitHubPrimaryData(
   clientId: string,
   clientSecret: string,
-  code: string
+  accessToken: string
 ): Promise<GithubUserData> {
-  const accessToken = await getGitHubAuthTokenWeb(clientId, clientSecret, code);
+  // const accessToken = await getGitHubAuthTokenWeb(clientId, clientSecret, code);
 
   const authorization = `Bearer ${accessToken}`;
 

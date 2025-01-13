@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } f
 import { getPgClient } from 'src/lib/postgres';
 import { handleErrorResponse } from 'src/util/http.util';
 import { getLogger } from 'src/util/logger.util';
-import { getGitHubPrimaryData } from 'src/lib/github';
+import { getGitHubAuthTokenWeb, getGitHubPrimaryData } from 'src/lib/github';
 import {
   getApplicationAuthenticationPreferences,
   getAuthDataByKeyId,
@@ -51,10 +51,11 @@ export const handler: APIGatewayProxyHandler = async (
       PROVIDER_NAME
     );
 
+    const accessToken = await getGitHubAuthTokenWeb(clientId, clientSecret, code);
     const { providerId, username, email } = await getGitHubPrimaryData(
       clientId,
       clientSecret,
-      code
+      accessToken
     );
 
     let userData = await getUserIdentityByProviderId(
@@ -69,7 +70,8 @@ export const handler: APIGatewayProxyHandler = async (
       await updateUserIdentityData(logger, pgClient, userData.identityId, [
         { key: 'email', value: encrypt(email) },
         { key: 'emailHash', value: generateHash(email) },
-        { key: 'lastLoginAt', value: new Date().toISOString() }
+        { key: 'lastLoginAt', value: new Date().toISOString() },
+        { key: 'accessToken', value: accessToken }
       ]);
     } else {
       const tmpPassword = Math.random().toString(36);

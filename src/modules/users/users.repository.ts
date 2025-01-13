@@ -669,3 +669,21 @@ export function createAuthenticationActivityLogEntry(
     now
   ]);
 }
+
+export function getUserIdentityByUid(
+  pgClient: PgClient,
+  uid: string,
+  provider: AuthProvider
+): Promise<QueryResult> {
+  const query = `
+    SELECT aui.email 
+    FROM authentication_users au 
+    LEFT JOIN authentication_user_identities aui ON au.id = aui.uid
+    WHERE au."id" = $1
+    AND aui.provider = $2;
+  `;
+
+  console.log(query);
+
+  return pgClient.query(query, [uid, provider]);
+}

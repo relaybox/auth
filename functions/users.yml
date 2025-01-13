@@ -137,6 +137,19 @@ get-users-me:
           name: user-authorizer
           type: TOKEN
 
+get-users-identity:
+  handler: src/handlers/users/get-users-identity.handler
+  timeout: 30
+  events:
+    - ${self:custom.keepAlive}
+    - http:
+        path: /users/identity
+        method: get
+        cors: ${self:custom.cors}
+        authorizer:
+          name: user-authorizer
+          type: TOKEN
+
 get-users-session:
   handler: src/handlers/users/get-users-session.handler
   timeout: 30

@@ -26,6 +26,7 @@ import {
   AuthProvider,
   AuthStorageType,
   AuthUser,
+  AuthUserIdentity,
   AuthUserIdentityCredentials,
   AuthUserSession,
   AuthVerificationCodeType,
@@ -936,4 +937,28 @@ export function getAuthenticationActionLog(): AuthenticationActionLog {
     keyId: null,
     errorMessage: null
   };
+}
+
+export async function getUserIdentityByUid(
+  logger: Logger,
+  pgClient: PgClient,
+  uid: string,
+  provider: AuthProvider
+): Promise<AuthUserIdentity | null> {
+  logger.debug(`Getting user identity by client id`, { uid, provider });
+
+  try {
+    const { rows } = await repository.getUserIdentityByUid(pgClient, uid, provider);
+
+    console.log(rows);
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows[0];
+  } catch (err: unknown) {
+    logger.error(`Failed to get user identity by client id`, { err });
+    throw err;
+  }
 }
