@@ -26,26 +26,18 @@ export async function handler(
     const uid = event.requestContext.authorizer!.principalId;
     const { provider } = event.queryStringParameters!;
 
-    console.log(provider);
-
     if (!uid) {
       throw new ValidationError('Missing client id');
     }
 
     logger.info(`Getting session data for user`, { uid });
 
-    const { keyId } = getRequestAuthParams(event);
-    const { orgId, appId } = await getAuthDataByKeyId(logger, pgClient, keyId);
     const userIdentity = await getUserIdentityByUid(
       logger,
       pgClient,
       uid,
       provider as AuthProvider
     );
-
-    if (!userIdentity) {
-      throw new NotFoundError(`User not found`);
-    }
 
     return httpResponse._200(userIdentity);
   } catch (err: any) {
