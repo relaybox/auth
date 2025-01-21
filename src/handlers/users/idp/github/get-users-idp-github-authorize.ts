@@ -45,7 +45,7 @@ export const handler: APIGatewayProxyHandler = async (
     /**
      * THIS NEEDS TO BE SET VIA APP PERMISSIONS
      */
-    const scope = 'user:email repo';
+    const scope = 'user:email';
     // -----------------------------------------
 
     const state = publicKey;
