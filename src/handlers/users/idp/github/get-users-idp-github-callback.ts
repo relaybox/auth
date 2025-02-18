@@ -52,6 +52,7 @@ export const handler: APIGatewayProxyHandler = async (
     );
 
     const accessToken = await getGitHubAuthTokenWeb(clientId, clientSecret, code);
+
     const { providerId, username, email } = await getGitHubPrimaryData(
       clientId,
       clientSecret,
@@ -85,8 +86,8 @@ export const handler: APIGatewayProxyHandler = async (
         email,
         tmpPassword,
         AuthProvider.GITHUB,
-        providerId
-        // username
+        providerId,
+        username
       );
     }
 
