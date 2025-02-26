@@ -307,20 +307,29 @@ export async function getUserDataByClientId(
 ): Promise<QueryResult> {
   const query = `
     SELECT 
-      id, 
-      "clientId", 
-      "createdAt", 
-      "updatedAt", 
-      username, 
-      "orgId", 
-      "appId", 
-      "isOnline", 
-      "lastOnline",
-      "blockedAt",
-      "firstName",
-      "lastName"
-    FROM authentication_users
-    WHERE "clientId" = $1;
+      au.id, 
+      au."clientId", 
+      au."createdAt", 
+      au."updatedAt", 
+      au.username, 
+      au."orgId", 
+      au."appId", 
+      au."isOnline", 
+      au."lastOnline",
+      au."blockedAt",
+      au."firstName",
+      au."lastName",
+      json_agg(
+        json_build_object(
+          'id', aui."id",
+          'provider', aui.provider,
+          'providerId', aui."providerId"
+        )
+      ) AS identities
+    FROM authentication_users au
+    INNER JOIN authentication_user_identities aui ON aui."uid" = au."id"
+    WHERE "clientId" = $1
+    GROUP BY au.id;
   `;
 
   return pgClient.query(query, [clientId]);
