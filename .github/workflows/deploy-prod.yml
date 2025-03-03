@@ -50,44 +50,44 @@ jobs:
           vars: ${{ toJson(vars) }}
           secrets: ${{ toJson(secrets) }}
 
-  publish-docker-image:
-    name: Publish / DockerHub
-    runs-on: ubuntu-latest
-    needs: deploy
-    environment:
-      name: production
+  # publish-docker-image:
+  #   name: Publish / DockerHub
+  #   runs-on: ubuntu-latest
+  #   needs: deploy
+  #   environment:
+  #     name: production
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Log in to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ vars.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Version from Tag
-        id: extract-version
-        uses: ./.github/actions/extract-version
+  #     - name: Extract Version from Tag
+  #       id: extract-version
+  #       uses: ./.github/actions/extract-version
 
-      - name: Update package version
-        run: |
-          npm version ${{ steps.extract-version.outputs.version }} --no-git-tag-version
+  #     - name: Update package version
+  #       run: |
+  #         npm version ${{ steps.extract-version.outputs.version }} --no-git-tag-version
 
-      - name: Set Up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: image=moby/buildkit:buildx-stable-1
+  #     - name: Set Up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+  #       with:
+  #         driver-opts: image=moby/buildkit:buildx-stable-1
 
-      - name: Build and push multi-platform image
-        id: build-image
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --platform linux/amd64,linux/arm64/v8 \
-            -t relaybox/auth:${{ steps.extract-version.outputs.version }} \
-            -t relaybox/auth:latest \
-            --push .
+  #     - name: Build and push multi-platform image
+  #       id: build-image
+  #       run: |
+  #         docker buildx create --use
+  #         docker buildx build \
+  #           --platform linux/amd64,linux/arm64/v8 \
+  #           -t relaybox/auth:${{ steps.extract-version.outputs.version }} \
+  #           -t relaybox/auth:latest \
+  #           --push .
 
   update-package-version:
     name: Update package version
