@@ -10,7 +10,7 @@ export function getUsersIdpCallbackHtml(
     <head>
       <title>OAuth Callback</title>
       <script type="text/javascript">
-        window.opener.postMessage(${JSON.stringify(authSession)}, ${callbackTargetUrl});
+        window.opener.postMessage(${JSON.stringify(authSession)}, '${callbackTargetUrl}');
         window.close();
       </script>
     </head>
