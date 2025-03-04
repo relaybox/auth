@@ -7,7 +7,7 @@ export function getUsersIdpCallbackHtml(authSession: AuthUserSession): string {
     <head>
       <title>OAuth Callback</title>
       <script type="text/javascript">
-        window.opener.postMessage(${JSON.stringify(authSession)}, 'http://localhost:5173');
+        window.opener.postMessage(${JSON.stringify(authSession)}, 'https://app.dev.repogram.com');
         window.close();
       </script>
     </head>
