@@ -603,7 +603,7 @@ export function getAuthProviderDataByProviderName(
   providerName: string
 ): Promise<QueryResult> {
   const query = `
-    SELECT aap."clientId", aap."clientSecret", aap.salt
+    SELECT aap."clientId", aap."clientSecret", aap."callbackTargetUrl", aap.salt
     FROM authentication_providers ap
     LEFT JOIN application_authentication_providers aap 
     ON ap."id" = aap."providerId" AND aap."deletedAt" IS NULL

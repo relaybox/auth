@@ -806,7 +806,7 @@ export async function getAuthProviderDataByProviderName(
   pgClient: PgClient,
   appId: string,
   providerName: string
-): Promise<{ clientId: string; clientSecret: string }> {
+): Promise<{ clientId: string; clientSecret: string; callbackTargetUrl: string }> {
   logger.debug(`Getting auth provider data by provider name`, { providerName });
 
   try {
@@ -816,13 +816,14 @@ export async function getAuthProviderDataByProviderName(
       providerName
     );
 
-    const { clientId, clientSecret, salt } = rows[0];
+    const { clientId, clientSecret, salt, callbackTargetUrl } = rows[0];
 
     const decryptedClientSecret = decrypt(clientSecret, salt);
 
     return {
       clientId,
-      clientSecret: decryptedClientSecret
+      clientSecret: decryptedClientSecret,
+      callbackTargetUrl
     };
   } catch (err: any) {
     logger.error(`Failed to get auth provider data by provider name`, { err });
