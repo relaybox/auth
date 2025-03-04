@@ -1,13 +1,16 @@
 import { AuthUserSession } from 'src/types/auth.types';
 
-export function getUsersIdpCallbackHtml(authSession: AuthUserSession): string {
+export function getUsersIdpCallbackHtml(
+  authSession: AuthUserSession,
+  callbackTargetUrl: string
+): string {
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <title>OAuth Callback</title>
       <script type="text/javascript">
-        window.opener.postMessage(${JSON.stringify(authSession)}, 'https://app.dev.repogram.com');
+        window.opener.postMessage(${JSON.stringify(authSession)}, ${callbackTargetUrl});
         window.close();
       </script>
     </head>
