@@ -62,15 +62,25 @@ export function createUserIdentity(
   keyVersion: number,
   provider = AuthProvider.EMAIL,
   providerId: string | null = null,
-  autoVerify: boolean = false
+  autoVerify: boolean = false,
+  accessToken: string | null = null
 ): Promise<QueryResult> {
   const now = new Date().toISOString();
 
   const query = `
     INSERT INTO authentication_user_identities (
-      "uid", email, "emailHash", password, salt, "keyVersion", "provider", "providerId", "verifiedAt"
+      "uid", 
+      email, 
+      "emailHash", 
+      password, 
+      salt, 
+      "keyVersion", 
+      "provider", 
+      "providerId", 
+      "verifiedAt",
+      "accessToken"
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
     ) RETURNING id;
   `;
 
@@ -83,7 +93,8 @@ export function createUserIdentity(
     keyVersion,
     provider,
     providerId,
-    autoVerify ? now : null
+    autoVerify ? now : null,
+    accessToken
   ]);
 }
 
