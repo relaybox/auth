@@ -119,7 +119,8 @@ export async function createUserIdentity(
   password: string,
   provider?: AuthProvider,
   providerId?: string | null,
-  autoVerify: boolean = false
+  autoVerify: boolean = false,
+  accessToken?: string
 ): Promise<AuthUser> {
   logger.debug(`Creating user identity`, { uid, provider });
 
@@ -140,7 +141,8 @@ export async function createUserIdentity(
       keyVersion,
       provider,
       providerId,
-      autoVerify
+      autoVerify,
+      accessToken
     );
 
     logger.info(`User identity created`, { uid, id: rows[0].id });

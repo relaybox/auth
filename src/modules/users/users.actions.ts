@@ -114,7 +114,8 @@ export async function registerIdpUser(
   password: string,
   provider: AuthProvider,
   providerId: string,
-  username?: string
+  username?: string,
+  accessToken?: string
 ): Promise<AuthUser> {
   logger.info(`Registering idp user`, { orgId, provider });
 
@@ -140,7 +141,8 @@ export async function registerIdpUser(
     password,
     provider,
     providerId,
-    autoVerify
+    autoVerify,
+    accessToken
   );
 
   return userData;

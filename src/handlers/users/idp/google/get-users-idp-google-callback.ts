@@ -46,7 +46,7 @@ export const handler: APIGatewayProxyHandler = async (
     const { appPid, keyId } = getKeyParts(publicKey);
     const { orgId, appId, secretKey } = await getAuthDataByKeyId(logger, pgClient, keyId);
 
-    const { clientId, clientSecret } = await getAuthProviderDataByProviderName(
+    const { clientId, clientSecret, callbackTargetUrl } = await getAuthProviderDataByProviderName(
       logger,
       pgClient,
       appId,
@@ -110,7 +110,7 @@ export const handler: APIGatewayProxyHandler = async (
       authenticateAction,
       authStorageType
     );
-    const htmlContent = getUsersIdpCallbackHtml(authSession);
+    const htmlContent = getUsersIdpCallbackHtml(authSession, callbackTargetUrl);
 
     if (!authSession.user.authMfaEnabled) {
       await enqueueWebhookEvent(
