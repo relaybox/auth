@@ -9,19 +9,18 @@ export interface EventBridgeKeepAliveEvent {
   keepAlive: boolean;
 }
 
-export function eventBridgeKeepAliveEventHandler(
+export async function eventBridgeKeepAliveEventHandler(
   logger: Logger,
   event: EventBridgeKeepAliveEvent
-): void {
+): Promise<void> {
   logger.info(`EventBridge keep alive event received`, { event });
-  return;
 }
 
 export function lambdaProxyEventMiddleware(logger: Logger, lambdaProxyEventHandler: any) {
   return function (
     event: APIGatewayProxyEvent | EventBridgeKeepAliveEvent,
     context: any
-  ): Promise<APIGatewayProxyResult> | void {
+  ): Promise<APIGatewayProxyResult | void> {
     if (EventBridgeInputParams.KEEP_ALIVE in event) {
       return eventBridgeKeepAliveEventHandler(logger, event);
     } else {
