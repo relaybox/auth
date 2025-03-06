@@ -1,20 +1,16 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { NotFoundError, UnauthorizedError, ValidationError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 import { getPgClient } from '@/lib/postgres';
-import {
-  getAuthDataByKeyId,
-  getRequestAuthParams,
-  getUserDataByClientId,
-  getUserIdentityByUid
-} from '@/modules/users/users.service';
+import { getUserIdentityByUid } from '@/modules/users/users.service';
 import * as httpResponse from '@/util/http.util';
 import { handleErrorResponse } from '@/util/http.util';
 import { getLogger } from '@/util/logger.util';
 import { AuthProvider } from '@/types/auth.types';
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 
 const logger = getLogger('get-users-id-identity');
 
-export async function handler(
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
 ): Promise<APIGatewayProxyResult> {
@@ -46,3 +42,5 @@ export async function handler(
     pgClient.clean();
   }
 }
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);

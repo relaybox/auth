@@ -1,4 +1,5 @@
-import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getPgClient } from 'src/lib/postgres';
 import { getUserDataById } from 'src/modules/users/users.service';
 import * as httpResponse from 'src/util/http.util';
@@ -7,7 +8,7 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('get-users-me');
 
-export async function handler(
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
 ): Promise<APIGatewayProxyResult> {
@@ -29,3 +30,5 @@ export async function handler(
     pgClient.clean();
   }
 }
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);

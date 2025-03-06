@@ -1,3 +1,4 @@
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { TokenError, UnauthorizedError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -13,10 +14,10 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('post-users-token-refresh');
 
-export const handler: APIGatewayProxyHandler = async (
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   logger.info(`Refreshing auth token`);
@@ -56,4 +57,6 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);
