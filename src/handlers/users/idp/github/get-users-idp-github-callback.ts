@@ -19,15 +19,16 @@ import { getUsersIdpCallbackHtml } from 'src/modules/users/users.templates';
 import { registerIdpUser } from 'src/modules/users/users.actions';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/modules/webhook/webhook.types';
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 
 const logger = getLogger('post-users-idp-github');
 
 const PROVIDER_NAME = 'github';
 
-export const handler: APIGatewayProxyHandler = async (
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   logger.info(`Fetching access token from github`);
@@ -139,4 +140,6 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);

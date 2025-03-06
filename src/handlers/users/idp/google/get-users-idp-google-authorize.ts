@@ -1,3 +1,4 @@
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -14,10 +15,10 @@ const logger = getLogger('post-users-idp-google-authorize');
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || '';
 
-export const handler: APIGatewayProxyHandler = async (
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   logger.info(`Redirecting auth request to google`);
@@ -63,4 +64,6 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);

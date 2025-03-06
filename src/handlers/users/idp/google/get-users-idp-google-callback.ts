@@ -19,6 +19,7 @@ import { getGoogleAuthToken, getGoogleUserData } from 'src/lib/google';
 import { registerIdpUser } from 'src/modules/users/users.actions';
 import { enqueueWebhookEvent } from '@/modules/webhook/webhook.service';
 import { WebhookEvent } from '@/modules/webhook/webhook.types';
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 
 const logger = getLogger('post-users-idp-google-callback');
 
@@ -26,10 +27,10 @@ const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || '';
 const PROVIDER_NAME = 'google';
 const REDIRECT_URI = `${AUTH_SERVICE_URL}/users/idp/google/callback`;
 
-export const handler: APIGatewayProxyHandler = async (
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   context.callbackWaitsForEmptyEventLoop = false;
 
   logger.info(`Fetching access token from google`);
@@ -135,4 +136,6 @@ export const handler: APIGatewayProxyHandler = async (
   } finally {
     pgClient.clean();
   }
-};
+}
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);

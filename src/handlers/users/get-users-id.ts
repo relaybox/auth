@@ -1,3 +1,4 @@
+import { lambdaProxyEventMiddleware } from '@/util/request.util';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { NotFoundError, UnauthorizedError, ValidationError } from 'src/lib/errors';
 import { getPgClient } from 'src/lib/postgres';
@@ -12,7 +13,7 @@ import { getLogger } from 'src/util/logger.util';
 
 const logger = getLogger('get-users-id');
 
-export async function handler(
+export async function lambdaProxyEventHandler(
   event: APIGatewayProxyEvent,
   context: any
 ): Promise<APIGatewayProxyResult> {
@@ -48,3 +49,5 @@ export async function handler(
     pgClient.clean();
   }
 }
+
+export const handler = lambdaProxyEventMiddleware(logger, lambdaProxyEventHandler);
