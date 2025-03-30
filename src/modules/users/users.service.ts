@@ -397,10 +397,9 @@ export async function getAuthSession(
     throw new UnauthorizedError(`Cross application authentication not supported`);
   }
 
-  const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
-
   if (user.authMfaEnabled && authenticateAction) {
     const { username, authMfaEnabled, factors } = user;
+    const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
 
     return <AuthUserSession>{
       user: {
@@ -436,8 +435,7 @@ export async function getAuthSession(
 
   return {
     session,
-    user,
-    tmpToken
+    user
   };
 }
 

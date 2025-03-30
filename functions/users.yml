@@ -53,8 +53,6 @@ get-users-token-refresh:
         method: get
         cors: ${self:custom.cors}
 
-# Get refresh token using short lived tmp token
-# USE CASE: web to desktop authentication
 get-users-token-session:
   handler: src/handlers/users/get-users-token-session.handler
   timeout: 30
@@ -64,7 +62,7 @@ get-users-token-session:
         method: get
         cors: ${self:custom.cors}
         authorizer:
-          name: tmp-authorizer
+          name: user-authorizer
 
 post-users-password-reset:
   handler: src/handlers/users/post-users-password-reset.handler
