@@ -381,7 +381,8 @@ export async function getAuthSession(
   expiresIn: number,
   sessionExpiresIn: number,
   authenticateAction: boolean = false,
-  authStorageType: AuthStorageType = AuthStorageType.PERSIST
+  authStorageType: AuthStorageType = AuthStorageType.PERSIST,
+  generateTmpToken: boolean = false
 ): Promise<AuthUserSession> {
   logger.debug(`Getting auth session for user ${uid}`, { uid });
 
@@ -396,9 +397,10 @@ export async function getAuthSession(
     throw new UnauthorizedError(`Cross application authentication not supported`);
   }
 
+  const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
+
   if (user.authMfaEnabled && authenticateAction) {
     const { username, authMfaEnabled, factors } = user;
-    const tmpToken = await getTmpToken(logger, uid, publicKey, secretKey);
 
     return <AuthUserSession>{
       user: {
@@ -434,7 +436,8 @@ export async function getAuthSession(
 
   return {
     session,
-    user
+    user,
+    tmpToken
   };
 }
 
