@@ -381,7 +381,8 @@ export async function getAuthSession(
   expiresIn: number,
   sessionExpiresIn: number,
   authenticateAction: boolean = false,
-  authStorageType: AuthStorageType = AuthStorageType.PERSIST
+  authStorageType: AuthStorageType = AuthStorageType.PERSIST,
+  generateTmpToken: boolean = false
 ): Promise<AuthUserSession> {
   logger.debug(`Getting auth session for user ${uid}`, { uid });
 

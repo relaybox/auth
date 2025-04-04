@@ -53,6 +53,17 @@ get-users-token-refresh:
         method: get
         cors: ${self:custom.cors}
 
+get-users-token-session:
+  handler: src/handlers/users/get-users-token-session.handler
+  timeout: 30
+  events:
+    - http:
+        path: /users/token/session
+        method: get
+        cors: ${self:custom.cors}
+        authorizer:
+          name: user-authorizer
+
 post-users-password-reset:
   handler: src/handlers/users/post-users-password-reset.handler
   timeout: 30
